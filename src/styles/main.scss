@@ -99,10 +99,10 @@ h1 {
   }
 
   .burgerContainer::after {
-    content: '';
+    content: "";
     position: absolute;
     right: 35px;
-    top: calc(35px /2);
+    top: calc(35px / 2);
     z-index: 0;
     width: calc(6rem + 15rem);
     background-color: $lightGrey;
@@ -148,95 +148,98 @@ h1 {
     margin: 2rem 0 0 0;
 
     ul {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-direction: column;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
         display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        flex-direction: column;
-        list-style: none;
-        padding: 0;
-        margin: 0;
+        align-items: center;
+        justify-content: flex-start;
+        flex-direction: row;
+        margin: 0.75rem 0;
+        padding: 0.75rem 0;
+        width: 100%;
+        border-radius: 1rem;
+        cursor: pointer;
 
-        li {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            flex-direction: row;
-            margin: 0.75rem 0;
-            padding: 0.75rem 0;
-            width: 100%;
-            border-radius: 1rem;
-            cursor: pointer;
-
-            img {
-                padding: 0 1rem 0 0;
-            }
-
-            a {
-                text-decoration: none;
-                color: $darkGrey;
-                font-size: 20px;
-                display: flex;
-                align-content: center;
-                justify-content: space-between;
-                margin: 0 0 0 0.5rem;
-                transition: 0.2s all;
-            }
+        img {
+          padding: 0 1rem 0 0;
         }
 
-        li.active {
-            background-color: $veryLightGreen;
-
-            a {
-                color: $green;
-            }
+        a {
+          text-decoration: none;
+          color: $darkGrey;
+          font-size: 20px;
+          display: flex;
+          align-content: center;
+          justify-content: space-between;
+          margin: 0 0 0 0.5rem;
         }
+      }
 
-        li:hover {
-            background-color: $lightGrey;
-            transition: 0.25s all;
+      li.active {
+        background-color: $veryLightGreen;
+
+        a {
+          color: $green;
         }
+      }
+
+      li:hover {
+        background-color: $lightGrey;
+        transition: 0.25s all;
+      }
     }
   }
 }
 
 .sidebar.active {
-    width: 3rem;
+  width: 3rem;
+  transition: 0.5s all;
+
+  .logoContainer.active {
+    padding: 1.6rem 0 1.6rem 0;
+  }
+
+  // .logoContainer.active {
+  //     h2.title {
+  //         opacity: 0;
+  //     }
+  // }
+
+  .burgerContainer.active {
     transition: 0.5s all;
-
-    .logoContainer.active {
-        h2.title {
-            opacity: 0;
-        }
+    .burgerMenu {
+      background-color: $white;
+      transition: 0.5s all;
     }
 
-    .burgerContainer.active {
-        transition: 0.5s all;
-        .burgerMenu {
-            background-color: $white;
-            transition: 0.5s all;
-        }
-
-        .burgerMenu::before {
-            transform: translateY(0rem) rotate(0deg);
-            transition: 0.5s all;
-        }
-
-        .burgerMenu::after {
-            transform: translateY(0rem) rotate(0deg);
-            transition: 0.5s all;
-        }
+    .burgerMenu::before {
+      transform: translateY(0rem) rotate(0deg);
+      transition: 0.5s all;
     }
 
-    .profileContainer {
-        .profileContents {
-            opacity: 0;
-            transition: 0.2s all;
-        }
+    .burgerMenu::after {
+      transform: translateY(0rem) rotate(0deg);
+      transition: 0.5s all;
     }
+  }
 
-    // .contentsContainer {
-    //     a {
-    //         opacity: 0;
-    //     }
-    // }
+  // .profileContainer {
+  //     .profileContents {
+  //         opacity: 0;
+  //         transition: 10s all;
+  //     }
+  // }
+
+  // .contentsContainer {
+  //     a {
+  //         opacity: 0;
+  //     }
+  // }
 }

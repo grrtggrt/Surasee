@@ -24,7 +24,7 @@ const Nav = () => {
         }
       >
         <img src={Icon} alt="icon" className="logo" />
-        <h2 className="title">FinalProject</h2>
+        {closeMenu === false ? <h2 className="title">FinalProject</h2> : ""}
       </div>
       <div
         className={
@@ -46,8 +46,8 @@ const Nav = () => {
       >
         <img src={Profile} alt="profile" className="profile" />
         <div className="profileContents">
-          <p className="name">Hello, John</p>
-          <p>johnsmith@gmail.com</p>
+          {closeMenu === false ? <p className="name">Hello, John</p> : ""}
+          {closeMenu === false ? <p>johnsmith@gmail.com</p> : ""}
         </div>
       </div>
       <div
