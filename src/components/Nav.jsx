@@ -5,7 +5,7 @@ import Dashboard from "../assets/chart-histogram.svg";
 import Schedule from "../assets/calendar-lines.svg";
 import ManageRoom from "../assets/apps-add.svg";
 import ImportData from "../assets/file-import.svg";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom"
 
 const Nav = () => {
   const location = useLocation();
@@ -57,7 +57,7 @@ const Nav = () => {
       >
         <ul>
           <li className={location.pathname === "/" ? "active" : ""}>
-            <Link to="/">
+            <Link to="/dashboard">
               <img src={Dashboard} alt="dashboard" />
               {closeMenu === false ? "Dashboard" : ""}
             </Link>
@@ -78,6 +78,12 @@ const Nav = () => {
             <Link to="/importdata">
               <img src={ImportData} alt="importdata" />
               {closeMenu === false ? "Importdata" : ""}
+            </Link>
+          </li>
+          <li className={location.pathname === "/importdata" ? "active" : ""}>
+            <Link to="/">
+              <img src={ImportData} alt="importdata" />
+              {closeMenu === false ? "Back" : ""}
             </Link>
           </li>
         </ul>

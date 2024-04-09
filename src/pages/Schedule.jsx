@@ -1,12 +1,12 @@
-import React from 'react'
+import React from "react";
+import "./Schedule.scss";
 
 const Schedule = () => {
   return (
     <>
-    <h1>Schedule</h1>
+      <div className="mainContent">Schedule</div>
     </>
-    
-  )
-}
+  );
+};
 
-export default Schedule
+export default Schedule;
