@@ -32,8 +32,8 @@
     cursor: pointer;
 
     img {
-      max-width: 40px;
-      margin-right: 0.5rem;
+      max-width: 50px;
+      margin-right: 1.5rem;
       background: var(--inputColor);
       border-radius: 2px;
       padding: 0.2rem;
@@ -48,7 +48,8 @@
   .profileContainer {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    padding: 0 1.5rem;
 
     img {
       width: auto;

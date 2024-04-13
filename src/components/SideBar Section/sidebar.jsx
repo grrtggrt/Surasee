@@ -11,49 +11,70 @@ import { TbLogout2 } from "react-icons/tb";
 import { BsQuestionCircle } from "react-icons/bs";
 
 import logo from "../../assets/logo.png";
-import Profile from '../../assets/profile.png'
+import Profile from "../../assets/profile.png";
 
 const Sidebar = () => {
   const location = useLocation();
+
+  const user = {
+    name: "สุรสีห์ ไวยวุฒิโท",
+    email: "surasee.w@ku.th",
+  };
 
   return (
     <>
       <div className="sideBar grid">
         <div className="logoDiv flex">
           <img src={logo} alt="Image Name" />
-          <h2>Project.</h2>
+          <h2>FinalProject.</h2>
         </div>
 
         <div className="profileContainer">
           <img src={Profile} alt="profile" className="profile" />
           <div className="profileContents">
-            <p className="name">Hello, John</p>
-            <p>johnsmith@gmail.com</p>
+            <p className="name">{user.name}</p>
+            <p>{user.email}</p>
           </div>
         </div>
 
         <div className="menuDiv">
           <h3 className="divTitle">MENU</h3>
           <ul className="menuLists grid">
-            <li className={`listItem ${location.pathname === '/dashboard' ? 'active' : ''}`}>
+            <li
+              className={`listItem ${
+                location.pathname === "/dashboard" ? "active" : ""
+              }`}
+            >
               <Link to="/dashboard" className="menuLink flex">
                 <AiOutlineLineChart className="icon" />
                 <span className="smallText">Dashboard</span>
               </Link>
             </li>
-            <li className={`listItem ${location.pathname === '/schedule' ? 'active' : ''}`}>
+            <li
+              className={`listItem ${
+                location.pathname === "/schedule" ? "active" : ""
+              }`}
+            >
               <Link to="/schedule" className="menuLink flex">
                 <AiOutlineSchedule className="icon" />
                 <span className="smallText">Schedule</span>
               </Link>
             </li>
-            <li className={`listItem ${location.pathname === '/manageroom' ? 'active' : ''}`}>
+            <li
+              className={`listItem ${
+                location.pathname === "/manageroom" ? "active" : ""
+              }`}
+            >
               <Link to="/manageroom" className="menuLink flex">
                 <IoCreateOutline className="icon" />
                 <span className="smallText">ManageRoom</span>
               </Link>
             </li>
-            <li className={`listItem ${location.pathname === '/importdata' ? 'active' : ''}`}>
+            <li
+              className={`listItem ${
+                location.pathname === "/importdata" ? "active" : ""
+              }`}
+            >
               <Link to="/importdata" className="menuLink flex">
                 <TbFileImport className="icon" />
                 <span className="smallText">ImportData</span>

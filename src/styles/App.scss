@@ -18,8 +18,8 @@
 
 .container {
     position: relative;
-    width: 95vw;
-    height: 95vh;
+    width: 100vw;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -28,7 +28,6 @@
     border-radius: 1rem;
     box-shadow: 2px 2px 8px var(--greyText);
     margin: auto;
-    margin-top: 20px;
 }
 
 
@@ -104,29 +103,6 @@ img {
     background: var(--paleGreen);
     color: var(--primaryColor);
 }
-
-// body {
-//     display: flex;
-//     align-items: center;
-//     justify-content: center;
-//     margin: auto;
-//     padding: 1rem;
-// }
-
-// .container {
-//     position: relative;
-//     width: 95vw;
-//     height: 95vh;
-//     display: flex;
-//     align-items: center;
-//     justify-content: center;
-//     background: var(--bgColor);
-//     overflow: hidden;
-//     border-radius: 1rem;
-//     box-shadow: 2px 2px 8px var(--greyText);
-// }
-
-/* Hide the scroll thumb */
 
 ::-webkit-scrollbar {
     display: none;
