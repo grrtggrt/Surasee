@@ -89,7 +89,7 @@ const Sidebar = () => {
             <li className="listItem">
               <Link to="" className="menuLink flex">
                 <FiSettings className="icon" />
-                <span className="smallText">Setting</span>
+                <span className="smallText">User Setting</span>
               </Link>
             </li>
             <li className="listItem">
