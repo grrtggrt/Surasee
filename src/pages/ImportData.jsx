@@ -42,7 +42,7 @@ const ImportData = () => {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await axios.post("http://localhost:5173/",formData, {
+      const response = await axios.post("http://localhost:5173/", formData, {
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round(
             (progressEvent.loaded * 100) / progressEvent.total
@@ -58,7 +58,7 @@ const ImportData = () => {
   };
 
   return (
-    <div className="mainContent">
+    <div className="main-content-center">
       <div className="uploadFileContent">
         <input
           ref={inputRef}

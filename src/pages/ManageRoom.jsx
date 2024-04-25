@@ -4,7 +4,7 @@ import "./ManageRoom.scss";
 const ManageRoom = () => {
   return (
     <>
-      <div className="mainContent">ManageRoom</div>
+      <div className="main-content-center">ManageRoom</div>
     </>
   );
 };

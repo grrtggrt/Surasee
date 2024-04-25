@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./sidebar.scss";
 
@@ -6,40 +6,36 @@ import { AiOutlineLineChart } from "react-icons/ai";
 import { TbFileImport } from "react-icons/tb";
 import { AiOutlineSchedule } from "react-icons/ai";
 import { IoCreateOutline } from "react-icons/io5";
-import { FiSettings } from "react-icons/fi";
-import { TbLogout2 } from "react-icons/tb";
-import { BsQuestionCircle } from "react-icons/bs";
 
 import logo from "../../assets/logo.png";
-import Profile from "../../assets/profile.png";
+import { SidebarContext } from "../../context/sidebarContext";
 
 const Sidebar = () => {
-  const location = useLocation();
+  
+  const [sidebarClass, setSidebarClass] = useState("");
+  const { isSidebarOpen } = useContext(SidebarContext);
 
-  const user = {
-    name: "สุรสีห์ ไวยวุฒิโท",
-    email: "surasee.w@ku.th",
-  };
+  useEffect(() => {
+    if(isSidebarOpen){
+      setSidebarClass('sideBar-change');
+    } else {
+      setSidebarClass('');
+    }
+  }, [isSidebarOpen]);
+
+  const location = useLocation();
 
   return (
     <>
-      <div className="sideBar grid">
-        <div className="logoDiv flex">
+      <div className={`sideBar ${sidebarClass}`}>
+        <div className="logoDiv">
           <img src={logo} alt="Image Name" />
-          <h2>FinalProject.</h2>
         </div>
 
-        <div className="profileContainer">
-          <img src={Profile} alt="profile" className="profile" />
-          <div className="profileContents">
-            <p className="name">{user.name}</p>
-            <p>{user.email}</p>
-          </div>
-        </div>
+        <div style={{ width: "100%", height: 1, background: "#3B3F43" }}></div>
 
         <div className="menuDiv">
-          <h3 className="divTitle">MENU</h3>
-          <ul className="menuLists grid">
+          <ul className="menuLists">
             <li
               className={`listItem ${
                 location.pathname === "/dashboard" ? "active" : ""
@@ -82,41 +78,11 @@ const Sidebar = () => {
             </li>
           </ul>
         </div>
-
-        <div className="settingsDiv">
-          <h3 className="divTitle">SETTINGS</h3>
-          <ul className="menuLists grid">
-            <li className="listItem">
-              <Link to="" className="menuLink flex">
-                <FiSettings className="icon" />
-                <span className="smallText">User Setting</span>
-              </Link>
-            </li>
-            <li className="listItem">
-              <Link to="/" className="menuLink flex">
-                <TbLogout2 className="icon" />
-                <span className="smallText">LogOut</span>
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div className="sideBarCard">
-          <BsQuestionCircle className="icon" />
-          <div className="cardContent">
-            <div className="circle1"></div>
-            <div className="circle2"></div>
-            <h3>Help Center</h3>
-            <p>
-              Having trouble in Project, please contact us from for more
-              questions.
-            </p>
-            <button className="btn">Go to help center</button>
-          </div>
-        </div>
       </div>
     </>
   );
 };
 
 export default Sidebar;
+
+

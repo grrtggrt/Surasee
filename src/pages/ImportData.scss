@@ -19,22 +19,23 @@
   --smallestFontSize: 0.75rem;
 }
 
-.mainContent {
+.main-content-center {
   width: 100%;
   height: 100%;
   padding: 2rem;
   overflow: auto;
 
   .uploadFileContent {
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 22rem;
 
     .file-btn {
-      width: 440px;
-      height: 200px;
+      width: 60%;
+      height: 40%;
       font-size: var(--h1FontSize);
       display: flex;
       flex-direction: column;

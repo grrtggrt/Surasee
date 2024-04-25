@@ -1,92 +1,185 @@
 import React, { useState } from "react";
-import { useDrag, useDrop } from "react-dnd";
-import "./Schedule.scss";
+import { Card, Row, Col, Form, Button, CardBody } from "react-bootstrap";
+import { FaSearch } from "react-icons/fa";
+import { FaSyncAlt } from "react-icons/fa";
+import { FaPlus } from "react-icons/fa";
+import { FaRegSave } from "react-icons/fa";
+
+import PopupManageRoom from "./popup/PopupManageRoom";
+import PopupManageSchedule from "./popup/PopupManageSchedule";
 
 const Schedule = () => {
-  const [boards, setBoards] = useState([]);
-  const [subjects, setSubjects] = useState([
-    {
-      id: 1,
-      name: "Math",
-      active: false,
-    },
-    {
-      id: 2,
-      name: "English",
-      active: false,
-    },
-    {
-      id: 3,
-      name: "Science",
-      active: false,
-    },
-  ]);
 
-  const handleAddSubjectToBoard = (id) => {
-    const selectedSubject = subjects.find((subject) => subject.id === id);
-    selectedSubject.active = true;
-    setBoards((prevBoards) => [...prevBoards, selectedSubject]);
-    setSubjects((prevSubjects) => prevSubjects.filter((subject) => subject.id !== id));
-  };
+  const [showManageRoom, setShowManageRoom] = useState(false);
 
-  const handleRemoveSubject = (index) => {
-    const removedSubject = boards[index];
-    removedSubject.active = false;
-    setBoards((prevBoards) => prevBoards.filter((_, idx) => idx !== index));
-    setSubjects((prevSubjects) => [...prevSubjects, removedSubject]);
-  };
+  const handleShowManageRoom = () => setShowManageRoom(true);
 
-  const [{ isOver, canDrop }, drop] = useDrop(() => ({
-    accept: "SUBJECT",
-    drop: (item) => handleAddSubjectToBoard(item.id),
-    collect: (monitor) => ({
-      isOver: !!monitor.isOver(),
-      canDrop: !!monitor.canDrop(),
-    }),
-  }));
+  const handleHideManageRoom = () => setShowManageRoom(false);
+
+  const [showSchedule, setShowSchedule] = useState(false);
+
+  const handleShowSchedule = () => setShowSchedule(true);
+
+  const handleHideSchedule = () => setShowSchedule(false);
 
   return (
-    <div className="mainContent">
-      <div className="subjectContent">
-        <div className="content-grid">
-          {subjects.map((subject) => (
-            <Subject key={subject.id} subject={subject} onAddToBoard={handleAddSubjectToBoard} />
-          ))}
-        </div>
-      </div>
-      <div className="drop-target">
-        <div className={`content-drop ${isOver && canDrop ? 'can-drop' : ''}`} ref={drop}>
-          {boards.map((boardSubject, index) => (
-            <div key={index} onClick={() => handleRemoveSubject(index)}>
-              {boardSubject.name}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const Subject = ({ subject, onAddToBoard }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "SUBJECT",
-    item: { id: subject.id },
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
-    }),
-  }));
-
-  return (
-    <div
-      className="grid-cl"
-      onClick={() => onAddToBoard(subject.id)}
-      ref={drag}
-      style={{
-        display: subject.active ? "none" : "",
-        background: "rgb(112, 205, 255)",
-      }}
-    >
-      <h3 className="grid-c-title">{subject.name}</h3>
+    <div className="main-content-center">
+      <Row>
+        <Col md={9} className="d-flex gap-3">
+          <Form.Select
+            aria-label="Default select example"
+            style={{
+              fontSize: "16px",
+            }}
+          >
+            <option>คณะ</option>
+            <option>1</option>
+          </Form.Select>
+          <Form.Select
+            aria-label="Default select example"
+            style={{
+              fontSize: "16px",
+            }}
+          >
+            <option>สาขา</option>
+            <option>1</option>
+          </Form.Select>
+        </Col>
+        <Col className="d-flex justify-content-end gap-3">
+          <Form.Select
+            aria-label="Default select example"
+            style={{
+              fontSize: "16px",
+            }}
+          >
+            <option>ชั้นปี</option>
+            <option>1</option>
+          </Form.Select>
+          <Button
+            className="d-flex align-items-center gap-2"
+            style={{ fontSize: "16px", color: "white" }}
+            variant="info"
+          >
+            <FaSearch />
+            ค้นหา
+          </Button>
+          <Button
+            className="d-flex align-items-center gap-2"
+            style={{ fontSize: "16px", color: "white" }}
+            variant="dark"
+          >
+            <FaSyncAlt />
+            รีเซ็ต
+          </Button>
+        </Col>
+      </Row>
+      <Row className="pt-3">
+        <Col md={9}>
+          <Card>
+            <CardBody>
+              <Row>
+                <Col className="d-flex align-items-center justify-content-center gap-3">
+                  <Card style={{ width: "80%" }}>
+                    <CardBody
+                      style={{
+                        background: "#212529",
+                        color: "white",
+                        padding: "5.4px 10.8px",
+                        fontSize: "16px",
+                        borderRadius: "0.25rem",
+                        textAlign: "center",
+                      }}
+                    >
+                      ตารางสอบกลางภาค เทอม 1 วันที่ 1 สิงหาคม - 10 สิงหาคม 2567
+                    </CardBody>
+                  </Card>
+                  <Button
+                    className="d-flex align-items-center justify-content-center gap-2"
+                    style={{
+                      backgroundColor: "#03A96B",
+                      color: "white",
+                      fontSize: "16px",
+                      border: "none",
+                      width: "20%",
+                    }}
+                    onClick={() => handleShowSchedule()}
+                  >
+                    <FaPlus/>
+                    จัดวันสอบ
+                  </Button>
+                </Col>
+              </Row>
+              <Row className="pt-3">
+                <Col>
+                  <Card>
+                    <CardBody></CardBody>
+                  </Card>
+                </Col>
+              </Row>
+              <Row>
+                <Col className="d-flex justify-content-end pt-3">
+                  <Button
+                    className="d-flex align-items-center justify-content-center gap-2"
+                    style={{
+                      backgroundColor: "#03A96B",
+                      border: "none",
+                      color: "white",
+                      fontSize: "16px",
+                    }}
+                  >
+                    <FaRegSave /> บันทึก
+                  </Button>
+                </Col>
+              </Row>
+            </CardBody>
+          </Card>
+        </Col>
+        <Col>
+          <Card style={{ background: "#4A4F55" }}>
+            <CardBody>
+              <Row>
+                <Col className="d-flex align-items-center justify-content-center gap-3">
+                  <Form>
+                    <Form.Control
+                      style={{ fontSize: "16px" }}
+                      type="search"
+                      placeholder="ค้นหา"
+                      aria-label="Search"
+                    />
+                  </Form>
+                  <Form.Select
+                    className="w-25"
+                    aria-label="Default select example"
+                    style={{
+                      fontSize: "16px",
+                    }}
+                  >
+                    <option>วิชา</option>
+                    <option>1</option>
+                  </Form.Select>
+                  <Button
+                    className="d-flex align-items-center gap-2"
+                    style={{ fontSize: "16px", color: "white" }}
+                    variant="info"
+                  >
+                    <FaSearch />
+                    ค้นหา
+                  </Button>
+                </Col>
+              </Row>
+              <Row className="pt-3">
+                <Col>
+                  <Card>
+                    <CardBody></CardBody>
+                  </Card>
+                </Col>
+              </Row>
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
+      <PopupManageRoom show={showManageRoom} hide={handleHideManageRoom} />
+      <PopupManageSchedule show={showSchedule} hide={handleHideSchedule} />
     </div>
   );
 };
