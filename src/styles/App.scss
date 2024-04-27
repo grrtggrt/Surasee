@@ -81,25 +81,36 @@ img {
   gap: 1.5rem;
 }
 
-// .btn {
+.pagination {
+  .page-item.active .page-link {
+    border: none;
+    background-color: #03a96b;
+  }
+
+  .page-link {
+    background-color: var(--whiteColor);
+    color: var(--blackColor);
+
+    &:hover {
+      background-color: var(--bgColor);
+      color: var(--textColor);
+    }
+  }
+}
+
+// .page-item.active .page-link {
 //   border: none;
-//   outline: none;
-//   cursor: pointer;
-//   border-radius: 8px;
-//   box-shadow: 0 2px 4px var(--inputColor);
-//   padding: 0.8rem 1rem;
-//   color: var(--textColor);
+//   background-color: #03a96b;
 // }
 
-// .btn .icon {
-//   margin-left: 0.5rem;
-// }
+// a.page-link{
+//   color: black;
 
-// .btn:hover {
-//   background: var(--paleGreen);
-//   color: var(--primaryColor);
+//   &:hover {
+//     color: var(--blackColor);
+//   }
 // }
 
 ::-webkit-scrollbar {
-    display: none;
+  display: none;
 }

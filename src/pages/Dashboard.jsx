@@ -18,19 +18,31 @@ import PopupDashboard from "./popup/PopupDashboard";
 const Dashboard = () => {
   const subjects = [
     {
-      id: 1,
-      name: "Math",
+      id: "01361101-64",
+      name_en: "Introductory Thai Usage",
+      name_th: "การใช้ภาษไทยเบื้องต้น",
+      majorId: ["R07", "R03", "R17"],
+      sec: [800, 850],
+      type: "เสรี",
       active: false,
     },
     {
-      id: 2,
-      name: "English",
+      id: "01101372-65",
+      name_en: "Econometrics I",
+      name_th: "เศรษฐมิติ I",
+      majorId: ["G01"],
+      sec: [800, 801, 900],
+      type: "บังคับ",
       active: false,
     },
     {
-      id: 3,
-      name: "Science",
-      active: true,
+      id: "01417111-65",
+      name_en: "Calculus I",
+      name_th: "แคลคูลัส I",
+      majorId: ["S09" , "S18" , "M04" , "M02"],
+      sec: [800 , 807],
+      type: "วิชาเลือก",
+      active: false,
     },
   ];
 
@@ -346,8 +358,12 @@ const Dashboard = () => {
                   </Button>
                   <Button
                     className="d-flex align-items-center gap-2"
-                    style={{ fontSize: "16px", color: "white" }}
-                    variant="dark"
+                    style={{
+                      fontSize: "16px",
+                      color: "white",
+                      background: "#BD4636",
+                      border: "none",
+                    }}
                     onClick={() => handleClickReset()}
                   >
                     <FaSyncAlt />

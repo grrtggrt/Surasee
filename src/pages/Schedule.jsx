@@ -9,7 +9,6 @@ import PopupManageRoom from "./popup/PopupManageRoom";
 import PopupManageSchedule from "./popup/PopupManageSchedule";
 
 const Schedule = () => {
-
   const [showManageRoom, setShowManageRoom] = useState(false);
 
   const handleShowManageRoom = () => setShowManageRoom(true);
@@ -22,6 +21,116 @@ const Schedule = () => {
 
   const handleHideSchedule = () => setShowSchedule(false);
 
+  const subjects = [
+    {
+      id: "01361101-64",
+      name_en: "Introductory Thai Usage",
+      name_th: "การใช้ภาษไทยเบื้องต้น",
+      majorId: ["R07", "R03", "R17"],
+      sec: [800, 850],
+      type: "เสรี",
+      active: false,
+    },
+    {
+      id: "01101372-65",
+      name_en: "Econometrics I",
+      name_th: "เศรษฐมิติ I",
+      majorId: ["G01"],
+      sec: [800, 801, 900],
+      type: "บังคับ",
+      active: false,
+    },
+    {
+      id: "01417111-65",
+      name_en: "Calculus I",
+      name_th: "แคลคูลัส I",
+      majorId: ["S09", "S18", "M04", "M02"],
+      sec: [800, 807],
+      type: "วิชาเลือก",
+      active: false,
+    },
+  ];
+
+  const branch = [
+    {
+      id: 1,
+      faculty: "วิทยาศาสตร์",
+      majorId: "S09",
+      majorName: "เทคโนโลยีสารสนเทศ",
+      grade: "1",
+    },
+    {
+      id: 2,
+      faculty: "วิทยาศาสตร์",
+      majorId: "S10",
+      majorName: "เทคโนโลยีสารสนเทศ(ภาคพิเศษ)",
+      grade: "1",
+    },
+    {
+      id: 3,
+      faculty: "พาณิชยนาวีนานาชาติ",
+      majorId: "M09",
+      majorName: "วิศวกรรมเครื่องกลเรือ",
+      grade: "1",
+    },
+    {
+      id: 4,
+      faculty: "พาณิชยนาวีนานาชาติ",
+      majorId: "M04",
+      majorName: "การขนส่งทางทะเล",
+      grade: "1",
+    },
+    {
+      id: 5,
+      faculty: "วิทยาการจัดการ",
+      majorId: "R01",
+      majorName: "การเงิน",
+      grade: "1",
+    },
+    {
+      id: 6,
+      faculty: "วิทยาการจัดการ",
+      majorId: "R02",
+      majorName: "การจัดการ",
+      grade: "1",
+    },
+    {
+      id: 7,
+      faculty: "วิศวกรรมศาสตร์",
+      majorId: "T02",
+      majorName: "วิศวกรรมคอมพิวเตอร์",
+      grade: "1",
+    },
+    {
+      id: 8,
+      faculty: "วิศวกรรมศาสตร์",
+      majorId: "T03",
+      majorName: "วิศวกรรมเครื่องกล",
+      grade: "1",
+    },
+    {
+      id: 9,
+      faculty: "วิศวกรรมศาสตร์",
+      majorId: "T04",
+      majorName: "วิศวกรรมไฟฟ้า",
+      grade: "1",
+    },
+    {
+      id: 10,
+      faculty: "วิศวกรรมศาสตร์",
+      majorId: "T05",
+      majorName: "วิศวกรรมโยธา",
+      grade: "1",
+    },
+    {
+      id: 11,
+      faculty: "วิศวกรรมศาสตร์",
+      majorId: "T07",
+      majorName: "วิศวกรรมอุสาหการ",
+      grade: "1",
+    },
+  ];
+
   return (
     <div className="main-content-center">
       <Row>
@@ -33,7 +142,11 @@ const Schedule = () => {
             }}
           >
             <option>คณะ</option>
-            <option>1</option>
+            {[...new Set(branch.map((item) => item.faculty))].map(
+              (faculty, index) => (
+                <option key={index}>{faculty}</option>
+              )
+            )}
           </Form.Select>
           <Form.Select
             aria-label="Default select example"
@@ -42,7 +155,9 @@ const Schedule = () => {
             }}
           >
             <option>สาขา</option>
-            <option>1</option>
+            {branch.map((item) => (
+              <option key={item.id}>{item.majorName}</option>
+            ))}
           </Form.Select>
         </Col>
         <Col className="d-flex justify-content-end gap-3">
@@ -53,7 +168,11 @@ const Schedule = () => {
             }}
           >
             <option>ชั้นปี</option>
-            <option>1</option>
+            {[...new Set(branch.map((item) => item.grade))].map(
+              (grade, index) => (
+                <option key={index}>{grade}</option>
+              )
+            )}
           </Form.Select>
           <Button
             className="d-flex align-items-center gap-2"
@@ -65,8 +184,12 @@ const Schedule = () => {
           </Button>
           <Button
             className="d-flex align-items-center gap-2"
-            style={{ fontSize: "16px", color: "white" }}
-            variant="dark"
+            style={{
+              fontSize: "16px",
+              color: "white",
+              background: "#BD4636",
+              border: "none",
+            }}
           >
             <FaSyncAlt />
             รีเซ็ต
@@ -104,7 +227,7 @@ const Schedule = () => {
                     }}
                     onClick={() => handleShowSchedule()}
                   >
-                    <FaPlus/>
+                    <FaPlus />
                     จัดวันสอบ
                   </Button>
                 </Col>
@@ -155,7 +278,11 @@ const Schedule = () => {
                     }}
                   >
                     <option>วิชา</option>
-                    <option>1</option>
+                    {[...new Set(subjects.map((item) => item.type))].map(
+                      (type, index) => (
+                        <option key={index}>{type}</option>
+                      )
+                    )}
                   </Form.Select>
                   <Button
                     className="d-flex align-items-center gap-2"

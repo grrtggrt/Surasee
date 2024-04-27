@@ -5,7 +5,6 @@ const PopupManageRoom = (props) => {
   const { show, hide } = props;
 
   return (
-    <div className="main-content-center">
       <Modal show={show} onHide={hide} centered>
         <Modal.Header
           closeButton
@@ -17,7 +16,14 @@ const PopupManageRoom = (props) => {
           <Row>
             <Col>
               <Card>
-                <Card.Body>
+                <Card.Body
+                  className="p-1"
+                  style={{
+                    background: "#212523",
+                    color: "white",
+                    fontSize: "16px",
+                  }}
+                >
                   โปรดระบุเวลาสอบ :
                 </Card.Body>
               </Card>
@@ -25,7 +31,6 @@ const PopupManageRoom = (props) => {
           </Row>
         </Modal.Body>
       </Modal>
-    </div>
   );
 };
 

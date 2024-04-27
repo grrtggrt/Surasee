@@ -5,7 +5,6 @@ const PopupDashboard = (props) => {
   const { show, hide } = props;
 
   return (
-    <div className="main-content-center">
       <Modal show={show} onHide={hide} size="xl" centered>
         <Modal.Header closeButton>
           <Modal.Title>ตารางสอบ</Modal.Title>
@@ -17,7 +16,6 @@ const PopupDashboard = (props) => {
           </Row>
         </Modal.Body>
       </Modal>
-    </div>
   );
 };
 

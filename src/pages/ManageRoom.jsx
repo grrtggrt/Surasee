@@ -1,12 +1,9 @@
-import React from "react";
-import "./ManageRoom.scss";
+import React from 'react'
 
 const ManageRoom = () => {
   return (
-    <>
-      <div className="main-content-center">ManageRoom</div>
-    </>
-  );
-};
+    <div className='main-content-center'>ManageRoom</div>
+  )
+}
 
-export default ManageRoom;
+export default ManageRoom
