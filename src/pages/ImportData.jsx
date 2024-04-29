@@ -1,8 +1,5 @@
 import React, { useRef, useState } from "react";
-import { GoUpload } from "react-icons/go";
-import { IoMdClose } from "react-icons/io";
-import { MdOutlineDescription } from "react-icons/md";
-import { FaCheck } from "react-icons/fa6";
+import { FaCloudArrowUp, FaX, FaRegFileLines, FaCheck } from "react-icons/fa6";
 import axios from "axios";
 import "./ImportData.scss";
 
@@ -70,7 +67,7 @@ const ImportData = () => {
         {!selectedFile && (
           <button className="file-btn" onClick={onChooseFile}>
             <span>
-              <GoUpload />
+              <FaCloudArrowUp />
             </span>
             Upload File
           </button>
@@ -80,7 +77,7 @@ const ImportData = () => {
           <>
             <div className="file-card">
               <span>
-                <MdOutlineDescription />
+                <FaRegFileLines />
               </span>
               <div className="file-info">
                 <div style={{ flex: 1 }}>
@@ -96,7 +93,7 @@ const ImportData = () => {
                 {uploadStatus === "select" ? (
                   <button onClick={clearFileInput}>
                     <span>
-                      <IoMdClose />
+                      <FaX />
                     </span>
                   </button>
                 ) : (

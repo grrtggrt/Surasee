@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import "./Login.scss";
 import { useNavigate } from "react-router-dom";
-import { FaUserShield } from "react-icons/fa";
-import { BsFillShieldLockFill } from "react-icons/bs";
-import { AiOutlineSwapRight } from "react-icons/ai";
+
+
+import { FaUser, FaLock, FaArrowRightLong  } from "react-icons/fa6";
 
 import video from "../../assets/video.mp4";
 import logo from "../../assets/logo.png";
@@ -58,7 +58,7 @@ const Login = () => {
               <div className="inputDiv">
                 <label htmlFor="username">Username</label>
                 <div className="input">
-                  <FaUserShield className="icon" />
+                  <FaUser className="icon" />
                   <input
                     type="text"
                     id="username"
@@ -73,7 +73,7 @@ const Login = () => {
               <div className="inputDiv">
                 <label htmlFor="password">Password</label>
                 <div className="input">
-                  <BsFillShieldLockFill className="icon" />
+                  <FaLock className="icon" />
                   <input
                     type="password"
                     id="password"
@@ -83,9 +83,9 @@ const Login = () => {
                   />
                 </div>
               </div>
-              <button type="submit" className="btn flex" onClick={handleLogin}>
+              <button type="submit" className="btn" onClick={handleLogin}>
                 <span>Login</span>
-                <AiOutlineSwapRight className="icon" />
+                <FaArrowRightLong className="icon" />
               </button>
             </form>
           </div>

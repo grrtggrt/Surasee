@@ -1,21 +1,29 @@
 import React, { useState } from "react";
-import { Card, Row, Col, Form, Button, CardBody } from "react-bootstrap";
-import { FaSearch } from "react-icons/fa";
-import { FaSyncAlt } from "react-icons/fa";
-import { FaPlus } from "react-icons/fa";
-import { FaRegSave } from "react-icons/fa";
+import { Card, Row, Col, Form, Button, Collapse, Badge } from "react-bootstrap";
+
+import {
+  FaMagnifyingGlass,
+  FaArrowsRotate,
+  FaPlus,
+  FaFloppyDisk,
+  FaAngleDown,
+} from "react-icons/fa6";
 
 import PopupManageRoom from "./popup/PopupManageRoom";
 import PopupManageSchedule from "./popup/PopupManageSchedule";
 
 const Schedule = () => {
   const [showManageRoom, setShowManageRoom] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleCollapse = () => {
+    setIsOpen(!isOpen);
+  };
 
   const handleShowManageRoom = () => setShowManageRoom(true);
 
   const handleHideManageRoom = () => setShowManageRoom(false);
-
-  const [showSchedule, setShowSchedule] = useState(false);
 
   const handleShowSchedule = () => setShowSchedule(true);
 
@@ -179,7 +187,7 @@ const Schedule = () => {
             style={{ fontSize: "16px", color: "white" }}
             variant="info"
           >
-            <FaSearch />
+            <FaMagnifyingGlass />
             ค้นหา
           </Button>
           <Button
@@ -191,7 +199,7 @@ const Schedule = () => {
               border: "none",
             }}
           >
-            <FaSyncAlt />
+            <FaArrowsRotate />
             รีเซ็ต
           </Button>
         </Col>
@@ -199,11 +207,11 @@ const Schedule = () => {
       <Row className="pt-3">
         <Col md={9}>
           <Card>
-            <CardBody>
+            <Card.Body>
               <Row>
                 <Col className="d-flex align-items-center justify-content-center gap-3">
                   <Card style={{ width: "80%" }}>
-                    <CardBody
+                    <Card.Body
                       style={{
                         background: "#212529",
                         color: "white",
@@ -213,8 +221,11 @@ const Schedule = () => {
                         textAlign: "center",
                       }}
                     >
-                      ตารางสอบกลางภาค เทอม 1 วันที่ 1 สิงหาคม - 10 สิงหาคม 2567
-                    </CardBody>
+                      <p className="mb-0">
+                        ตารางสอบกลางภาค เทอม 1 วันที่ 1 สิงหาคม - 10 สิงหาคม
+                        2567
+                      </p>
+                    </Card.Body>
                   </Card>
                   <Button
                     className="d-flex align-items-center justify-content-center gap-2"
@@ -225,17 +236,17 @@ const Schedule = () => {
                       border: "none",
                       width: "20%",
                     }}
-                    onClick={() => handleShowSchedule()}
+                    onClick={() => handleShowManageRoom()}
                   >
                     <FaPlus />
-                    จัดวันสอบ
+                    <p className="mb-0">จัดวันสอบ</p>
                   </Button>
                 </Col>
               </Row>
               <Row className="pt-3">
                 <Col>
                   <Card>
-                    <CardBody></CardBody>
+                    <Card.Body></Card.Body>
                   </Card>
                 </Col>
               </Row>
@@ -250,58 +261,248 @@ const Schedule = () => {
                       fontSize: "16px",
                     }}
                   >
-                    <FaRegSave /> บันทึก
+                    <FaFloppyDisk />
+                    <p className="mb-0">บันทึก</p>
                   </Button>
                 </Col>
               </Row>
-            </CardBody>
+            </Card.Body>
           </Card>
         </Col>
         <Col>
           <Card style={{ background: "#4A4F55" }}>
-            <CardBody>
-              <Row>
-                <Col className="d-flex align-items-center justify-content-center gap-3">
-                  <Form>
-                    <Form.Control
-                      style={{ fontSize: "16px" }}
-                      type="search"
-                      placeholder="ค้นหา"
-                      aria-label="Search"
-                    />
-                  </Form>
-                  <Form.Select
-                    className="w-25"
-                    aria-label="Default select example"
-                    style={{
-                      fontSize: "16px",
-                    }}
-                  >
-                    <option>วิชา</option>
-                    {[...new Set(subjects.map((item) => item.type))].map(
-                      (type, index) => (
-                        <option key={index}>{type}</option>
-                      )
-                    )}
-                  </Form.Select>
+            <Card.Body>
+              {/* <Accordion>
+                <Accordion.Item
+                  eventKey="0"
+                  style={{ border: "none", outline: "none", boxShadow: "none" }}
+                >
+                  <Accordion.Button style={{ padding: "10px" }}>
+                    <FaMagnifyingGlass className="me-2" />
+                    <p className="mb-0">ค้นหาข้อมูล</p>
+                  </Accordion.Button>
+                  <Accordion.Body className="p-3">
+                    <Row>
+                      <Col className="d-flex flex-column gap-2">
+                        <Form.Select
+                          className="w-100"
+                          aria-label="Default select example"
+                          style={{
+                            fontSize: "16px",
+                          }}
+                        >
+                          <option>คณะ</option>
+                          {[...new Set(subjects.map((item) => item.type))].map(
+                            (type, index) => (
+                              <option key={index}>{type}</option>
+                            )
+                          )}
+                        </Form.Select>
+                        <Form.Select
+                          className="w-100"
+                          aria-label="Default select example"
+                          style={{
+                            fontSize: "16px",
+                          }}
+                        >
+                          <option>สาขา</option>
+                          {[...new Set(subjects.map((item) => item.type))].map(
+                            (type, index) => (
+                              <option key={index}>{type}</option>
+                            )
+                          )}
+                        </Form.Select>
+                        <Form.Select
+                          className=""
+                          aria-label="Default select example"
+                          style={{
+                            fontSize: "16px",
+                          }}
+                        >
+                          <option>ชั้นปี</option>
+                          {[...new Set(subjects.map((item) => item.type))].map(
+                            (type, index) => (
+                              <option key={index}>{type}</option>
+                            )
+                          )}
+                        </Form.Select>
+                        <Form.Control
+                          style={{ fontSize: "16px" }}
+                          type="search"
+                          placeholder="ค้นหารหัสวิชา/ชื่อวิชา"
+                          aria-label="Search"
+                        />
+                        <Form.Select
+                          className=""
+                          aria-label="Default select example"
+                          style={{
+                            fontSize: "16px",
+                          }}
+                        >
+                          <option>ประเภทวิชา</option>
+                          {[...new Set(subjects.map((item) => item.type))].map(
+                            (type, index) => (
+                              <option key={index}>{type}</option>
+                            )
+                          )}
+                        </Form.Select>
+                        <div className="d-flex justify-content-center gap-2">
+                          <Button
+                            className="d-flex align-items-center gap-2"
+                            style={{ fontSize: "16px", color: "white" }}
+                            variant="info"
+                          >
+                            <FaMagnifyingGlass />
+                            ค้นหา
+                          </Button>
+                          <Button
+                            className="d-flex align-items-center gap-2"
+                            style={{
+                              fontSize: "16px",
+                              color: "white",
+                              background: "#BD4636",
+                              border: "none",
+                            }}
+                          >
+                            <FaArrowsRotate />
+                            รีเซ็ต
+                          </Button>
+                        </div>
+                      </Col>
+                    </Row>
+                  </Accordion.Body>
+                </Accordion.Item>
+              </Accordion> */}
+
+              <Row className="gy-2">
+                <Col md={12}>
                   <Button
-                    className="d-flex align-items-center gap-2"
-                    style={{ fontSize: "16px", color: "white" }}
-                    variant="info"
+                    className="d-flex"
+                    style={{
+                      width: "100%",
+                      fontSize: "16px",
+                      color: "black",
+                      background: "white",
+                      border: "none",
+                    }}
+                    onClick={toggleCollapse}
                   >
-                    <FaSearch />
-                    ค้นหา
+                    <Col className="d-flex">ค้นหาข้อมูลเพิ่มเติม</Col>
+                    <Col className="d-flex justify-content-end align-self-center">
+                      <FaAngleDown />
+                    </Col>
                   </Button>
+                </Col>
+                <div className="mt-2">
+                  <Collapse in={isOpen}>
+                    <Card className="p-3">
+                      <Row>
+                        <Col className="d-flex flex-column gap-2">
+                          <Form.Select
+                            aria-label="Default select example"
+                            style={{
+                              fontSize: "16px",
+                            }}
+                          >
+                            <option>คณะ</option>
+                            {[
+                              ...new Set(subjects.map((item) => item.type)),
+                            ].map((type, index) => (
+                              <option key={index}>{type}</option>
+                            ))}
+                          </Form.Select>
+                          <Form.Select
+                            aria-label="Default select example"
+                            style={{
+                              fontSize: "16px",
+                            }}
+                          >
+                            <option>สาขา</option>
+                            {[
+                              ...new Set(subjects.map((item) => item.type)),
+                            ].map((type, index) => (
+                              <option key={index}>{type}</option>
+                            ))}
+                          </Form.Select>
+                          <Form.Select
+                            aria-label="Default select example"
+                            style={{
+                              fontSize: "16px",
+                            }}
+                          >
+                            <option>ชั้นปี</option>
+                            {[
+                              ...new Set(subjects.map((item) => item.type)),
+                            ].map((type, index) => (
+                              <option key={index}>{type}</option>
+                            ))}
+                          </Form.Select>
+                          <Form.Control
+                            style={{ fontSize: "16px" }}
+                            type="search"
+                            placeholder="ค้นหารหัสวิชา/ชื่อวิชา"
+                            aria-label="Search"
+                          />
+                          <Form.Select
+                            className=""
+                            aria-label="Default select example"
+                            style={{
+                              fontSize: "16px",
+                            }}
+                          >
+                            <option>ประเภทวิชา</option>
+                            {[
+                              ...new Set(subjects.map((item) => item.type)),
+                            ].map((type, index) => (
+                              <option key={index}>{type}</option>
+                            ))}
+                          </Form.Select>
+                          <div className="d-flex justify-content-center gap-2">
+                            <Button
+                              className="d-flex align-items-center gap-2"
+                              style={{ fontSize: "16px", color: "white" }}
+                              variant="info"
+                            >
+                              <FaMagnifyingGlass />
+                              ค้นหา
+                            </Button>
+                            <Button
+                              className="d-flex align-items-center gap-2"
+                              style={{
+                                fontSize: "16px",
+                                color: "white",
+                                background: "#BD4636",
+                                border: "none",
+                              }}
+                            >
+                              <FaArrowsRotate />
+                              รีเซ็ต
+                            </Button>
+                          </div>
+                        </Col>
+                      </Row>
+                    </Card>
+                  </Collapse>
+                </div>
+
+                <Col md={12}>
+                  <Badge
+                    pill
+                    bg="info"
+                    style={{ fontSize: "12px", padding: "8px" }}
+                  >
+                    คณะวิทยาศาสตร์
+                  </Badge>
                 </Col>
               </Row>
               <Row className="pt-3">
                 <Col>
                   <Card>
-                    <CardBody></CardBody>
+                    <Card.Body>ตัวอย่างการ์ดวิชา</Card.Body>
                   </Card>
                 </Col>
               </Row>
-            </CardBody>
+            </Card.Body>
           </Card>
         </Col>
       </Row>

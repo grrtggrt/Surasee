@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Modal, Row, Col, Form, Button } from "react-bootstrap";
-import { FaRegSave } from "react-icons/fa";
-import { FaBan } from "react-icons/fa6";
+import { FaBan, FaFloppyDisk } from "react-icons/fa6";
 
 import "./CustomDatePicker.scss";
 
@@ -14,7 +13,9 @@ const PopupManageSchedule = (props) => {
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
 
-  const maxDate = startDate ? new Date(startDate.getTime() + 8 * 24 * 60 * 60 * 1000) : null;
+  const maxDate = startDate
+    ? new Date(startDate.getTime() + 8 * 24 * 60 * 60 * 1000)
+    : null;
 
   return (
     <Modal show={show} onHide={hide} centered>
@@ -90,7 +91,7 @@ const PopupManageSchedule = (props) => {
                 fontSize: "16px",
               }}
             >
-              <FaRegSave /> บันทึก
+              <FaFloppyDisk /> บันทึก
             </Button>
           </Col>
           <Col className="d-flex justify-content-start">

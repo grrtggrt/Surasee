@@ -9,9 +9,7 @@ import {
   Table,
   Pagination,
 } from "react-bootstrap";
-import { FaSearch } from "react-icons/fa";
-import { FaSyncAlt } from "react-icons/fa";
-import { FaEye } from "react-icons/fa6";
+import { FaEye, FaArrowsRotate, FaMagnifyingGlass } from "react-icons/fa6";
 
 import PopupDashboard from "./popup/PopupDashboard";
 
@@ -168,6 +166,7 @@ const Dashboard = () => {
 
     setFetchData(filteredData);
     setInput("");
+    setCurrentPage(1);
   };
 
   const handleClickReset = () => {
@@ -353,7 +352,7 @@ const Dashboard = () => {
                     variant="info"
                     onClick={() => handleClickSearch()}
                   >
-                    <FaSearch />
+                    <FaMagnifyingGlass />
                     ค้นหา
                   </Button>
                   <Button
@@ -366,7 +365,7 @@ const Dashboard = () => {
                     }}
                     onClick={() => handleClickReset()}
                   >
-                    <FaSyncAlt />
+                    <FaArrowsRotate />
                     รีเซ็ต
                   </Button>
                 </Col>

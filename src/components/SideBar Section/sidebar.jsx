@@ -2,10 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./sidebar.scss";
 
-import { AiOutlineLineChart } from "react-icons/ai";
-import { TbFileImport } from "react-icons/tb";
-import { AiOutlineSchedule } from "react-icons/ai";
-import { IoCreateOutline } from "react-icons/io5";
+import { FaChartLine, FaRegCalendarCheck, FaRegPenToSquare, FaCloudArrowUp  } from "react-icons/fa6";
 
 import logo from "../../assets/logo.png";
 import { SidebarContext } from "../../context/sidebarContext";
@@ -42,7 +39,7 @@ const Sidebar = () => {
               }`}
             >
               <Link to="/dashboard" className="menuLink flex">
-                <AiOutlineLineChart className="icon" />
+                <FaChartLine className="icon" />
                 <span className="smallText">Dashboard</span>
               </Link>
             </li>
@@ -52,7 +49,7 @@ const Sidebar = () => {
               }`}
             >
               <Link to="/schedule" className="menuLink flex">
-                <AiOutlineSchedule className="icon" />
+                <FaRegCalendarCheck className="icon" />
                 <span className="smallText">Schedule</span>
               </Link>
             </li>
@@ -62,7 +59,7 @@ const Sidebar = () => {
               }`}
             >
               <Link to="/manageroom" className="menuLink flex">
-                <IoCreateOutline className="icon" />
+                <FaRegPenToSquare className="icon" />
                 <span className="smallText">ManageRoom</span>
               </Link>
             </li>
@@ -72,7 +69,7 @@ const Sidebar = () => {
               }`}
             >
               <Link to="/importdata" className="menuLink flex">
-                <TbFileImport className="icon" />
+                <FaCloudArrowUp className="icon" />
                 <span className="smallText">ImportData</span>
               </Link>
             </li>

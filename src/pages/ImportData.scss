@@ -42,7 +42,7 @@
       align-items: center;
       justify-content: center;
       gap: 15px;
-      color: var(--primaryColor);
+      color: #03a96b;
       background-color: var(--whiteColor);
       border: 1.5px dashed;
       border-radius: 20px;
@@ -50,7 +50,7 @@
       transition: all 0.3 ease;
 
       .file-btn:hover {
-        color: var(--primaryColor);
+        color: #03a96b;
         background-color: var(--whiteColor);
       }
 
@@ -58,7 +58,7 @@
         width: 75px;
         height: 75px;
         font-size: 45px;
-        color: var(--primaryColor);
+        color: #03a96b;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -72,7 +72,7 @@
       font-size: 14px;
       font-weight: 500;
       color: var(--whiteColor);
-      background-color: var(--primaryColor);
+      background-color: #03a96b;
       border: none;
       border-radius: 8px;
       padding: 10px;
@@ -94,7 +94,7 @@
       span {
         display: flex;
         font-size: 30px;
-        color: var(--primaryColor);
+        color: #03a96b;
       }
 
       .file-info {
@@ -136,7 +136,7 @@
           .progress {
             width: 0%;
             height: 5px;
-            background-color: var(--primaryColor);
+            background-color: #03a96b;
             border: 8px;
             transition: width 0.5s ease;
           }
