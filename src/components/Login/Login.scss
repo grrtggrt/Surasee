@@ -1,24 +1,3 @@
-:root {
-  --primaryColor: hsl(94, 55%, 56%);
-  --hoverColor: hsl(93, 75%, 76%);
-  --paleGreen: hsl(96, 75%, 89%);
-  --whiteColor: hsl(0, 0%, 100%);
-  --blackColor: hsl(0, 0%, 18%);
-  --textColor: hsl(240, 1%, 48%);
-  --greyText: hsl(0, 0%, 75%);
-  --bgColor: hsl(113, 11%, 85%);
-  --inputColor: hsl(330, 12%, 97%);
-
-  /* Font ang Typography */
-  --biggestFontSize: 2.5rem;
-  --h1FontSize: 1.5rem;
-  --h2FontSize: 1.25rem;
-  --h3FontSize: 1rem;
-  --normalFontSize: 0.938rem;
-  --smallFontSize: 0.813rem;
-  --smallestFontSize: 0.75rem;
-}
-
 .showMessage {
   display: block;
   color: var(--whiteColor);
@@ -38,18 +17,18 @@
   box-shadow: 0 7px 50px rgb(214, 223, 213);
 
   .container {
-    height: 75vh;
-    width: 60%;
+    height: 100vh;
+    max-width: 100%;
     margin: auto;
     padding: 0;
     justify-content: space-between;
     border-radius: 10px;
-    background: hsl(0, 0%, 91%);
+    background: #fff;
 
     .videoDiv {
       position: relative;
       display: flex;
-      flex-basis: 50%;
+      flex-basis: 70%;
       width: 70%;
       height: 100%;
       padding: 0 1.5rem;
@@ -57,7 +36,6 @@
       justify-content: center;
       flex-direction: column;
       margin: auto;
-      border-radius: 10px;
       overflow: hidden;
 
       video,
@@ -92,25 +70,29 @@
     }
 
     .formDiv {
-      flex-basis: 50%;
+      flex-basis: 30%;
+      padding: 2.5rem;
       margin: auto;
       flex-direction: column;
       gap: 1.5rem;
       transform: translateY(-1rem);
 
       .headerDiv {
-        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2rem;
         padding: 1.5rem 0;
 
         .loginImg {
-          width: 120px;
+          width: 160px;
           padding-bottom: 0.5rem;
         }
 
-        h3 {
-          font-size: 25px;
-          color: var(--blackColor);
-          font-weight: 600;
+        h5 {
+          font-size: 1.3rem;
+          color: rgba(0, 0, 0, 0.65);
         }
       }
 
@@ -126,13 +108,13 @@
             background: none;
             outline: none;
             border: none;
-            width: 200px;
+            width: 425px;
           }
 
           label {
-            color: var(--blackColor);
+            color: #4e5155;
             font-weight: 400;
-            font-size: 14px;
+            font-size: 1.1rem;
             padding: 0.5rem 0;
             display: block;
           }
@@ -140,14 +122,15 @@
           .input {
             display: flex;
             gap: 1rem;
-            padding: 1rem;
-            background: var(--inputColor);
-            border-radius: 10px;
-            border: 1px solid transparent;
+            padding: 0.75rem;
+            background: #fff;
+            border: 1px solid rgba(24, 28, 33, 0.1);
+            border-radius: 0.25rem;
+            font-size: 1rem;
           }
 
           .input:focus-within {
-            border: 1px solid var(--primaryColor);
+            border: 1px solid #03a96b;
           }
         }
 
@@ -157,25 +140,21 @@
           justify-content: center;
           margin: auto;
           padding: 0.8rem;
-          background: var(--primaryColor);
-          border-radius: 10px;
+          background: #02bc77;
           color: var(--whiteColor);
           font-size: 16px;
           width: 100%;
           gap: 0.7rem;
-          transition: .3s ease;
+          transition: 0.3s ease;
 
           .icon {
             font-size: 20px;
           }
 
           &:hover {
-            background: var(--hoverColor);
-            color: var(--blackColor);
-            transition: .3s all;
+            background: #03a96b;
 
             .icon {
-              color: var(--blackColor);
               transform: translateX(5px);
             }
           }
@@ -185,15 +164,7 @@
   }
 }
 
-@media screen and (max-width: 927px) {
-  .loginPage {
-    .container {
-      width: 85%;
-    }
-  }
-}
-
-@media screen and (max-width: 678px) {
+@media screen and (max-width: 1084px) {
   .loginPage {
     .container {
       height: 100%;
@@ -206,7 +177,6 @@
       }
 
       .formDiv {
-
         .headerDiv {
           padding: 1.5rem 0;
 
@@ -216,12 +186,11 @@
         }
 
         .form {
-          gap: 2rem;
+          gap: 1rem;
 
           .inputDiv {
             input {
-              width: 100%;
-              max-width: 200px;
+              max-width: 400px;
             }
           }
         }
@@ -229,4 +198,19 @@
     }
   }
 }
-  
+
+@media screen and (max-width: 564px) {
+  .loginPage {
+    .container {
+      .formDiv {
+        .form {
+          .inputDiv {
+            input {
+              max-width: 270px;
+            }
+          }
+        }
+      }
+    }
+  }
+}

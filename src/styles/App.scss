@@ -8,14 +8,6 @@
   transition: 0.3s ease;
 }
 
-// body {
-//     display: flex;
-//     align-items: center;
-//     justify-content: center;
-//     margin: auto;
-//     padding: 1rem;
-// }
-
 .main-container {
   position: relative;
   width: 100vw;
@@ -101,19 +93,6 @@ img {
 p {
   margin: 0;
 }
-
-// .page-item.active .page-link {
-//   border: none;
-//   background-color: #03a96b;
-// }
-
-// a.page-link{
-//   color: black;
-
-//   &:hover {
-//     color: var(--blackColor);
-//   }
-// }
 
 ::-webkit-scrollbar {
   display: none;

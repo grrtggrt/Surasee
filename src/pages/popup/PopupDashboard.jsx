@@ -6,9 +6,9 @@ const PopupDashboard = (props) => {
 
   return (
     <Modal show={show} onHide={hide} size="xl" centered>
-      <Modal.Header closeButton>
+      <Modal.Header closeButton style={{background:"#fff"}}>
         <Modal.Title>
-          <h2>ตารางสอบ</h2>
+          <h2 style={{color:"#2F3337"}}>ตารางสอบ</h2>
           <Row>
             <Col className="d-flex align-items-center gap-4">
               <h5 style={{ fontSize: "16px", color: "#03A96B" }}>
@@ -55,13 +55,28 @@ const PopupDashboard = (props) => {
             <Card.Body className="p-0">
               <Row>
                 <Col sm={2} className="p-0">
-                  <Card style={{background:"#03A96B"}}>
-                    <Card.Body>
-                      
+                  <Card style={{ background: "#03A96B" }}>
+                    <Card.Body style={{ fontSize: "22px", color: "white" }}>
+                      <p>29/04/24</p>
+                      <p style={{ fontSize: "16px" }}>09:00 - 12:00</p>
                     </Card.Body>
                   </Card>
                 </Col>
                 <Col sm={10}>
+                  <Row className="pt-4">
+                    <Col>
+                      <p>02739498-59</p>
+                      <p>หมู่ 830</p>
+                    </Col>
+                    <Col>
+                      <p>Special Problems</p>
+                      <p>ปัญหาพิเศษ</p>
+                    </Col>
+                    <Col>
+                      <p>ห้อง 17201A</p>
+                      <p>อาคาร 17 (50 ที่นั่ง)</p>
+                    </Col>
+                  </Row>
                 </Col>
               </Row>
             </Card.Body>

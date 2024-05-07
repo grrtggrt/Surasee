@@ -1,20 +1,31 @@
+
 .custom-datepicker {
   display: flex;
   text-align: start;
-  width: 351.9px;
+  width: 306px;
   padding: 0.375rem 0.75rem 0.375rem 0.75rem;
   border: 1px solid #ced4da;
   border-radius: 0.25rem;
   color: #212529;
   font-size: 16px;
+  transition: none !important;
+}
+
+.react-datepicker-ignore-onclickoutside {
+  border: 1px solid #03a96b;
 }
 
 .react-datepicker-wrapper {
+  transition: none !important;
   .react-datepicker__input-container {
+    transition: none !important;
     .react-datepicker__close-icon::after {
       background-color: #03a96b;
     }
   }
+  //   .react-datepicker-ignore-onclickoutside {
+  //     border: 1px solid rebeccapurple !important;
+  // }
 }
 
 .react-datepicker.custom-calendar {
@@ -22,7 +33,7 @@
   border: none;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-
+  transition: none !important;
   .react-datepicker__header {
     background-color: #03a96b;
 
@@ -40,11 +51,11 @@
   .react-datepicker__month {
     .react-datepicker__week {
       .react-datepicker__day--keyboard-selected {
-        background-color: #64C8A3;
+        background-color: #64c8a3;
         color: white;
       }
-      .react-datepicker__day--in-selecting-range{
-        background-color: #64C8A3;
+      .react-datepicker__day--in-selecting-range {
+        background-color: #64c8a3;
       }
       .react-datepicker__day--in-range {
         background-color: #03a96b;

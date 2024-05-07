@@ -1,0 +1,10 @@
+.custom-input {
+    font-size: 16px;
+    height: 35px;
+    min-height: 35px;
+    box-shadow: none !important;
+    border-color: #CCCCCC;
+    &:focus {
+        border-color: #03A96B;
+    }
+  }

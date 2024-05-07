@@ -10,8 +10,14 @@ import {
   Pagination,
 } from "react-bootstrap";
 import { FaEye, FaArrowsRotate, FaMagnifyingGlass } from "react-icons/fa6";
+import Select from "react-select";
+
+//styles
+import "../styles/Select.scss";
 
 import PopupDashboard from "./popup/PopupDashboard";
+
+import { dataFacultyOption, dataMajorOption, dataGradeOption } from "../MockupData";
 
 const Dashboard = () => {
   const subjects = [
@@ -129,22 +135,8 @@ const Dashboard = () => {
   const [input, setInput] = useState("");
   const [selectedFaculty, setSelectedFaculty] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("");
+  // const [selectMajor, setSelectMajor] = useState("");
   const [fetchData, setFetchData] = useState(branch);
-
-  // const fetchData = branch.filter((item) => {
-  //   return (
-  //     (selectedFaculty === "" ||
-  //       selectedFaculty === "คณะ" ||
-  //       item.faculty.toLowerCase().includes(selectedFaculty.toLowerCase())) &&
-  //     (selectedGrade === "" ||
-  //       selectedGrade === "ชั้นปี" ||
-  //       item.grade.toLowerCase().includes(selectedGrade.toLowerCase())) &&
-  //     (item.faculty.toLowerCase().includes(input.toLowerCase()) ||
-  //       item.majorId.toLowerCase().includes(input.toLowerCase()) ||
-  //       item.majorName.toLowerCase().includes(input.toLowerCase()) ||
-  //       item.grade.toLowerCase().includes(input.toLowerCase()))
-  //   );
-  // });
 
   const handleClickSearch = () => {
     // คำนวณข้อมูลที่ต้องการแสดงตามเงื่อนไขที่กำหนด
@@ -300,9 +292,8 @@ const Dashboard = () => {
         <Col>
           <Card bg="light">
             <Card.Body>
-              <Row>
-                <Col className="d-flex justify-content-end gap-3">
-                  <Form.Select
+              <Row className="d-flex justify-content-end gx-2">
+                {/* <Form.Select
                     aria-label="Default select example"
                     style={{
                       maxWidth: "150px",
@@ -318,55 +309,72 @@ const Dashboard = () => {
                         <option key={index}>{faculty}</option>
                       )
                     )}
-                  </Form.Select>
-                  <Form.Select
-                    aria-label="Default select example"
-                    style={{
-                      maxWidth: "150px",
-                      minWidth: "none",
-                      fontSize: "16px",
-                    }}
-                    value={selectedGrade}
-                    onChange={(e) => setSelectedGrade(e.target.value)}
-                  >
-                    <option>ชั้นปี</option>
-                    {[...new Set(branch.map((item) => item.grade))].map(
-                      (grade, index) => (
-                        <option key={index}>{grade}</option>
-                      )
-                    )}
-                  </Form.Select>
+                  </Form.Select> */}
+                <Col md={2}>
+                  <Select
+                    id="fieldName"
+                    name="fieldName"
+                    options={dataFacultyOption}
+                    // onChange={handleTypeSelect}
+                    placeholder="คณะ"
+                    isSearchable={false}
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                  />
+                </Col>
+                <Col md={2}>
+                  <Select
+                    id="fieldName"
+                    name="fieldName"
+                    options={dataMajorOption}
+                    // onChange={handleTypeSelect}
+                    placeholder="สาขา"
+                    isSearchable={false}
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                  />
+                </Col>
+                <Col md={1}>
+                  <Select
+                    id="fieldName"
+                    name="fieldName"
+                    options={dataGradeOption}
+                    // onChange={handleTypeSelect}
+                    placeholder="ชั้นปี"
+                    isSearchable={false}
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                  />
+                </Col>
+                <Col md={2}>
                   <Form className="d-flex ">
                     <Form.Control
                       style={{ fontSize: "16px" }}
                       type="search"
                       placeholder="ค้นหา"
                       aria-label="Search"
+                      className="custom-input"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                     />
                   </Form>
+                </Col>
+                <Col md="auto" className="d-flex gap-2">
                   <Button
                     className="d-flex align-items-center gap-2"
-                    style={{ fontSize: "16px", color: "white" }}
                     variant="info"
                     onClick={() => handleClickSearch()}
                   >
                     <FaMagnifyingGlass />
-                    ค้นหา
+                    <p className="mb-0">ค้นหา</p>
                   </Button>
                   <Button
                     className="d-flex align-items-center gap-2"
-                    style={{
-                      fontSize: "16px",
-                      color: "white",
-                      background: "#BD4636",
-                      border: "none",
-                    }}
+                    variant="danger"
                     onClick={() => handleClickReset()}
                   >
                     <FaArrowsRotate />
-                    รีเซ็ต
+                    <p className="mb-0">รีเซ็ต</p>
                   </Button>
                 </Col>
               </Row>
