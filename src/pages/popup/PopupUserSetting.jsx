@@ -79,7 +79,7 @@ const PopupUserSetting = (props) => {
   };
 
   return (
-    <Modal show={show} hide={hide} centered>
+    <Mgodal show={show} hide={hide} centered>
       <Modal.Header className="modal-header">
         <Modal.Title>ตั้งค่า</Modal.Title>
         <CloseButton variant="white" onClick={hide} />
@@ -182,7 +182,7 @@ const PopupUserSetting = (props) => {
         </Row>
       </Modal.Body>
       <PopupResetPassword show={showResetPassword} hide={handleHide}/>
-    </Modal>
+    </Mgodal>
   );
 };
 
