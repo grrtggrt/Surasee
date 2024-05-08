@@ -46,6 +46,10 @@ const PopupEditRoom = (props) => {
       confirmButtonText: "บันทึก",
       confirmButtonColor: "#03A96B",
       cancelButtonColor: "#BD4636",
+      customClass: {
+        confirmButton: "shadow-none",
+        cancelButton: "shadow-none",
+      },
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.fire({
@@ -53,6 +57,9 @@ const PopupEditRoom = (props) => {
           icon: "success",
           confirmButtonColor: "#03A96B",
           confirmButtonText: "ตกลง",
+          customClass: {
+            confirmButton: "shadow-none",
+          },
         });
         hide();
       }
@@ -61,7 +68,7 @@ const PopupEditRoom = (props) => {
 
   return (
     <Modal show={show} onHide={hide} centered size="lg">
-      <Modal.Header className="modal-header">
+      <Modal.Header>
         <Modal.Title>แก้ไขห้องสอบ</Modal.Title>
         <CloseButton variant="white" onClick={hide} />
       </Modal.Header>

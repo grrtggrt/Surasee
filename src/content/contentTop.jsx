@@ -4,7 +4,7 @@ import "./contentTop.scss";
 import { SidebarContext } from "../context/sidebarContext";
 import { FaBars, FaPowerOff, FaGear } from "react-icons/fa6";
 
-import Profile from '../assets/profile.png'
+import Profile from "../assets/profile.png";
 import PopupUserSetting from "../pages/popup/PopupUserSetting";
 
 const content = () => {
@@ -19,7 +19,7 @@ const content = () => {
     <div className="main-content-top">
       <div className="content-top-left">
         <span className="sidebar-toggler" onClick={() => toggleSidebar()}>
-        <FaBars />
+          <FaBars />
         </span>
       </div>
 
@@ -32,7 +32,7 @@ const content = () => {
         <Link to="/">
           <FaPowerOff className="logout-btn" />
         </Link>
-        <PopupUserSetting show={show} hide={handleHide}/>
+        <PopupUserSetting show={show} hide={handleHide} />
       </div>
     </div>
   );

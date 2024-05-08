@@ -8,7 +8,7 @@ import {
   Button,
   CloseButton,
 } from "react-bootstrap";
-import { FaCirclePlus, FaFloppyDisk } from "react-icons/fa6";
+import { FaCirclePlus, FaFloppyDisk, FaBan } from "react-icons/fa6";
 import Select from "react-select";
 import Swal from "sweetalert2";
 // styles
@@ -56,6 +56,10 @@ const PopupManageRoom = (props) => {
       confirmButtonText: "บันทึก",
       confirmButtonColor: "#03A96B",
       cancelButtonColor: "#BD4636",
+      customClass: {
+        confirmButton: "shadow-none",
+        cancelButton: "shadow-none",
+      },
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.fire({
@@ -63,6 +67,9 @@ const PopupManageRoom = (props) => {
           icon: "success",
           confirmButtonColor: "#03A96B",
           confirmButtonText: "ตกลง",
+          customClass: {
+            confirmButton: "shadow-none",
+          },
         });
         hide();
       }
@@ -74,7 +81,7 @@ const PopupManageRoom = (props) => {
       show={show}
       onHide={hide}
       centered
-      dialogClassName="modal-dialog-width"
+      size="lg"
     >
       <Modal.Header className="model-header">
         <Modal.Title>จัดห้องสอบ</Modal.Title>
@@ -254,20 +261,22 @@ const PopupManageRoom = (props) => {
               </Card.Body>
             </Card>
           </Col>
-          <Col className="d-flex justify-content-center">
+          <Col className="d-flex justify-content-center gap-3">
             <Button
               className="d-flex align-items-center justify-content-center gap-2"
-              style={{
-                backgroundColor: "#03A96B",
-                border: "none",
-                boxShadow: "none",
-                color: "white",
-                fontSize: "16px",
-              }}
+              variant="success"
               onClick={() => handleSaveConfirm()}
             >
               <FaFloppyDisk />
               <p className="mb-0">บันทึก</p>
+            </Button>
+            <Button
+              className="d-flex align-items-center justify-content-center gap-2"
+              variant="danger"
+              onClick={() => hide()}
+            >
+              <FaBan />
+              <p className="mb-0">ยกเลิก</p>
             </Button>
           </Col>
         </Row>

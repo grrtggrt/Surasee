@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Card, Row, Col, Form, Button, Collapse, Badge } from "react-bootstrap";
+import { Card, Row, Col, Form, Button } from "react-bootstrap";
 import Swal from "sweetalert2";
 import Select from "react-select";
 
@@ -8,7 +8,6 @@ import {
   FaArrowsRotate,
   FaPlus,
   FaFloppyDisk,
-  FaAngleDown,
   FaPenToSquare,
   FaEraser,
 } from "react-icons/fa6";
@@ -20,21 +19,17 @@ import {
   dataFacultyOption,
   dataMajorOption,
   dataGradeOption,
+  dataSubjects,
 } from "../MockupData";
 
 const Schedule = () => {
   const [showManageRoom, setShowManageRoom] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startDate, setStartDate] = useState(null); // เพิ่ม state เก็บค่า startDate
   const [endDate, setEndDate] = useState(null);
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [selectedSemester, setSelectedSemester] = useState(null);
-
-  const toggleCollapse = () => {
-    setIsOpen(!isOpen);
-  };
 
   const handleEditClick = () => {
     setIsEditing(!isEditing);
@@ -126,36 +121,6 @@ const Schedule = () => {
 
   const handleHideSchedule = () => setShowSchedule(false);
 
-  // const subjects = [
-  //   {
-  //     id: "01361101-64",
-  //     name_en: "Introductory Thai Usage",
-  //     name_th: "การใช้ภาษไทยเบื้องต้น",
-  //     majorId: ["R07", "R03", "R17"],
-  //     sec: [800, 850],
-  //     type: "เสรี",
-  //     active: false,
-  //   },
-  //   {
-  //     id: "01101372-65",
-  //     name_en: "Econometrics I",
-  //     name_th: "เศรษฐมิติ I",
-  //     majorId: ["G01"],
-  //     sec: [800, 801, 900],
-  //     type: "บังคับ",
-  //     active: false,
-  //   },
-  //   {
-  //     id: "01417111-65",
-  //     name_en: "Calculus I",
-  //     name_th: "แคลคูลัส I",
-  //     majorId: ["S09", "S18", "M04", "M02"],
-  //     sec: [800, 807],
-  //     type: "วิชาเลือก",
-  //     active: false,
-  //   },
-  // ];
-
   const numRows = 4; // จำนวนวันที่ต้องการสร้าง
   const numCols = 10; // จำนวนคอลัมน์ในแต่ละแถว
 
@@ -193,7 +158,11 @@ const Schedule = () => {
             <Col key={`col-${j}`} className={`p-0 ${psClass} ${peClass}`}>
               <Card>
                 <Card.Body
-                  style={{ background: "rgb(33, 37, 41", color: "white" }}
+                  style={{
+                    background: "rgb(33, 37, 41",
+                    color: "white",
+                    textAlign: "center",
+                  }}
                 >
                   {content}
                 </Card.Body>
@@ -224,6 +193,8 @@ const Schedule = () => {
                   style={{
                     background: j === 0 ? "rgb(33, 37, 41" : "#4A4F55",
                     color: j === 0 ? "white" : "",
+                    textAlign: j === 0 ? "center" : "",
+                    height: j === 0 ? "10vw" : "10vw",
                   }}
                 >
                   {content}
@@ -383,77 +354,40 @@ const Schedule = () => {
           </Card>
         </Col>
         <Col>
-          <Card style={{ background: "#4A4F55" }}>
+          <Card style={{ background: "#4A4F55"}}>
             <Card.Body>
-              <Row className="gy-2">
-                <Col md={12}>
+              <Row className="pb-3">
+                <Col className="d-flex gap-3">
+                  <Form.Control
+                    style={{ fontSize: "16px" }}
+                    type="search"
+                    placeholder="ค้นหารหัสวิชา/ชื่อวิชา"
+                    aria-label="Search"
+                    className="custom-input"
+                  />
                   <Button
-                    className="d-flex w-100"
-                    style={{
-                      fontSize: "16px",
-                      color: "black",
-                      background: "white",
-                      border: "none",
-                    }}
-                    onClick={toggleCollapse}
+                    className="d-flex align-items-center gap-2"
+                    variant="info"
                   >
-                    <Col className="d-flex">ค้นหาข้อมูลเพิ่มเติม</Col>
-                    <Col className="d-flex justify-content-end align-self-center">
-                      <FaAngleDown />
-                    </Col>
+                    <FaMagnifyingGlass />
+                    <p className="mb-0">ค้นหา</p>
                   </Button>
                 </Col>
-                <div className="mt-2">
-                  <Collapse in={isOpen}>
-                    <Card className="p-3">
-                      <Row>
-                        <Col className="d-flex flex-column gap-2">
-                          <Form.Control
-                            style={{ fontSize: "16px" }}
-                            type="search"
-                            placeholder="ค้นหารหัสวิชา/ชื่อวิชา"
-                            aria-label="Search"
-                            className="custom-input"
-                          />
-                          <Select
-                            id="fieldName"
-                            name="fieldName"
-                            options={dataGradeOption}
-                            // onChange={handleOptionChange}
-                            // value={selectedOption}
-                            placeholder="ชั้นปี"
-                            isSearchable={false}
-                            className="react-select-container"
-                            classNamePrefix="react-select"
-                          />
-                          <div className="d-flex justify-content-center gap-2">
-                            <Button
-                              className="d-flex align-items-center gap-2"
-                              variant="info"
-                            >
-                              <FaMagnifyingGlass />
-                              <p className="mb-0">ค้นหา</p>
-                            </Button>
-                            <Button
-                              className="d-flex align-items-center gap-2"
-                              variant="danger"
-                            >
-                              <FaArrowsRotate />
-                              <p className="mb-0">รีเซ็ต</p>
-                            </Button>
-                          </div>
-                        </Col>
-                      </Row>
-                    </Card>
-                  </Collapse>
-                </div>
               </Row>
-              <Row className="pt-3">
-                <Col>
-                  <Card>
-                    <Card.Body>ตัวอย่างการ์ดวิชา</Card.Body>
-                  </Card>
-                </Col>
+              <Row style={{overflowY:"auto" , maxHeight:"35.8vw"}}>
+                {dataSubjects.map((item, id) => (
+                  <Col key={id} md={6} className="d-flex flex-column mb-3">
+                    <Card>
+                      <Card.Body>
+                        <p>รหัสวิชา : {item.id}</p>
+                        <p>ชื่อวิชา : {item.name_th}</p>
+                        <p>สาขา : {`${item.majorId}`}</p>
+                        <p>หมู่เรียน : {`${item.sec}`}</p>
+                        <p>ประเภท : {item.type}</p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
               </Row>
             </Card.Body>
           </Card>
@@ -468,5 +402,7 @@ const Schedule = () => {
     </div>
   );
 };
+
+console.log({ dataSubjects });
 
 export default Schedule;

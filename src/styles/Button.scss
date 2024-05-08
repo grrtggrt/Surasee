@@ -1,54 +1,66 @@
 .btn {
+  color: #ffffff;
+  font-size: 16px;
+  border: none;
+  box-shadow: none !important;
+  &:hover {
     color: #ffffff;
-    font-size: 16px;
-    border: none;
-    box-shadow: none !important;
-    &:hover {
-        color: #ffffff;
-    }
+  }
 }
 
 .btn-success {
-    background-color: #03A96B;
-    &:focus {
-        background-color: #03A96B;
-    }
+  background-color: #03a96b;
+  &:focus {
+    background-color: #03a96b;
+  }
 }
 
 .btn-dark {
-    background-color: #4A4F55;
+  background-color: #4a4f55;
+  &:hover {
+    background-color: #404447;
+  }
+  &:focus {
+    background-color: #4a4f55;
     &:hover {
-        background-color: #404447;
+      background-color: #404447;
     }
-    &:focus {
-        background-color: #4A4F55;
-    }
+  }
 }
 
 .btn-info {
-    &:focus {
-        color: #ffffff;
-    }
+  &:focus {
+    color: #ffffff;
+  }
 }
 
-
 .btn-outline {
-    background-color: transparent !important;
-    color: #ffffff;
-    border: 1px solid;
-    font-size: 16px;
-    &:hover {
-        border: 1px solid #ffffff; 
-    }
-    &:focus {
-        border: 1px solid #ffffff; 
-    }
+  background-color: transparent !important;
+  color: #ffffff;
+  border: 1px solid;
+  font-size: 16px;
+  &:hover {
+    border: 1px solid #ffffff;
+  }
+  &:focus {
+    border: 1px solid #ffffff;
+  }
+}
+
+.btn-outline-dark {
+  background-color: transparent;
+  color: #212529;
+  border: 1px solid;
+  font-size: 16px;
+  &:hover {
+    border: 1px solid #ffffff;
+  }
 }
 
 .btn-icon {
-    background: none !important;
-    border: none;
-    outline: none;
-    box-shadow: none;
-    padding: 2px;
+  background: none !important;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  padding: 2px;
 }

@@ -17,6 +17,10 @@ const PopupResetPassword = (props) => {
       confirmButtonText: "บันทึก",
       confirmButtonColor: "#03A96B",
       cancelButtonColor: "#BD4636",
+      customClass: {
+        confirmButton: "shadow-none",
+        cancelButton: "shadow-none",
+      },
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.fire({
@@ -24,6 +28,9 @@ const PopupResetPassword = (props) => {
           icon: "success",
           confirmButtonColor: "#03A96B",
           confirmButtonText: "ตกลง",
+          customClass: {
+            confirmButton: "shadow-none",
+          },
         });
         hide();
       }
@@ -32,7 +39,7 @@ const PopupResetPassword = (props) => {
   
   return (
     <Modal show={show} onHide={hide} centered>
-      <Modal.Header className="modal-header">
+      <Modal.Header>
         <Modal.Title>ตั้งค่า</Modal.Title>
         <CloseButton variant="white" onClick={hide} />
       </Modal.Header>
@@ -72,12 +79,7 @@ const PopupResetPassword = (props) => {
           <Col className="d-flex justify-content-end">
             <Button
               className="d-flex align-items-center justify-content-center gap-2"
-              style={{
-                backgroundColor: "#03A96B",
-                border: "none",
-                color: "white",
-                fontSize: "16px",
-              }}
+              variant="success"
               onClick={() => handleSaveConfirm()}
             >
               <FaFloppyDisk /> บันทึก
@@ -86,12 +88,7 @@ const PopupResetPassword = (props) => {
           <Col className="d-flex justify-content-start">
             <Button
               className="d-flex align-items-center justify-content-center gap-2"
-              style={{
-                backgroundColor: "#BD4636",
-                border: "none",
-                color: "white",
-                fontSize: "16px",
-              }}
+              variant="danger"
               onClick={() => hide()}
             >
               <FaBan /> ยกเลิก

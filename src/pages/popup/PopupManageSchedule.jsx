@@ -33,8 +33,6 @@ const PopupManageSchedule = (props) => {
     SetSelectSemester(e.value);
   };
 
-  console.log({ selectTerm, selectSemester });
-
   const handleSaveConfirm = () => {
     if (
       selectTerm === null ||
@@ -47,6 +45,9 @@ const PopupManageSchedule = (props) => {
         title: "กรุณาเลือกข้อมูลให้ครบ",
         confirmButtonColor: "#03A96B",
         confirmButtonText: "ตกลง",
+        customClass: {
+          confirmButton: "shadow-none",
+        },
       });
       return;
     }
@@ -59,6 +60,9 @@ const PopupManageSchedule = (props) => {
         title: "กรุณาเลือกช่วงเวลาให้มีระยะเวลาอย่างน้อย 9 วัน",
         confirmButtonColor: "#03A96B",
         confirmButtonText: "ตกลง",
+        customClass: {
+          confirmButton: "shadow-none",
+        },
       });
       return;
     }
@@ -71,6 +75,10 @@ const PopupManageSchedule = (props) => {
       confirmButtonText: "บันทึก",
       confirmButtonColor: "#03A96B",
       cancelButtonColor: "#BD4636",
+      customClass: {
+        confirmButton: "shadow-none",
+        cancelButton: "shadow-none",
+      },
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.fire({
@@ -78,6 +86,9 @@ const PopupManageSchedule = (props) => {
           icon: "success",
           confirmButtonColor: "#03A96B",
           confirmButtonText: "ตกลง",
+          customClass: {
+            confirmButton: "shadow-none",
+          },
         });
         props.onSave(startDate, endDate, selectTerm, selectSemester);
         hide();
@@ -87,7 +98,7 @@ const PopupManageSchedule = (props) => {
 
   return (
     <Modal show={show} onHide={hide} centered>
-      <Modal.Header className="model-header">
+      <Modal.Header>
         <Modal.Title>จัดวันสอบ</Modal.Title>
         <CloseButton variant="white" onClick={hide} />
       </Modal.Header>
@@ -143,24 +154,14 @@ const PopupManageSchedule = (props) => {
           <Col className="d-flex justify-content-center gap-2">
             <Button
               className="d-flex align-items-center justify-content-center gap-2"
-              style={{
-                backgroundColor: "#03A96B",
-                border: "none",
-                color: "white",
-                fontSize: "16px",
-              }}
+              variant="success"
               onClick={() => handleSaveConfirm()}
             >
               <FaFloppyDisk /> บันทึก
             </Button>
             <Button
               className="d-flex align-items-center justify-content-center gap-2"
-              style={{
-                backgroundColor: "#BD4636",
-                border: "none",
-                color: "white",
-                fontSize: "16px",
-              }}
+              variant="danger"
               onClick={() => hide()}
             >
               <FaBan /> ยกเลิก

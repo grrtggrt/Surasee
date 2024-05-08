@@ -162,10 +162,10 @@ const ManageRoom = () => {
           <Card>
             <Card.Body>
               <Row
-                className="d-flex justify-content-between rounded-3 gx-2 mb-3 p-2"
+                className="d-flex justify-content-end rounded-3 gx-2 mb-3 p-2"
                 style={{ background: "#4A4F55" }}
               >
-                <Col>
+                <Col className="d-flex justify-content-start">
                   <Button
                     className="btn-outline d-flex align-items-center gap-2"
                     onClick={() => handleShow()}
@@ -174,58 +174,56 @@ const ManageRoom = () => {
                     แก้ไข
                   </Button>
                 </Col>
-                <Col className="d-flex flex-wrap justify-content-end gap-2 ">
-                  <Col>
-                    <Select
-                      id="fieldName"
-                      name="fieldName"
-                      // options={options}
-                      // onChange={handleOptionChange}
-                      // value={selectedOption}
-                      placeholder="อาคาร"
-                      isSearchable={false}
-                      className="react-select-container"
-                      classNamePrefix="react-select"
-                    />
-                  </Col>
-                  <Col>
-                    <Select
-                      id="fieldName"
-                      name="fieldName"
-                      options={dataGradeOption}
-                      // onChange={handleOptionChange}
-                      // value={selectedOption}
-                      placeholder="ชั้นปี"
-                      isSearchable={false}
-                      className="react-select-container"
-                      classNamePrefix="react-select"
-                    />
-                  </Col>
-                  <Col>
-                    <Form.Control
-                      id="fieldName"
-                      name="fieldName"
-                      type="number"
-                      className="custom-input"
-                      placeholder="จำนวน"
-                    />
-                  </Col>
-                  <Col className="d-flex justify-content-center gap-2">
-                    <Button
-                      className="d-flex align-items-center gap-2"
-                      variant="info"
-                    >
-                      <FaMagnifyingGlass />
-                      <p className="mb-0">ค้นหา</p>
-                    </Button>
-                    <Button
-                      className="d-flex align-items-center gap-2"
-                      variant="danger"
-                    >
-                      <FaArrowsRotate />
-                      <p className="mb-0">รีเซ็ต</p>
-                    </Button>
-                  </Col>
+                <Col md={1}>
+                  <Select
+                    id="fieldName"
+                    name="fieldName"
+                    // options={dataMajorOption}
+                    // onChange={handleOptionChange}
+                    // value={selectedOption}
+                    placeholder="อาคาร"
+                    isSearchable={false}
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                  />
+                </Col>
+                <Col md={1}>
+                  <Select
+                    id="fieldName"
+                    name="fieldName"
+                    options={dataGradeOption}
+                    // onChange={handleOptionChange}
+                    // value={selectedOption}
+                    placeholder="ชั้นปี"
+                    isSearchable={false}
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                  />
+                </Col>
+                <Col md={1}>
+                  <Form.Control
+                    id="fieldName"
+                    name="fieldName"
+                    type="input"
+                    className="custom-input"
+                    placeholder="จำนวน"
+                  />
+                </Col>
+                <Col md="auto" className="d-flex justify-content-center gap-2">
+                  <Button
+                    className="d-flex align-items-center gap-2"
+                    variant="info"
+                  >
+                    <FaMagnifyingGlass />
+                    <p className="mb-0">ค้นหา</p>
+                  </Button>
+                  <Button
+                    className="d-flex align-items-center gap-2"
+                    variant="danger"
+                  >
+                    <FaArrowsRotate />
+                    <p className="mb-0">รีเซ็ต</p>
+                  </Button>
                 </Col>
               </Row>
               <Row className="row-cols-6 gy-3">

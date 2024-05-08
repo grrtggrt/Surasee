@@ -17,170 +17,82 @@ import "../styles/Select.scss";
 
 import PopupDashboard from "./popup/PopupDashboard";
 
-import { dataFacultyOption, dataMajorOption, dataGradeOption } from "../MockupData";
+import {
+  dataFacultyOption,
+  dataGradeOption,
+  dataBranch,
+  dataSubjects,
+} from "../MockupData";
 
 const Dashboard = () => {
-  const subjects = [
-    {
-      id: "01361101-64",
-      name_en: "Introductory Thai Usage",
-      name_th: "การใช้ภาษไทยเบื้องต้น",
-      majorId: ["R07", "R03", "R17"],
-      sec: [800, 850],
-      type: "เสรี",
-      active: false,
-    },
-    {
-      id: "01101372-65",
-      name_en: "Econometrics I",
-      name_th: "เศรษฐมิติ I",
-      majorId: ["G01"],
-      sec: [800, 801, 900],
-      type: "บังคับ",
-      active: false,
-    },
-    {
-      id: "01417111-65",
-      name_en: "Calculus I",
-      name_th: "แคลคูลัส I",
-      majorId: ["S09" , "S18" , "M04" , "M02"],
-      sec: [800 , 807],
-      type: "วิชาเลือก",
-      active: false,
-    },
-  ];
-
-  const branch = [
-    {
-      id: 1,
-      faculty: "วิทยาศาสตร์",
-      majorId: "S09",
-      majorName: "เทคโนโลยีสารสนเทศ",
-      grade: "1",
-    },
-    {
-      id: 2,
-      faculty: "วิทยาศาสตร์",
-      majorId: "S10",
-      majorName: "เทคโนโลยีสารสนเทศ(ภาคพิเศษ)",
-      grade: "1",
-    },
-    {
-      id: 3,
-      faculty: "พาณิชยนาวีนานาชาติ",
-      majorId: "M09",
-      majorName: "วิศวกรรมเครื่องกลเรือ",
-      grade: "1",
-    },
-    {
-      id: 4,
-      faculty: "พาณิชยนาวีนานาชาติ",
-      majorId: "M04",
-      majorName: "การขนส่งทางทะเล",
-      grade: "1",
-    },
-    {
-      id: 5,
-      faculty: "วิทยาการจัดการ",
-      majorId: "R01",
-      majorName: "การเงิน",
-      grade: "1",
-    },
-    {
-      id: 6,
-      faculty: "วิทยาการจัดการ",
-      majorId: "R02",
-      majorName: "การจัดการ",
-      grade: "1",
-    },
-    {
-      id: 7,
-      faculty: "วิศวกรรมศาสตร์",
-      majorId: "T02",
-      majorName: "วิศวกรรมคอมพิวเตอร์",
-      grade: "1",
-    },
-    {
-      id: 8,
-      faculty: "วิศวกรรมศาสตร์",
-      majorId: "T03",
-      majorName: "วิศวกรรมเครื่องกล",
-      grade: "1",
-    },
-    {
-      id: 9,
-      faculty: "วิศวกรรมศาสตร์",
-      majorId: "T04",
-      majorName: "วิศวกรรมไฟฟ้า",
-      grade: "1",
-    },
-    {
-      id: 10,
-      faculty: "วิศวกรรมศาสตร์",
-      majorId: "T05",
-      majorName: "วิศวกรรมโยธา",
-      grade: "1",
-    },
-    {
-      id: 11,
-      faculty: "วิศวกรรมศาสตร์",
-      majorId: "T07",
-      majorName: "วิศวกรรมอุสาหการ",
-      grade: "1",
-    },
-  ];
-
   // Search
-
   const [input, setInput] = useState("");
-  const [selectedFaculty, setSelectedFaculty] = useState("");
-  const [selectedGrade, setSelectedGrade] = useState("");
-  // const [selectMajor, setSelectMajor] = useState("");
-  const [fetchData, setFetchData] = useState(branch);
+  const [selectedFaculty, setSelectedFaculty] = useState(null);
+  const [selectedGrade, setSelectedGrade] = useState(null);
+  const [fetchData, setFetchData] = useState(dataBranch);
+
+  const handleSelectFaculty = (e) => {
+    setSelectedFaculty(e.value);
+  };
+
+  const handleSelectGrade = (e) => {
+    setSelectedGrade(e.value);
+  };
 
   const handleClickSearch = () => {
     // คำนวณข้อมูลที่ต้องการแสดงตามเงื่อนไขที่กำหนด
-    const filteredData = branch.filter((item) => {
+    const filteredData = fetchData.filter((item) => {
       return (
-        (selectedFaculty === "" ||
-          selectedFaculty === "คณะ" ||
+        (!selectedFaculty ||
           item.faculty.toLowerCase().includes(selectedFaculty.toLowerCase())) &&
-        (selectedGrade === "" ||
-          selectedGrade === "ชั้นปี" ||
+        (!selectedGrade ||
           item.grade.toLowerCase().includes(selectedGrade.toLowerCase())) &&
-        (input === "" ||
+        (!input ||
           item.faculty.toLowerCase().includes(input.toLowerCase()) ||
           item.majorId.toLowerCase().includes(input.toLowerCase()) ||
           item.majorName.toLowerCase().includes(input.toLowerCase()) ||
           item.grade.toLowerCase().includes(input.toLowerCase()))
       );
     });
-
     setFetchData(filteredData);
-    setInput("");
     setCurrentPage(1);
   };
 
   const handleClickReset = () => {
-    setFetchData(branch);
+    setFetchData(dataBranch);
     setInput("");
-    setSelectedFaculty("");
-    setSelectedGrade("");
+    setSelectedFaculty(null);
+    setSelectedGrade(null);
   };
 
   useEffect(() => {
-    setSelectedFaculty("");
-    setSelectedGrade("");
+    setFetchData(dataBranch);
+    if (!input) {
+      return;
+    } else {
+      setSelectedFaculty(null);
+      setSelectedGrade(null);
+    }
   }, [input]);
+
+  useEffect(() => {
+    setFetchData(dataBranch);
+    if (selectedFaculty !== null || selectedGrade !== null) {
+      setInput("");
+    }
+  }, [selectedFaculty, selectedGrade]);
 
   // นับ CurrentItems ที่แสดงใน Table
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-  const indexOfLastItem = Math.min(currentPage * itemsPerPage, branch.length);
+  const indexOfLastItem = Math.min(
+    currentPage * itemsPerPage,
+    fetchData.length
+  );
 
-  const currentItems = fetchData.slice(indexOfFirstItem, indexOfLastItem);
+  const displayData = fetchData.slice(indexOfFirstItem, indexOfLastItem);
 
   const pageNumbers = [];
   for (let i = 1; i <= Math.ceil(fetchData.length / itemsPerPage); i++) {
@@ -216,7 +128,7 @@ const Dashboard = () => {
                 className="d-flex justify-content-center"
                 style={{ fontSize: "60px" }}
               >
-                {subjects.filter((subject) => !subject.active).length}
+                {dataSubjects.filter((subject) => !subject.active).length}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -238,7 +150,7 @@ const Dashboard = () => {
                 className="d-flex justify-content-center"
                 style={{ fontSize: "60px" }}
               >
-                {subjects.filter((subject) => subject.active).length}
+                {dataSubjects.filter((subject) => subject.active).length}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -260,7 +172,7 @@ const Dashboard = () => {
                 className="d-flex justify-content-center"
                 style={{ fontSize: "60px" }}
               >
-                {subjects.length}
+                {dataSubjects.length}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -282,7 +194,7 @@ const Dashboard = () => {
                 className="d-flex justify-content-center"
                 style={{ fontSize: "60px" }}
               >
-                {branch.length}
+                {dataBranch.length}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -315,20 +227,8 @@ const Dashboard = () => {
                     id="fieldName"
                     name="fieldName"
                     options={dataFacultyOption}
-                    // onChange={handleTypeSelect}
+                    onChange={handleSelectFaculty}
                     placeholder="คณะ"
-                    isSearchable={false}
-                    className="react-select-container"
-                    classNamePrefix="react-select"
-                  />
-                </Col>
-                <Col md={2}>
-                  <Select
-                    id="fieldName"
-                    name="fieldName"
-                    options={dataMajorOption}
-                    // onChange={handleTypeSelect}
-                    placeholder="สาขา"
                     isSearchable={false}
                     className="react-select-container"
                     classNamePrefix="react-select"
@@ -339,7 +239,7 @@ const Dashboard = () => {
                     id="fieldName"
                     name="fieldName"
                     options={dataGradeOption}
-                    // onChange={handleTypeSelect}
+                    onChange={handleSelectGrade}
                     placeholder="ชั้นปี"
                     isSearchable={false}
                     className="react-select-container"
@@ -403,7 +303,7 @@ const Dashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {currentItems.map((item) => (
+                      {displayData.map((item) => (
                         <tr key={item.id} style={{ textAlign: "center" }}>
                           <td>{item.faculty}</td>
                           <td>{item.majorId}</td>
@@ -423,9 +323,9 @@ const Dashboard = () => {
                           </td>
                         </tr>
                       ))}
-                      {currentItems.length < itemsPerPage && (
+                      {displayData.length < itemsPerPage && (
                         <>
-                          {[...Array(itemsPerPage - currentItems.length)].map(
+                          {[...Array(itemsPerPage - displayData.length)].map(
                             (_, index) => (
                               <tr key={index}>
                                 <td>

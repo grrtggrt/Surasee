@@ -1,23 +1,26 @@
 import React, { useState } from "react";
 import { Modal, Row, Col, Button, Form, CloseButton } from "react-bootstrap";
-import { FaBan, FaFloppyDisk } from "react-icons/fa6";
+import { FaFloppyDisk } from "react-icons/fa6";
 import Swal from "sweetalert2";
+import PopupResetPassword from "./PopupResetPassword"
 
 // assets
 import Profile from "../../assets/profile.png";
 // styles
 import "../../styles/Modal.scss";
-import PopupResetPassword from "./PopupResetPassword";
 
 const PopupUserSetting = (props) => {
-  const { show, hide } = props;
+  const { show, hide} = props;
   const [selectedImage, setSelectedImage] = useState(null);
-
   const [showResetPassword, setShowResetPassword] = useState(false);
 
-  const handleShow = () => setShowResetPassword(true);
+  const handleShow = () => {
+    setShowResetPassword(true);
+  }
 
-  const handleHide = () => setShowResetPassword(false);
+  const handleHide = () => {
+    setShowResetPassword(false);
+  }
 
   const handleProfileImageChange = (event) => {
     setSelectedImage(URL.createObjectURL(event.target.files[0]));
@@ -26,28 +29,6 @@ const PopupUserSetting = (props) => {
   const handleImageDelete = () => {
     setSelectedImage(null);
   };
-
-  // const handleSaveConfirm = () => {
-  //   Swal.fire({
-  //     title: "ต้องการบันทึกข้อมูลใช่หรือไม่",
-  //     icon: "question",
-  //     showCancelButton: true,
-  //     cancelButtonText: "ยกเลิก",
-  //     confirmButtonText: "บันทึก",
-  //     confirmButtonColor: "#03A96B",
-  //     cancelButtonColor: "#BD4636",
-  //   }).then((result) => {
-  //     if (result.isConfirmed) {
-  //       Swal.fire({
-  //         title: "บันทึกเสร็จสิ้น!",
-  //         icon: "success",
-  //         confirmButtonColor: "#03A96B",
-  //         confirmButtonText: "ตกลง",
-  //       });
-  //       hide();
-  //     }
-  //   });
-  // };
 
   const handleDeleteConfirm = () => {
     Swal.fire({
@@ -79,8 +60,8 @@ const PopupUserSetting = (props) => {
   };
 
   return (
-    <Modal show={show} hide={hide} centered>
-      <Modal.Header className="modal-header">
+    <Modal show={show} onHide={hide} centered>
+      <Modal.Header>
         <Modal.Title>ตั้งค่า</Modal.Title>
         <CloseButton variant="white" onClick={hide} />
       </Modal.Header>
@@ -91,31 +72,29 @@ const PopupUserSetting = (props) => {
           </Col>
         </Row>
         <Row>
-          <Col md={4} className="d-flex justify-content-center align-items-center">
-            <img src={selectedImage ? selectedImage : Profile} alt="Profile" style={{ width: "100px", borderRadius:"50%"}} />
+          <Col
+            md={4}
+            className="d-flex justify-content-center align-items-center"
+          >
+            <img
+              src={selectedImage ? selectedImage : Profile}
+              alt="Profile"
+              style={{ width: "100px", borderRadius: "50%" }}
+            />
           </Col>
           <Col md={8} className="d-flex flex-column align-self-center">
             <Row>
               <Col className="d-flex gap-3 pb-2">
                 <label htmlFor="profileImageInput">
                   <Button
-                    style={{
-                      background: "#03A96B",
-                      border: "none",
-                      fontSize: "16px",
-                    }}
+                    variant="success"
                     as="span"
                   >
                     เลือกรูปโปรไฟล์
                   </Button>
                 </label>
                 <Button
-                  style={{
-                    background: "none",
-                    border: "1px solid #3F3F3F",
-                    color: "#3F3F3F",
-                    fontSize: "16px",
-                  }}
+                  variant="outline-dark"
                   onClick={() => handleDeleteConfirm()}
                 >
                   ลบรูปโปรไฟล์
