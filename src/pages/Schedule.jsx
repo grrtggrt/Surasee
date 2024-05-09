@@ -14,6 +14,7 @@ import {
 
 import PopupManageRoom from "./popup/PopupManageRoom";
 import PopupManageSchedule from "./popup/PopupManageSchedule";
+import "./Schedule.scss";
 
 import {
   dataFacultyOption,
@@ -148,7 +149,7 @@ const Schedule = () => {
                   .toString()
                   .slice(-2)}`
               : ""; // เพิ่มเงื่อนไขเพื่อตรวจสอบว่า startDate และ endDate ไม่ใช่ null ก่อนที่จะรูปแบบวันที่
-          const content =
+          const content = 
             j !== 0 && startDate && endDate
               ? formattedDate
               : j === 0
@@ -159,12 +160,10 @@ const Schedule = () => {
               <Card>
                 <Card.Body
                   style={{
-                    background: "rgb(33, 37, 41",
-                    color: "white",
-                    textAlign: "center",
+                    background: "rgb(33, 37, 41"
                   }}
                 >
-                  {content}
+                  <p style={{color:"white", justifyContent:"center"}}>{content}</p>
                 </Card.Body>
               </Card>
             </Col>
@@ -206,7 +205,12 @@ const Schedule = () => {
       }
 
       rows.push(
-        <Row key={`row-${i}`} style={{ paddingTop: i === 0 ? "1rem" : "0" }}>
+        <Row
+          key={`row-${i}`}
+          style={{
+            paddingTop: i === 0 ? "1rem" : "0" 
+          }}
+        >
           {cols}
         </Row>
       );
@@ -309,7 +313,7 @@ const Schedule = () => {
                 </Col>
               </Row>
               <Row>
-                <Col className="d-flex flex-column">
+                <Col>
                   {startDate && endDate && selectedTerm && selectedSemester
                     ? renderRows()
                     : ""}
@@ -354,7 +358,7 @@ const Schedule = () => {
           </Card>
         </Col>
         <Col>
-          <Card style={{ background: "#4A4F55"}}>
+          <Card style={{ background: "#4A4F55" }}>
             <Card.Body>
               <Row className="pb-3">
                 <Col className="d-flex gap-3">
@@ -374,10 +378,10 @@ const Schedule = () => {
                   </Button>
                 </Col>
               </Row>
-              <Row style={{overflowY:"auto" , maxHeight:"35.8vw"}}>
-                {dataSubjects.map((item, id) => (
-                  <Col key={id} md={6} className="d-flex flex-column mb-3">
-                    <Card>
+              <Row>
+                <Col className="subject-card-grid">
+                  {dataSubjects.map((item, id) => (
+                    <Card key={id}>
                       <Card.Body>
                         <p>รหัสวิชา : {item.id}</p>
                         <p>ชื่อวิชา : {item.name_th}</p>
@@ -386,8 +390,8 @@ const Schedule = () => {
                         <p>ประเภท : {item.type}</p>
                       </Card.Body>
                     </Card>
-                  </Col>
-                ))}
+                  ))}
+                </Col>
               </Row>
             </Card.Body>
           </Card>

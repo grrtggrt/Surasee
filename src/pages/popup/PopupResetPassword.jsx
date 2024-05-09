@@ -36,6 +36,7 @@ const PopupResetPassword = (props) => {
       }
     });
   };
+
   
   return (
     <Modal show={show} onHide={hide} centered>

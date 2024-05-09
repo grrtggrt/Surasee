@@ -10,6 +10,7 @@ import Select from "react-select";
 import "../styles/Select.scss";
 import "../styles/Input.scss";
 import "../styles/Button.scss";
+import "./ManageRoom.scss";
 
 import PopupEditRoom from "./popup/PopupEditRoom";
 
@@ -17,6 +18,9 @@ import {
   dataMajorOption,
   dataGradeOption,
   dataTypeSubjectOption,
+  dataSubjects,
+  dataBuildingOption,
+  dataBuilding,
 } from "../MockupData";
 
 const ManageRoom = () => {
@@ -59,7 +63,7 @@ const ManageRoom = () => {
           </Col>
         </Row>
 
-        <Row>
+        <Row className="mx-0">
           <Card>
             <Card.Body>
               <Row
@@ -132,25 +136,18 @@ const ManageRoom = () => {
                 </Col>
               </Row>
               <Row>
-                <Col className="d-flex gap-3">
-                  <Card style={{ background: "#E8E8E8" }}>
-                    <Card.Body className="d-flex flex-column">
-                      <p>0141711-65 | 50/100</p>
-                      <p>Name : Econometrics I</p>
-                      <p>สาขา : G01</p>
-                      <p>Sec : 800, 801, 900</p>
-                      <p>ประเภท : บังคับ</p>
-                    </Card.Body>
-                  </Card>
-                  <Card style={{ background: "#E8E8E8" }}>
-                    <Card.Body className="d-flex flex-column">
-                      <p>0141711-65 | 50/100</p>
-                      <p>Name : Econometrics I</p>
-                      <p>สาขา : G01</p>
-                      <p>Sec : 800, 801, 900</p>
-                      <p>ประเภท : บังคับ</p>
-                    </Card.Body>
-                  </Card>
+                <Col className="subject-card-grid-manageroom">
+                  {dataSubjects.map((item, id) => (
+                    <Card key={id}>
+                      <Card.Body>
+                        <p>รหัสวิชา : {item.id}</p>
+                        <p>ชื่อวิชา : {item.name_th}</p>
+                        <p>สาขา : {`${item.majorId}`}</p>
+                        <p>หมู่เรียน : {`${item.sec}`}</p>
+                        <p>ประเภท : {item.type}</p>
+                      </Card.Body>
+                    </Card>
+                  ))}
                 </Col>
               </Row>
             </Card.Body>
@@ -158,7 +155,7 @@ const ManageRoom = () => {
         </Row>
 
         <h5 className="m-0">อาคาร / ห้อง</h5>
-        <Row>
+        <Row className="mx-0">
           <Card>
             <Card.Body>
               <Row
@@ -178,7 +175,7 @@ const ManageRoom = () => {
                   <Select
                     id="fieldName"
                     name="fieldName"
-                    // options={dataMajorOption}
+                    options={dataBuildingOption}
                     // onChange={handleOptionChange}
                     // value={selectedOption}
                     placeholder="อาคาร"
@@ -226,33 +223,21 @@ const ManageRoom = () => {
                   </Button>
                 </Col>
               </Row>
-              <Row className="row-cols-6 gy-3">
-                <Col>
-                  <Card
-                    className="d-inline-flex"
-                    style={{ textAlign: "center" }}
-                  >
-                    <Card.Header
-                      style={{ background: "#03a96b", color: "white" }}
-                    >
-                      17201 | 50 / 200
-                    </Card.Header>
-                    <Card.Body style={{ background: "#E8E8E8" }}>
-                      <Card>
-                        <Card.Body>
-                          <Row>
-                            <Col>
-                              <p>0141711-65</p>
-                              <p>Econometrics</p>
-                            </Col>
-                            <Col className="align-self-center text-danger">
-                              <p className="fs-4">A50</p>
-                            </Col>
-                          </Row>
-                        </Card.Body>
-                      </Card>
-                    </Card.Body>
-                  </Card>
+              <Row>
+                <Col className="room-card-grid-manageroom">
+                  {dataBuilding.map((item, id) => (
+                    <Card key={id}>
+                      <Card.Header
+                        className="d-flex justify-content-center gap-3"
+                        style={{ background: "#03A96B", color: "white" }}
+                      >
+                        <p>{item.room_num}</p>
+                        <p>|</p>
+                        <p>{`${item.amount} / ${item.max_amount}`}</p>
+                      </Card.Header>
+                      <Card.Body style={{maxHeight:"7vw"}}></Card.Body>
+                    </Card>
+                  ))}
                 </Col>
               </Row>
             </Card.Body>

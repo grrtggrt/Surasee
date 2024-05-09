@@ -2,18 +2,24 @@ import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import "./contentTop.scss";
 import { SidebarContext } from "../context/sidebarContext";
-import { FaBars, FaPowerOff, FaGear } from "react-icons/fa6";
+import { NavDropdown } from "react-bootstrap";
+import { FaBars, FaPowerOff, FaGear, FaUserPen, FaLock } from "react-icons/fa6";
 
 import Profile from "../assets/profile.png";
 import PopupUserSetting from "../pages/popup/PopupUserSetting";
+import PopupResetPassword from "../pages/popup/PopupResetPassword";
+
+import "../styles/Nav.scss";
 
 const content = () => {
   const { toggleSidebar } = useContext(SidebarContext);
-  const [show, setShow] = useState(false);
+  const [showPopupUserSetting, setShowPopupUserSetting] = useState(false);
+  const [showPopupResetPassword, setShowPopupResetPassword] = useState(false);
 
-  const handleShow = () => setShow(true);
-
-  const handleHide = () => setShow(false);
+  const handleShowPopupUserSetting = () => setShowPopupUserSetting(true);
+  const handleHidePopupUserSetting = () => setShowPopupUserSetting(false);
+  const handleShowPopupResetPassword = () => setShowPopupResetPassword(true);
+  const handleHidePopupResetPassword = () => setShowPopupResetPassword(false);
 
   return (
     <div className="main-content-top">
@@ -28,11 +34,22 @@ const content = () => {
           <img src={Profile} alt="Profile" />
           <h2>นายสุรสีห์ ไวยวุฒิโท</h2>
         </div>
-        <FaGear className="setting-btn" onClick={handleShow} />
+        <NavDropdown title={<FaGear className="setting-btn" />} id="basic-nav-dropdown">
+          <NavDropdown.Item onClick={() => handleShowPopupUserSetting()}>
+              <FaUserPen className="me-2 fs-5"/>
+              แก้ไขข้อมูลส่วนตัว
+            </NavDropdown.Item>
+          <NavDropdown.Item onClick={() => handleShowPopupResetPassword()} >
+              <FaLock className="me-2 fs-6" />
+              เปลี่ยนรหัสผ่าน
+            </NavDropdown.Item>
+        </NavDropdown>
+
         <Link to="/">
           <FaPowerOff className="logout-btn" />
         </Link>
-        <PopupUserSetting show={show} hide={handleHide} />
+        <PopupUserSetting show={showPopupUserSetting} hide={handleHidePopupUserSetting} />
+        <PopupResetPassword show={showPopupResetPassword} hide={handleHidePopupResetPassword} />
       </div>
     </div>
   );

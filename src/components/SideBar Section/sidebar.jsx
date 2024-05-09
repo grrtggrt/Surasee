@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./sidebar.scss";
 
-import { FaChartLine, FaRegCalendarCheck, FaRegPenToSquare, FaCloudArrowUp  } from "react-icons/fa6";
+import { FaChartLine, FaRegCalendarCheck, FaRegPenToSquare, FaCloudArrowUp, FaFlag  } from "react-icons/fa6";
 
 import logo from "../../assets/logo.png";
 import { SidebarContext } from "../../context/sidebarContext";
@@ -71,6 +71,16 @@ const Sidebar = () => {
               <Link to="/importdata" className="menuLink flex">
                 <FaCloudArrowUp className="icon" />
                 <span className="smallText">ImportData</span>
+              </Link>
+            </li>
+            <li
+              className={`listItem ${
+                location.pathname === "/report" ? "active" : ""
+              }`}
+            >
+              <Link to="/report" className="menuLink flex">
+                <FaFlag className="icon" />
+                <span className="smallText">Report</span>
               </Link>
             </li>
           </ul>

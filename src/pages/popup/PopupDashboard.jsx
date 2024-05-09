@@ -6,9 +6,13 @@ const PopupDashboard = (props) => {
 
   return (
     <Modal show={show} onHide={hide} size="xl" centered>
-      <Modal.Header closeButton style={{background:"#fff"}}>
+      <Modal.Header closeButton style={{ background: "#fff" }}>
         <Modal.Title>
-          <h2 style={{color:"#2F3337"}}>ตารางสอบ</h2>
+          <Row>
+            <Col>
+              <h2 style={{ color: "#2F3337" }}>ตารางสอบ</h2>
+            </Col>
+          </Row>
           <Row>
             <Col className="d-flex align-items-center gap-4">
               <h5 style={{ fontSize: "16px", color: "#03A96B" }}>

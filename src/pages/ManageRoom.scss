@@ -1,0 +1,16 @@
+.subject-card-grid-manageroom {
+  display: grid;
+  grid-template-columns: repeat(6,1fr);
+  overflow-y: auto;
+  max-height: 7.6vw;
+  gap: 1rem
+}
+
+.room-card-grid-manageroom {
+  display: grid;
+  grid-template-columns: repeat(7,1fr);
+  overflow-y: auto;
+  max-height: 19vw;
+  gap: 1rem;
+  
+}

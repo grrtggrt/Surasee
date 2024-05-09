@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Row, Col, Button, Form, CloseButton } from "react-bootstrap";
-import { FaFloppyDisk } from "react-icons/fa6";
+import { FaFloppyDisk, FaBan } from "react-icons/fa6";
 import Swal from "sweetalert2";
-import PopupResetPassword from "./PopupResetPassword"
 
 // assets
 import Profile from "../../assets/profile.png";
@@ -10,17 +9,9 @@ import Profile from "../../assets/profile.png";
 import "../../styles/Modal.scss";
 
 const PopupUserSetting = (props) => {
-  const { show, hide} = props;
+  const { show, hide } = props;
   const [selectedImage, setSelectedImage] = useState(null);
-  const [showResetPassword, setShowResetPassword] = useState(false);
 
-  const handleShow = () => {
-    setShowResetPassword(true);
-  }
-
-  const handleHide = () => {
-    setShowResetPassword(false);
-  }
 
   const handleProfileImageChange = (event) => {
     setSelectedImage(URL.createObjectURL(event.target.files[0]));
@@ -28,6 +19,35 @@ const PopupUserSetting = (props) => {
 
   const handleImageDelete = () => {
     setSelectedImage(null);
+  };
+
+  const handleSaveConfirm = () => {
+    Swal.fire({
+      title: "ต้องการบันทึกข้อมูลใช่หรือไม่",
+      icon: "question",
+      showCancelButton: true,
+      cancelButtonText: "ยกเลิก",
+      confirmButtonText: "บันทึก",
+      confirmButtonColor: "#03A96B",
+      cancelButtonColor: "#BD4636",
+      customClass: {
+        confirmButton: "shadow-none",
+        cancelButton: "shadow-none",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "บันทึกเสร็จสิ้น!",
+          icon: "success",
+          confirmButtonColor: "#03A96B",
+          confirmButtonText: "ตกลง",
+          customClass: {
+            confirmButton: "shadow-none",
+          },
+        });
+        hide();
+      }
+    });
   };
 
   const handleDeleteConfirm = () => {
@@ -134,7 +154,7 @@ const PopupUserSetting = (props) => {
               </Form>
             </Col>
           </Row>
-          <Row>
+          <Row >
             <Col>
               <p>ตำแหน่ง :</p>
               <Form>
@@ -147,20 +167,28 @@ const PopupUserSetting = (props) => {
               </Form>
             </Col>
           </Row>
-        </Row>
-        <Row className="pb-2">
-          <Col className="d-flex justify-content-end pe-4">
+          <Row className="mt-2 mb-2">
+          <Col className="d-flex justify-content-end">
             <Button
               className="d-flex align-items-center justify-content-center gap-2"
-              variant="info"
-              onClick={() => handleShow()}
+              variant="success"
+              onClick={() => handleSaveConfirm()}
             >
-              <FaFloppyDisk /> เปลี่ยนรหัสผ่าน
+              <FaFloppyDisk /> บันทึก
+            </Button>
+          </Col>
+          <Col className="d-flex justify-content-start">
+            <Button
+              className="d-flex align-items-center justify-content-center gap-2"
+              variant="danger"
+              onClick={() => hide()}
+            >
+              <FaBan /> ยกเลิก
             </Button>
           </Col>
         </Row>
+        </Row>
       </Modal.Body>
-      <PopupResetPassword show={showResetPassword} hide={handleHide}/>
     </Modal>
   );
 };

@@ -6,6 +6,7 @@ import ContentDashboard from "./content/contentDashboard.jsx";
 import ContentSchedule from "./content/contentSchedule.jsx";
 import ContentManageRoom from "./content/contentManageRoom.jsx";
 import ContentImportData from "./content/contentImportData.jsx";
+import ContentReport from "./content/contentReport.jsx"
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import "./styles/App.scss";
@@ -49,6 +50,15 @@ function App() {
               <div className="main-container">
                 <Sidebar />
                 <ContentImportData />
+              </div>
+            }
+          />
+          <Route
+            path="/report"
+            element={
+              <div className="main-container">
+                <Sidebar />
+                <ContentReport />
               </div>
             }
           />

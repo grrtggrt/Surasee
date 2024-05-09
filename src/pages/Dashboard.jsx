@@ -15,8 +15,10 @@ import Select from "react-select";
 //styles
 import "../styles/Select.scss";
 
+// Popup
 import PopupDashboard from "./popup/PopupDashboard";
 
+//Data
 import {
   dataFacultyOption,
   dataGradeOption,
@@ -224,8 +226,8 @@ const Dashboard = () => {
                   </Form.Select> */}
                 <Col md={2}>
                   <Select
-                    id="fieldName"
-                    name="fieldName"
+                    id="facultyName"
+                    name="facultyName"
                     options={dataFacultyOption}
                     onChange={handleSelectFaculty}
                     placeholder="คณะ"

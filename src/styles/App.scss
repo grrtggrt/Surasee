@@ -75,7 +75,7 @@ img {
 
 .pagination {
   .page-item.active .page-link {
-    border: none;
+    border: 1px solid;
     background-color: #03a96b;
   }
 
@@ -94,6 +94,6 @@ p {
   margin: 0;
 }
 
-::-webkit-scrollbar {
-  display: none;
-}
+// ::-webkit-scrollbar {
+//   display: none;
+// }

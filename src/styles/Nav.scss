@@ -1,0 +1,28 @@
+.dropdown {
+    width: 55px;
+}
+
+.dropdown-toggle::after {
+    display: none;
+}
+
+.dropdown-menu {
+    width: 170px;
+}
+
+.dropdown-item {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    // &:hover,
+    // &:focus {
+    // //   color: red;
+    // }
+  
+    &.active,
+    &:active {
+      color: #ffffff;
+      background-color: #03a96b;
+      text-decoration: none;
+    }
+  
+}

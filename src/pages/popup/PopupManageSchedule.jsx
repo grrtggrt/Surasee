@@ -18,7 +18,7 @@ const PopupManageSchedule = (props) => {
 
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
-  const [selectTerm, SetSelectTerm] = useState(null);
+  const [selectTerm, SetSelectTerm] = useState("");
   const [selectSemester, SetSelectSemester] = useState(null);
 
   const maxDate = startDate
@@ -27,6 +27,7 @@ const PopupManageSchedule = (props) => {
 
   const handleTermSelect = (e) => {
     SetSelectTerm(e.value);
+    console.log('handle', selectTerm);
   };
 
   const handleSemesterSelect = (e) => {
