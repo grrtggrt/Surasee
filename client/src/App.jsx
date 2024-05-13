@@ -6,14 +6,11 @@ import ContentDashboard from "./content/contentDashboard.jsx";
 import ContentSchedule from "./content/contentSchedule.jsx";
 import ContentManageRoom from "./content/contentManageRoom.jsx";
 import ContentImportData from "./content/contentImportData.jsx";
-import ContentReport from "./content/contentReport.jsx"
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import ContentReport from "./content/contentReport.jsx";
 import "./styles/App.scss";
 
 function App() {
   return (
-    <DndProvider backend={HTML5Backend}>
       <Router>
         <Routes>
           <Route path="/" element={<Login />} />
@@ -64,7 +61,6 @@ function App() {
           />
         </Routes>
       </Router>
-    </DndProvider>
   );
 }
 

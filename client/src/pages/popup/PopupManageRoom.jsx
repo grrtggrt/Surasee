@@ -20,15 +20,13 @@ import "../../styles/Button.scss";
 import { dataSeatOption } from "../../MockupData";
 
 const PopupManageRoom = (props) => {
-  const { show, hide } = props;
+  const { show, hide, selectedSubject } = props;
 
   const [selectedOption, setSelectedOption] = useState("");
   const [cardColor, setCardColor] = useState("");
-  // const options = [
-  //   { value: "none", label: "Empty" },
-  //   { value: "left", label: "Open Left" },
-  //   { value: "right", label: "Open Right" },
-  // ];
+
+  console.log(selectedSubject)
+
   const handleTypeSelect = (e) => {
     setSelectedOption(e.value);
   };
@@ -77,12 +75,7 @@ const PopupManageRoom = (props) => {
   };
 
   return (
-    <Modal
-      show={show}
-      onHide={hide}
-      centered
-      size="lg"
-    >
+    <Modal show={show} onHide={hide} centered size="lg">
       <Modal.Header className="model-header">
         <Modal.Title>จัดห้องสอบ</Modal.Title>
         <CloseButton variant="white" onClick={hide} />
@@ -111,6 +104,7 @@ const PopupManageRoom = (props) => {
                     type="text"
                     readOnly
                     disabled
+                    value={selectedSubject ? selectedSubject.id : ''}
                   />
                 </Form>
               </Col>
@@ -122,6 +116,7 @@ const PopupManageRoom = (props) => {
                     type="text"
                     readOnly
                     disabled
+                    value={selectedSubject ? selectedSubject.name_th : ''}
                   />
                 </Form>
               </Col>
@@ -198,7 +193,7 @@ const PopupManageRoom = (props) => {
               </Card.Body>
             </Card>
             <Card>
-              <Card.Body style={{background: cardColor}}>
+              <Card.Body style={{ background: cardColor }}>
                 <Row className="gx-2">
                   <Col md={3}>
                     <Form.Label>อาคาร</Form.Label>

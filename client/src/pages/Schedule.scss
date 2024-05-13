@@ -1,0 +1,31 @@
+.subject-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  overflow-y: auto;
+  max-height: 35.8vw;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.table-body-card {
+  display: grid;
+  gap: 1rem;
+  padding: 0.5rem;
+  background-color: #4a4f55;
+  max-width: 13.5vh;
+  height: 10vw;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.table-header-card {
+  background-color: #212529;
+  color: white;
+  text-align: center;
+}

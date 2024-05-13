@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Row,
   Col,
@@ -52,6 +52,8 @@ const Report = () => {
   // นับ CurrentItems ที่แสดงใน Table
   const [fetchData, setFetchData] = useState(dataReport);
   const [currentPage, setCurrentPage] = useState(1);
+  const [input, setInput] = useState("");
+
   const itemsPerPage = 14;
 
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
@@ -68,6 +70,35 @@ const Report = () => {
   }
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  //Search
+  const handleClickSearch = () => {
+    // คำนวณข้อมูลที่ต้องการแสดงตามเงื่อนไขที่กำหนด
+    const filteredData = fetchData.filter((item) => {
+      return (
+        !input ||
+        item.id.toLowerCase().includes(input.toLowerCase()) ||
+        item.name_en.toLowerCase().includes(input.toLowerCase()) ||
+        item.sec.toString().toLowerCase().includes(input.toLowerCase()) ||
+        item.room_num.toLowerCase().includes(input.toLowerCase()) ||
+        item.date.toLowerCase().includes(input.toLowerCase()) ||
+        item.start_time.toLowerCase().includes(input.toLowerCase()) ||
+        item.end_time.toLowerCase().includes(input.toLowerCase()) ||
+        item.amount.toString().toLowerCase().includes(input.toLowerCase())
+      );
+    });
+    setFetchData(filteredData);
+    setCurrentPage(1);
+  };
+
+  const handleClickReset = () => {
+    setFetchData(dataReport);
+    setInput("");
+  };
+
+  useEffect(() => {
+    setFetchData(dataReport);
+  }, [input]);
 
   return (
     <div className="main-content-center">
@@ -108,12 +139,15 @@ const Report = () => {
                   type="input"
                   className="custom-input"
                   placeholder="รหัสวิชา/ชื่อวิชา"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
                 />
               </Col>
               <Col md="auto" className="d-flex justify-content-center gap-2">
                 <Button
                   className="d-flex align-items-center gap-2"
                   variant="info"
+                  onClick={() => handleClickSearch()}
                 >
                   <FaMagnifyingGlass />
                   <p className="mb-0">ค้นหา</p>
@@ -121,6 +155,7 @@ const Report = () => {
                 <Button
                   className="d-flex align-items-center gap-2"
                   variant="danger"
+                  onClick={() => handleClickReset()}
                 >
                   <FaArrowsRotate />
                   <p className="mb-0">รีเซ็ต</p>
@@ -154,8 +189,8 @@ const Report = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {displayData.map((item) => (
-                      <tr key={item.id} style={{ textAlign: "center" }}>
+                    {displayData.map((item, id) => (
+                      <tr key={id} style={{ textAlign: "center" }}>
                         <td>{item.id}</td>
                         <td style={{ textAlign: "start" }}>{item.name_en}</td>
                         <td>{`${item.sec}`}</td>

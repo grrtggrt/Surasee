@@ -27,11 +27,11 @@ import {
 } from "../MockupData";
 
 const Dashboard = () => {
-  // Search
   const [input, setInput] = useState("");
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [selectedGrade, setSelectedGrade] = useState(null);
   const [fetchData, setFetchData] = useState(dataBranch);
+  const [viewDetail, setViewDetail] = useState(null);
 
   const handleSelectFaculty = (e) => {
     setSelectedFaculty(e.value);
@@ -106,9 +106,15 @@ const Dashboard = () => {
   // แสดง Modal
   const [showModal, setShowModal] = useState(false);
 
-  const handleShow = () => setShowModal(true);
+  const handleShow = (faculty) => {
+    setViewDetail(faculty);
+    setShowModal(true);
+  }
 
-  const handleHide = () => setShowModal(false);
+  const handleHide = () => {
+    setViewDetail(null);
+    setShowModal(false);
+  }
 
   return (
     <div className="main-content-center">
@@ -207,23 +213,6 @@ const Dashboard = () => {
           <Card bg="light">
             <Card.Body>
               <Row className="d-flex justify-content-end gx-2">
-                {/* <Form.Select
-                    aria-label="Default select example"
-                    style={{
-                      maxWidth: "150px",
-                      minWidth: "none",
-                      fontSize: "16px",
-                    }}
-                    value={selectedFaculty}
-                    onChange={(e) => setSelectedFaculty(e.target.value)}
-                  >
-                    <option>คณะ</option>
-                    {[...new Set(branch.map((item) => item.faculty))].map(
-                      (faculty, index) => (
-                        <option key={index}>{faculty}</option>
-                      )
-                    )}
-                  </Form.Select> */}
                 <Col md={2}>
                   <Select
                     id="facultyName"
@@ -305,8 +294,8 @@ const Dashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {displayData.map((item) => (
-                        <tr key={item.id} style={{ textAlign: "center" }}>
+                      {displayData.map((item, id) => (
+                        <tr key={id} style={{ textAlign: "center" }}>
                           <td>{item.faculty}</td>
                           <td>{item.majorId}</td>
                           <td
@@ -318,7 +307,7 @@ const Dashboard = () => {
                           <td>
                             <FaEye
                               onClick={() => {
-                                handleShow();
+                                handleShow(item);
                               }}
                               style={{ cursor: "pointer" }}
                             />
@@ -369,7 +358,7 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
-      <PopupDashboard show={showModal} hide={handleHide} />
+      <PopupDashboard show={showModal} hide={handleHide} viewDetail={viewDetail} dataSubjects={dataSubjects}/>
     </div>
   );
 };

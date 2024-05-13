@@ -4,6 +4,7 @@ import {
   FaMagnifyingGlass,
   FaArrowsRotate,
   FaPenToSquare,
+  FaCirclePlus
 } from "react-icons/fa6";
 import Select from "react-select";
 // styles
@@ -13,6 +14,7 @@ import "../styles/Button.scss";
 import "./ManageRoom.scss";
 
 import PopupEditRoom from "./popup/PopupEditRoom";
+import PopupManageRoom from "./popup/PopupManageRoom";
 
 import {
   dataMajorOption,
@@ -24,11 +26,23 @@ import {
 } from "../MockupData";
 
 const ManageRoom = () => {
-  const [show, setShow] = useState(false);
+  const [showEditRoom, setShowEditRoom] = useState(false);
+  const [showManageRoom, setShowManageRoom] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState(null);
 
-  const handleShow = () => setShow(true);
+  const handleShowEditRoom = () => setShowEditRoom(true);
 
-  const handleHide = () => setShow(false);
+  const handleHideEditRoom = () => setShowEditRoom(false);
+
+  const handleShowManageRoom = (subject) => {
+    setSelectedSubject(subject);
+    setShowManageRoom(true);
+  };
+
+  const handleHideManageRoom = () => {
+    setShowManageRoom(false);
+    setSelectedSubject(null);
+  };
 
   return (
     <div className="main-content-center">
@@ -140,6 +154,13 @@ const ManageRoom = () => {
                   {dataSubjects.map((item, id) => (
                     <Card key={id}>
                       <Card.Body>
+                        <Button
+                          className="btn-icon"
+                          style={{ position: "absolute", top:"0", right:"0"}}
+                          onClick={() => handleShowManageRoom(item)}
+                        >
+                          <FaCirclePlus className="text-info fs-5" />
+                        </Button>
                         <p>รหัสวิชา : {item.id}</p>
                         <p>ชื่อวิชา : {item.name_th}</p>
                         <p>สาขา : {`${item.majorId}`}</p>
@@ -235,7 +256,7 @@ const ManageRoom = () => {
                         <p>|</p>
                         <p>{`${item.amount} / ${item.max_amount}`}</p>
                       </Card.Header>
-                      <Card.Body style={{maxHeight:"7vw"}}></Card.Body>
+                      <Card.Body style={{ maxHeight: "7vw" }}></Card.Body>
                     </Card>
                   ))}
                 </Col>
@@ -244,7 +265,8 @@ const ManageRoom = () => {
           </Card>
         </Row>
       </Row>
-      <PopupEditRoom show={show} hide={handleHide} />
+      <PopupEditRoom show={showEditRoom} hide={handleHideEditRoom} />
+      <PopupManageRoom show={showManageRoom} hide={handleHideManageRoom} selectedSubject={selectedSubject}  />
     </div>
   );
 };
