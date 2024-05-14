@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, Row, Col, Form, Button } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Swal from "sweetalert2";
@@ -44,40 +44,48 @@ const Schedule = () => {
   const [data, setData] = useState([]);
   const [items, setItems] = useState([]);
 
-  useEffect(() => {
-    axios
-      .get("http://localhost:5500/api/subject")
-      .then((response) => {
-        setData(response.data);
-        setItems(response.data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+  // useEffect(() => {
+  //   axios
+  //     .get("http://localhost:5500/api/subject")
+  //     .then((response) => {
+  //       setData(response.data);
+  //       setItems(response.data);
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //     });
+  // }, []);
+
+  const fetchSubjects = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/subject");
+      setData(response.data);
+      setItems(response.data);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+    }
   }, []);
 
-  console.log(items)
+  useEffect(() => {
+    fetchSubjects();
+  }, [fetchSubjects]);
 
   //DND
   const onDragEnd = (result) => {
     const { source, destination } = result;
 
-    if (!destination) return; // ไม่มีปลายทาง
+    if (!destination) return;
 
-    // ตรวจสอบว่าปลายทางเป็น droppable ที่ถูกต้องหรือไม่
     if (source.droppableId !== destination.droppableId) {
-      const draggedItem = items[source.index]; // กำหนดค่าให้ draggedItem จาก items ที่ถูกลาก
+      const draggedItem = items[source.index];
       const newItems = [...items];
       newItems.splice(source.index, 1);
 
-      // อัปเดต state ของไอเท็มเฉพาะเมื่อถูกวางใน droppable ที่ถูกต้อง
       setItems(newItems);
-      setDroppedItems((prevItems) => {
-        return [
-          ...prevItems,
-          { ...draggedItem, droppableId: destination.droppableId },
-        ];
-      });
+      setDroppedItems((prevItems) => [
+        ...prevItems,
+        { ...draggedItem, droppableId: destination.droppableId },
+      ]);
       setSelectedSubject(draggedItem);
       handleShowManageRoom();
     }
@@ -85,28 +93,25 @@ const Schedule = () => {
 
   //DELETE-BTN
   const handleDeleteItem = (droppableId, itemId) => {
-    // ตัดไอเท็มที่ต้องการลบออกจาก droppedItems
     let deletedCount = 0;
 
-    // สร้าง list ใหม่ของ droppedItems โดยไม่รวมไอเท็มที่ต้องการลบ
     const newDroppedItems = droppedItems.filter((item) => {
-      if (item.droppableId === droppableId && item.id === itemId) {
-        // ถ้าไอเท็มที่พบเป็นไอเท็มที่ต้องการลบ และยังไม่ลบไอเท็มที่ต้องการลบ
-        if (deletedCount === 0) {
-          deletedCount++;
-          return false; // ไม่เอาไอเท็มนี้
-        }
+      if (
+        item.droppableId === droppableId &&
+        item.id === itemId &&
+        deletedCount === 0
+      ) {
+        deletedCount++;
+        return false;
       }
-      return true; // เก็บไอเท็มนี้
+      return true;
     });
 
-    // หากต้องการให้ลบออกจาก items ด้วย ก็ให้ทำการอัปเดต items ด้วยการเพิ่มไอเท็มนั้นอีกครั้ง
     const deletedItem = droppedItems.find(
       (item) => item.droppableId === droppableId && item.id === itemId
     );
     const newItems = [...items, deletedItem];
 
-    // อัปเดต state ของ droppedItems และ items (หากต้องการลบจาก items)
     setDroppedItems(newDroppedItems);
     setItems(newItems);
   };
@@ -123,17 +128,10 @@ const Schedule = () => {
     selectTerm,
     selectSemester
   ) => {
-    // Convert start and end dates to Date objects
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const term = selectTerm;
-    const semester = selectSemester;
-
-    // Set the start date and end date state
-    setStartDate(start);
-    setEndDate(end);
-    setSelectedTerm(term);
-    setSelectedSemester(semester);
+    setStartDate(new Date(startDate));
+    setEndDate(new Date(endDate));
+    setSelectedTerm(selectTerm);
+    setSelectedSemester(selectSemester);
   };
 
   const handleSaveConfirm = () => {
@@ -219,21 +217,17 @@ const Schedule = () => {
         !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
     );
     setItems(filteredItems);
-  }, [input]);
+  }, [input, data, droppedItems]);
 
-  //POPUP
+  //PopupManageRoom
   const handleShowManageRoom = () => setShowManageRoom(true);
-
   const handleHideManageRoom = () => {
     setSelectedSubject(null);
     setShowManageRoom(false);
   };
-
+  //PopupSchedule
   const handleShowSchedule = () => setShowSchedule(true);
-
-  const handleHideSchedule = () => {
-    setShowSchedule(false);
-  };
+  const handleHideSchedule = () => setShowSchedule(false);
 
   //TABLE
   const numRows = 4; // จำนวนวันที่ต้องการสร้าง
@@ -362,7 +356,6 @@ const Schedule = () => {
           );
         }
       }
-
       rows.push(
         <Row key={`row-${i}`} className="d-flex flex-nowrap">
           {cols}

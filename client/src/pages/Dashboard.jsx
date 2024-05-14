@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import "./Dashboard.scss";
 import {
   Row,
@@ -9,7 +9,13 @@ import {
   Table,
   Pagination,
 } from "react-bootstrap";
-import { FaEye, FaArrowsRotate, FaMagnifyingGlass } from "react-icons/fa6";
+import {
+  FaEye,
+  FaArrowsRotate,
+  FaMagnifyingGlass,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa6";
 import Select from "react-select";
 import axios from "axios";
 
@@ -19,27 +25,38 @@ import "../styles/Select.scss";
 // Popup
 import PopupDashboard from "./popup/PopupDashboard";
 
-//Data
-import { dataFacultyOption, dataGradeOption, dataBranch } from "../MockupData";
-
 const Dashboard = () => {
   const [input, setInput] = useState("");
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [selectedGrade, setSelectedGrade] = useState(null);
   const [fetchData, setFetchData] = useState([]);
+  const [dataMajor, setDataMajor] = useState([]);
   const [dataSubject, setDataSubject] = useState([]);
   const [viewDetail, setViewDetail] = useState(null);
 
-  useEffect(() => {
-    axios
-      .get("http://localhost:5500/api/subject")
-      .then((response) => {
-        setDataSubject(response.data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+  const fetchSubjects = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/subject");
+      setDataSubject(response.data);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+    }
   }, []);
+
+  const fetchMajor = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/major");
+      setDataMajor(response.data);
+      setFetchData(response.data);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSubjects();
+    fetchMajor();
+  }, [fetchSubjects, fetchMajor]);
 
   const handleSelectFaculty = (e) => {
     setSelectedFaculty(e.value);
@@ -54,29 +71,52 @@ const Dashboard = () => {
     const filteredData = fetchData.filter((item) => {
       return (
         (!selectedFaculty ||
-          item.faculty.toLowerCase().includes(selectedFaculty.toLowerCase())) &&
+          item.fac_name
+            .toLowerCase()
+            .includes(selectedFaculty.toLowerCase())) &&
         (!selectedGrade ||
-          item.grade.toLowerCase().includes(selectedGrade.toLowerCase())) &&
+          item.major_grade
+            .toString()
+            .toLowerCase()
+            .includes(selectedGrade.toLowerCase())) &&
         (!input ||
-          item.faculty.toLowerCase().includes(input.toLowerCase()) ||
-          item.majorId.toLowerCase().includes(input.toLowerCase()) ||
-          item.majorName.toLowerCase().includes(input.toLowerCase()) ||
-          item.grade.toLowerCase().includes(input.toLowerCase()))
+          item.fac_name.toLowerCase().includes(input.toLowerCase()) ||
+          item.major_id.toLowerCase().includes(input.toLowerCase()) ||
+          item.major_name_th.toLowerCase().includes(input.toLowerCase()) ||
+          item.major_grade
+            .toString()
+            .toLowerCase()
+            .includes(input.toLowerCase()))
       );
     });
     setFetchData(filteredData);
     setCurrentPage(1);
   };
 
+  console.log(dataSubject);
+
+  // กรองข้อมูลแล้วเก็บไว้ในตัวแปร options
+  const filterFaculty = [...new Set(dataMajor.map((item) => item.fac_name))];
+  const optionFaculty = filterFaculty.map((faculty) => ({
+    label: faculty,
+    value: faculty,
+  }));
+
+  const filterGrade = [...new Set(dataMajor.map((item) => item.major_grade))];
+  const optionsGrade = filterGrade.map((grade) => ({
+    label: grade.toString(),
+    value: grade.toString(),
+  }));
+
   const handleClickReset = () => {
-    setFetchData(dataBranch);
+    setFetchData(dataMajor);
     setInput("");
     setSelectedFaculty(null);
     setSelectedGrade(null);
   };
 
   useEffect(() => {
-    setFetchData(dataBranch);
+    setFetchData(dataMajor);
     if (!input) {
       return;
     } else {
@@ -86,7 +126,7 @@ const Dashboard = () => {
   }, [input]);
 
   useEffect(() => {
-    setFetchData(dataBranch);
+    setFetchData(dataMajor);
     if (selectedFaculty !== null || selectedGrade !== null) {
       setInput("");
     }
@@ -96,16 +136,33 @@ const Dashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-  const indexOfLastItem = Math.min(
-    currentPage * itemsPerPage,
-    fetchData.length
-  );
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
-  const displayData = fetchData.slice(indexOfFirstItem, indexOfLastItem);
+  const sortedData = fetchData
+    .filter((item) => item.major_grade >= 1 && item.major_grade <= 4)
+    .sort((a, b) => a.major_grade - b.major_grade);
+
+  const displayData = sortedData.slice(indexOfFirstItem, indexOfLastItem);
 
   const pageNumbers = [];
-  for (let i = 1; i <= Math.ceil(fetchData.length / itemsPerPage); i++) {
+  const maxPageButtons = 5;
+
+  let startPage = 1;
+  let endPage = Math.min(
+    startPage + maxPageButtons - 1,
+    Math.ceil(fetchData.length / itemsPerPage)
+  );
+
+  if (currentPage > Math.floor(maxPageButtons / 2)) {
+    startPage = currentPage - Math.floor(maxPageButtons / 2);
+    endPage = Math.min(
+      startPage + maxPageButtons - 1,
+      Math.ceil(fetchData.length / itemsPerPage)
+    );
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
     pageNumbers.push(i);
   }
 
@@ -210,7 +267,7 @@ const Dashboard = () => {
                 className="d-flex justify-content-center"
                 style={{ fontSize: "60px" }}
               >
-                {dataBranch.length}
+                {dataMajor.length}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -225,7 +282,7 @@ const Dashboard = () => {
                   <Select
                     id="facultyName"
                     name="facultyName"
-                    options={dataFacultyOption}
+                    options={optionFaculty}
                     onChange={handleSelectFaculty}
                     placeholder="คณะ"
                     isSearchable={false}
@@ -237,7 +294,7 @@ const Dashboard = () => {
                   <Select
                     id="fieldName"
                     name="fieldName"
-                    options={dataGradeOption}
+                    options={optionsGrade}
                     onChange={handleSelectGrade}
                     placeholder="ชั้นปี"
                     isSearchable={false}
@@ -304,14 +361,17 @@ const Dashboard = () => {
                     <tbody>
                       {displayData.map((item, id) => (
                         <tr key={id} style={{ textAlign: "center" }}>
-                          <td>{item.faculty}</td>
-                          <td>{item.majorId}</td>
+                          <td>{item.fac_name}</td>
+                          <td>{item.major_id}</td>
                           <td
-                            style={{ textAlign: "start", paddingLeft: "1rem" }}
+                            style={{
+                              textAlign: "start",
+                              paddingLeft: "1rem",
+                            }}
                           >
-                            {item.majorName}
+                            {item.major_name_th}
                           </td>
-                          <td>{item.grade}</td>
+                          <td>{item.major_grade}</td>
                           <td>
                             <FaEye
                               onClick={() => {
@@ -349,7 +409,19 @@ const Dashboard = () => {
                       )}
                     </tbody>
                   </Table>
-                  <Pagination className="d-flex justify-content-end">
+                  <Pagination className="d-flex justify-content-end align-items-center gap-3">
+                    <p style={{ color: "#4a4f55" }}>
+                      Page {currentPage} of{" "}
+                      {Math.ceil(fetchData.length / itemsPerPage)}
+                    </p>
+                    {currentPage > 1 && (
+                      <Button
+                        variant="success"
+                        onClick={() => paginate(currentPage - 1)}
+                      >
+                        <FaChevronLeft/>
+                      </Button>
+                    )}
                     {pageNumbers.map((number) => (
                       <Pagination.Item
                         key={number}
@@ -359,6 +431,15 @@ const Dashboard = () => {
                         {number}
                       </Pagination.Item>
                     ))}
+                    {currentPage <
+                      Math.ceil(fetchData.length / itemsPerPage) && (
+                      <Button
+                        variant="success"
+                        onClick={() => paginate(currentPage + 1)}
+                      >
+                        <FaChevronRight/>
+                      </Button>
+                    )}
                   </Pagination>
                 </Col>
               </Row>
@@ -370,7 +451,7 @@ const Dashboard = () => {
         show={showModal}
         hide={handleHide}
         viewDetail={viewDetail}
-        dataSubjects={dataSubject}
+        dataSubject={dataSubject}
       />
     </div>
   );

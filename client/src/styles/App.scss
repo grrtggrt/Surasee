@@ -77,9 +77,16 @@ img {
   .page-item.active .page-link {
     border: 1px solid;
     background-color: #03a96b;
+
+    &:hover {
+      border: 1px solid;
+      background-color: #198754;
+      color: var(--whiteColor);
+    }
   }
 
   .page-link {
+    border-radius: 15% ;
     background-color: var(--whiteColor);
     color: var(--blackColor);
 

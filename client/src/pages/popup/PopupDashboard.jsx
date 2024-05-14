@@ -2,11 +2,13 @@ import React from "react";
 import { Modal, Row, Col, Card } from "react-bootstrap";
 
 const PopupDashboard = (props) => {
-  const { show, hide, viewDetail, dataSubjects } = props;
+  const { show, hide, viewDetail, dataSubject } = props;
 
   const filteredSubjects = viewDetail
-    ? dataSubjects.filter((subject) =>
-        subject.majorId.includes(viewDetail.majorId)
+    ? dataSubject.filter(
+        (subject) =>
+          subject.major_id.includes(viewDetail.major_id) &&
+          subject.grade === viewDetail.major_grade
       )
     : [];
 
@@ -51,7 +53,7 @@ const PopupDashboard = (props) => {
                 color: "white",
               }}
             >
-              {viewDetail ? viewDetail.majorId : ""}
+              {viewDetail ? viewDetail.major_id : ""}
             </p>
           </Col>
           <Col className="d-flex justify-content-end gap-2">
@@ -74,25 +76,32 @@ const PopupDashboard = (props) => {
                     </Card>
                   </Col>
                   <Col sm={10}>
-                    <Row className="pt-4 px-2">
-                      <Col md={3}>
-                        <p style={{ fontSize: "18px", color: "#424242" }}>
-                          {item.id}
+                    <Row className="pt-4">
+                      <Col md={3} className="px-3">
+                        <p style={{ fontSize: "16px", color: "#424242" }}>
+                          {item.cs_id}
                         </p>
-                        <p style={{ color: "#5B5B5B" }}>หมู่ {`${item.sec}`}</p>
+                        {(item.lc_sec || item.lb_sec) && (
+                          <p style={{ color: "#5B5B5B" }}>
+                            หมู่{" "}
+                            {`${item.lc_sec || ""}${
+                              item.lc_sec && item.lb_sec ? "," : ""
+                            }${item.lb_sec || ""}`}
+                          </p>
+                        )}
                       </Col>
                       <Col md={7}>
-                        <p style={{ fontSize: "18px", color: "#424242" }}>
-                          {item.name_en}
+                        <p style={{ fontSize: "16px", color: "#424242" }}>
+                          {item.cs_name_en}
                         </p>
-                        <p style={{ color: "#5B5B5B" }}>{item.name_th}</p>
+                        <p style={{ color: "#5B5B5B" }}>{item.cs_name_th}</p>
                       </Col>
                       <Col>
-                        <p style={{ fontSize: "18px", color: "#424242" }}>
+                        <p style={{ fontSize: "16px", color: "#424242" }}>
                           ห้อง 17201A
                         </p>
                         <p style={{ color: "#5B5B5B" }}>
-                          อาคาร 17 (50 ที่นั่ง)
+                          {`อาคาร 17 ( ${item.amount} ที่นั่ง )`}
                         </p>
                       </Col>
                     </Row>
