@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Login.scss";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 import { FaUser, FaLock, FaArrowRightLong } from "react-icons/fa6";
 
@@ -17,12 +18,12 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-
-    if (username === "admin" && password === "1234") {
-      navigateTo("/dashboard");
-    } else {
-      setLoginStatus("ชื่อผู้ใช้ หรือ รหัสผ่านไม่ถูกต้อง");
-    }
+    axios.post("http://localhost:5500/api/login" , { username, password })
+    .then(response=>{
+        navigateTo("/dashboard");
+    }).catch(err=>{
+        setLoginStatus("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
+    })
   };
 
   useEffect(() => {

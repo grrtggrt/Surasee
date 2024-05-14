@@ -25,8 +25,6 @@ const PopupManageRoom = (props) => {
   const [selectedOption, setSelectedOption] = useState("");
   const [cardColor, setCardColor] = useState("");
 
-  console.log(selectedSubject)
-
   const handleTypeSelect = (e) => {
     setSelectedOption(e.value);
   };
@@ -104,7 +102,7 @@ const PopupManageRoom = (props) => {
                     type="text"
                     readOnly
                     disabled
-                    value={selectedSubject ? selectedSubject.id : ''}
+                    value={selectedSubject ? selectedSubject.cs_id : ''}
                   />
                 </Form>
               </Col>
@@ -116,7 +114,7 @@ const PopupManageRoom = (props) => {
                     type="text"
                     readOnly
                     disabled
-                    value={selectedSubject ? selectedSubject.name_th : ''}
+                    value={selectedSubject ? selectedSubject.cs_name_th : ''}
                   />
                 </Form>
               </Col>
@@ -128,6 +126,7 @@ const PopupManageRoom = (props) => {
                     type="text"
                     readOnly
                     disabled
+                    value={selectedSubject ? selectedSubject.amount : ''}
                   />
                 </Form>
               </Col>

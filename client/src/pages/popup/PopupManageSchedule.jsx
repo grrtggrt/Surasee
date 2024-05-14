@@ -27,7 +27,6 @@ const PopupManageSchedule = (props) => {
 
   const handleTermSelect = (e) => {
     SetSelectTerm(e.value);
-    console.log('handle', selectTerm);
   };
 
   const handleSemesterSelect = (e) => {

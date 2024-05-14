@@ -3,6 +3,7 @@ import { Card, Row, Col, Form, Button } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Swal from "sweetalert2";
 import Select from "react-select";
+import axios from "axios";
 
 //ICONS
 import {
@@ -27,7 +28,6 @@ import {
   dataFacultyOption,
   dataMajorOption,
   dataGradeOption,
-  dataSubjects,
 } from "../MockupData";
 
 const Schedule = () => {
@@ -38,10 +38,25 @@ const Schedule = () => {
   const [endDate, setEndDate] = useState(null);
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [selectedSemester, setSelectedSemester] = useState(null);
-  const [items, setItems] = useState(dataSubjects);
   const [droppedItems, setDroppedItems] = useState([]);
   const [input, setInput] = useState("");
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [data, setData] = useState([]);
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5500/api/subject")
+      .then((response) => {
+        setData(response.data);
+        setItems(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
+
+  console.log(items)
 
   //DND
   const onDragEnd = (result) => {
@@ -71,9 +86,19 @@ const Schedule = () => {
   //DELETE-BTN
   const handleDeleteItem = (droppableId, itemId) => {
     // ตัดไอเท็มที่ต้องการลบออกจาก droppedItems
-    const newDroppedItems = droppedItems.filter(
-      (item) => !(item.droppableId === droppableId && item.id === itemId)
-    );
+    let deletedCount = 0;
+
+    // สร้าง list ใหม่ของ droppedItems โดยไม่รวมไอเท็มที่ต้องการลบ
+    const newDroppedItems = droppedItems.filter((item) => {
+      if (item.droppableId === droppableId && item.id === itemId) {
+        // ถ้าไอเท็มที่พบเป็นไอเท็มที่ต้องการลบ และยังไม่ลบไอเท็มที่ต้องการลบ
+        if (deletedCount === 0) {
+          deletedCount++;
+          return false; // ไม่เอาไอเท็มนี้
+        }
+      }
+      return true; // เก็บไอเท็มนี้
+    });
 
     // หากต้องการให้ลบออกจาก items ด้วย ก็ให้ทำการอัปเดต items ด้วยการเพิ่มไอเท็มนั้นอีกครั้ง
     const deletedItem = droppedItems.find(
@@ -176,12 +201,12 @@ const Schedule = () => {
     const filteredData = items.filter((item) => {
       return (
         !input ||
-        item.id.toLowerCase().includes(input.toLowerCase()) ||
-        item.name_en.toLowerCase().includes(input.toLowerCase()) ||
-        item.name_th.toLowerCase().includes(input.toLowerCase()) ||
-        item.type.toLowerCase().includes(input.toLowerCase()) ||
-        item.majorId.toString().toLowerCase().includes(input.toLowerCase()) ||
-        item.sec.toString().toLowerCase().includes(input.toLowerCase())
+        item.cs_id.toLowerCase().includes(input.toLowerCase()) ||
+        item.cs_name_en.toLowerCase().includes(input.toLowerCase()) ||
+        item.cs_name_th.toLowerCase().includes(input.toLowerCase()) ||
+        item.major_id.toString().toLowerCase().includes(input.toLowerCase()) ||
+        item.lb_sec.toString().toLowerCase().includes(input.toLowerCase()) ||
+        item.lc_sec.toString().toLowerCase().includes(input.toLowerCase())
       );
     });
 
@@ -189,20 +214,26 @@ const Schedule = () => {
   };
 
   useEffect(() => {
-    const filteredItems = dataSubjects.filter(
-      (item) => !droppedItems.find((droppedItem) => droppedItem.id === item.id)
+    const filteredItems = data.filter(
+      (item) =>
+        !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
     );
     setItems(filteredItems);
-  }, [droppedItems, input]);
+  }, [input]);
 
   //POPUP
   const handleShowManageRoom = () => setShowManageRoom(true);
 
-  const handleHideManageRoom = () => setShowManageRoom(false);
+  const handleHideManageRoom = () => {
+    setSelectedSubject(null);
+    setShowManageRoom(false);
+  };
 
   const handleShowSchedule = () => setShowSchedule(true);
 
-  const handleHideSchedule = () => setShowSchedule(false);
+  const handleHideSchedule = () => {
+    setShowSchedule(false);
+  };
 
   //TABLE
   const numRows = 4; // จำนวนวันที่ต้องการสร้าง
@@ -300,7 +331,7 @@ const Schedule = () => {
                       {droppedItems
                         .filter((item) => item.droppableId === droppableId)
                         .map((item, index) => (
-                          <Card key={item.id} index={index}>
+                          <Card key={item.cs_id} index={index}>
                             <Button
                               className="btn-icon"
                               style={{ position: "absolute", right: "0" }}
@@ -311,9 +342,9 @@ const Schedule = () => {
                               <FaCircleMinus className="text-danger fs-5" />
                             </Button>
                             <Card.Body>
-                              <p>รหัสวิชา : {item.id}</p>
-                              <p>ชื่อวิชา : {item.name_th}</p>
-                              <p>สาขา : {`${item.majorId}`}</p>
+                              <p>รหัสวิชา : {item.cs_id}</p>
+                              <p>ชื่อวิชา : {item.cs_name_en}</p>
+                              <p>สาขา : {`${item.major_id}`}</p>
                             </Card.Body>
                           </Card>
                         ))}
@@ -516,8 +547,8 @@ const Schedule = () => {
                         {/* รายการของไอเท็มที่ถูกลากมาวาง */}
                         {items.map((item, index) => (
                           <Draggable
-                            key={item.id}
-                            draggableId={item.id}
+                            key={item.cs_id}
+                            draggableId={item.cs_id}
                             index={index}
                           >
                             {(provided) => (
@@ -527,11 +558,11 @@ const Schedule = () => {
                                 {...provided.dragHandleProps}
                               >
                                 <Card.Body>
-                                  <p>รหัสวิชา : {item.id}</p>
-                                  <p>ชื่อวิชา : {item.name_th}</p>
-                                  <p>สาขา : {`${item.majorId}`}</p>
-                                  <p>หมู่เรียน : {`${item.sec}`}</p>
-                                  <p>ประเภท : {item.type}</p>
+                                  <p>รหัสวิชา : {item.cs_id}</p>
+                                  <p>ชื่อวิชา : {item.cs_name_en}</p>
+                                  <p>สาขา : {`${item.major_id}`}</p>
+                                  <p>บรรยาย : {`${item.lc_sec}`}</p>
+                                  <p>ปฎิบัติ : {`${item.lb_sec}`}</p>
                                 </Card.Body>
                               </Card>
                             )}

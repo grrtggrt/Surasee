@@ -11,6 +11,7 @@ import {
 } from "react-bootstrap";
 import { FaEye, FaArrowsRotate, FaMagnifyingGlass } from "react-icons/fa6";
 import Select from "react-select";
+import axios from "axios";
 
 //styles
 import "../styles/Select.scss";
@@ -19,19 +20,26 @@ import "../styles/Select.scss";
 import PopupDashboard from "./popup/PopupDashboard";
 
 //Data
-import {
-  dataFacultyOption,
-  dataGradeOption,
-  dataBranch,
-  dataSubjects,
-} from "../MockupData";
+import { dataFacultyOption, dataGradeOption, dataBranch } from "../MockupData";
 
 const Dashboard = () => {
   const [input, setInput] = useState("");
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [selectedGrade, setSelectedGrade] = useState(null);
-  const [fetchData, setFetchData] = useState(dataBranch);
+  const [fetchData, setFetchData] = useState([]);
+  const [dataSubject, setDataSubject] = useState([]);
   const [viewDetail, setViewDetail] = useState(null);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5500/api/subject")
+      .then((response) => {
+        setDataSubject(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
 
   const handleSelectFaculty = (e) => {
     setSelectedFaculty(e.value);
@@ -109,12 +117,12 @@ const Dashboard = () => {
   const handleShow = (faculty) => {
     setViewDetail(faculty);
     setShowModal(true);
-  }
+  };
 
   const handleHide = () => {
     setViewDetail(null);
     setShowModal(false);
-  }
+  };
 
   return (
     <div className="main-content-center">
@@ -136,7 +144,7 @@ const Dashboard = () => {
                 className="d-flex justify-content-center"
                 style={{ fontSize: "60px" }}
               >
-                {dataSubjects.filter((subject) => !subject.active).length}
+                {dataSubject.length}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -158,7 +166,7 @@ const Dashboard = () => {
                 className="d-flex justify-content-center"
                 style={{ fontSize: "60px" }}
               >
-                {dataSubjects.filter((subject) => subject.active).length}
+                {dataSubject.length}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -180,7 +188,7 @@ const Dashboard = () => {
                 className="d-flex justify-content-center"
                 style={{ fontSize: "60px" }}
               >
-                {dataSubjects.length}
+                {dataSubject.length}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -358,7 +366,12 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
-      <PopupDashboard show={showModal} hide={handleHide} viewDetail={viewDetail} dataSubjects={dataSubjects}/>
+      <PopupDashboard
+        show={showModal}
+        hide={handleHide}
+        viewDetail={viewDetail}
+        dataSubjects={dataSubject}
+      />
     </div>
   );
 };
