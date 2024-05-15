@@ -10,4 +10,11 @@ router.get('/building', (req, res, next) => {
     })
 })
 
+router.post('/building', (req, res, next) => {
+    Building.create(req.body, (err, post) => {
+        if(err) return next(err);
+        res.json(post);
+    })
+})
+
 module.exports=router

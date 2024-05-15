@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Modal, Row, Col, Form, Button, CloseButton } from "react-bootstrap";
+import { Modal, Row, Col, Button, CloseButton } from "react-bootstrap";
 import { FaBan, FaFloppyDisk } from "react-icons/fa6";
 import Select from "react-select";
 import Swal from "sweetalert2";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+
 // styles
+import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/DatePicker.scss";
 import "../../styles/Select.scss";
 import "../../styles/Modal.scss";

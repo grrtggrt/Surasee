@@ -23,44 +23,39 @@ import PopupManageSchedule from "./popup/PopupManageSchedule";
 //STYLE
 import "./Schedule.scss";
 
-//DATA
-import {
-  dataFacultyOption,
-  dataMajorOption,
-  dataGradeOption,
-} from "../MockupData";
-
 const Schedule = () => {
   const [showManageRoom, setShowManageRoom] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [input, setInput] = useState("");
+  const [dataSubject, setDataSubject] = useState([]);
+  const [dataMajor, setDataMajor] = useState([]);
+  const [selectedFaculty, setSelectedFaculty] = useState(null);
+  const [selectedMajor, setSelectedMajor] = useState(null);
+  const [selectedGrade, setSelectedGrade] = useState(null);
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [selectedSemester, setSelectedSemester] = useState(null);
-  const [droppedItems, setDroppedItems] = useState([]);
-  const [input, setInput] = useState("");
   const [selectedSubject, setSelectedSubject] = useState(null);
-  const [data, setData] = useState([]);
   const [items, setItems] = useState([]);
+  const [droppedItems, setDroppedItems] = useState([]);
 
-  // useEffect(() => {
-  //   axios
-  //     .get("http://localhost:5500/api/subject")
-  //     .then((response) => {
-  //       setData(response.data);
-  //       setItems(response.data);
-  //     })
-  //     .catch((error) => {
-  //       console.log(error);
-  //     });
-  // }, []);
-
+  //ดึงข้อมูล
   const fetchSubjects = useCallback(async () => {
     try {
       const response = await axios.get("http://localhost:5500/api/subject");
-      setData(response.data);
+      setDataSubject(response.data);
       setItems(response.data);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+    }
+  }, []);
+
+  const fetchMajor = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/major");
+      setDataMajor(response.data);
     } catch (error) {
       console.error("Error fetching subjects:", error);
     }
@@ -68,9 +63,10 @@ const Schedule = () => {
 
   useEffect(() => {
     fetchSubjects();
-  }, [fetchSubjects]);
+    fetchMajor();
+  }, [fetchSubjects, fetchMajor]);
 
-  //DND
+  //DropItems
   const onDragEnd = (result) => {
     const { source, destination } = result;
 
@@ -116,6 +112,12 @@ const Schedule = () => {
     setItems(newItems);
   };
 
+  const handleClearAll = () => {
+    setDroppedItems([]);
+
+    setItems([]);
+  };
+
   //BTN-EDIT
   const handleEditClick = () => {
     setIsEditing(!isEditing);
@@ -134,6 +136,7 @@ const Schedule = () => {
     setSelectedSemester(selectSemester);
   };
 
+  //Alert Confirm
   const handleSaveConfirm = () => {
     Swal.fire({
       title: "ต้องการบันทึกข้อมูลใช่หรือไม่",
@@ -187,15 +190,54 @@ const Schedule = () => {
             confirmButton: "shadow-none",
           },
         });
-        // handleEditClick();
+        handleClearAll();
         setIsEditing(false);
       }
     });
   };
 
   //Search
+  const handleSelectFaculty = (e) => {
+    setSelectedFaculty(e.value);
+  };
 
-  const handleClickSearch = () => {
+  const handleSelectMajor = (e) => {
+    setSelectedMajor(e.value);
+  };
+
+  const handleSelectGrade = (e) => {
+    setSelectedGrade(e.value);
+  };
+
+  //คณะ
+  const filterFaculty = [...new Set(dataMajor.map((item) => item.fac_name))];
+  const optionFaculty = filterFaculty.map((faculty) => ({
+    label: faculty,
+    value: faculty,
+  }));
+
+  //สาขา
+  const filterMajor = [...new Set(dataMajor.map((item) => item.major_id))].sort(
+    (a, b) => parseInt(a) - parseInt(b)
+  );
+  const optionMajor = filterMajor.map((major) => ({
+    label: major,
+    value: major,
+  }));
+
+  console.log(dataMajor)
+
+  //ชั้นปี
+  const filterGrade = [
+    ...new Set(dataMajor.map((item) => item.major_grade)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
+
+  const optionGrade = filterGrade.map((grade) => ({
+    label: grade,
+    value: grade,
+  }));
+
+  const handleClickSearchSubject = () => {
     const filteredData = items.filter((item) => {
       return (
         !input ||
@@ -211,13 +253,21 @@ const Schedule = () => {
     setItems(filteredData);
   };
 
+  const handleClickSearchMajor = () => {};
+
+  const handleClickResetMajor = () => {
+    setSelectedFaculty(null);
+    setSelectedMajor(null);
+    setSelectedGrade(null);
+  };
+
   useEffect(() => {
-    const filteredItems = data.filter(
+    const filteredItems = dataSubject.filter(
       (item) =>
         !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
     );
     setItems(filteredItems);
-  }, [input, data, droppedItems]);
+  }, [input, dataSubject, droppedItems]);
 
   //PopupManageRoom
   const handleShowManageRoom = () => setShowManageRoom(true);
@@ -326,15 +376,17 @@ const Schedule = () => {
                         .filter((item) => item.droppableId === droppableId)
                         .map((item, index) => (
                           <Card key={item.cs_id} index={index}>
-                            <Button
-                              className="btn-icon"
-                              style={{ position: "absolute", right: "0" }}
-                              onClick={() =>
-                                handleDeleteItem(droppableId, item.id)
-                              }
-                            >
-                              <FaCircleMinus className="text-danger fs-5" />
-                            </Button>
+                            {isEditing ? (
+                              <Button
+                                className="btn-icon"
+                                style={{ position: "absolute", right: "0" }}
+                                onClick={() =>
+                                  handleDeleteItem(droppableId, item.id)
+                                }
+                              >
+                                <FaCircleMinus className="text-danger fs-5" />
+                              </Button>
+                            ) : null}
                             <Card.Body>
                               <p>รหัสวิชา : {item.cs_id}</p>
                               <p>ชื่อวิชา : {item.cs_name_en}</p>
@@ -370,22 +422,20 @@ const Schedule = () => {
       <Row>
         <Col sm={9} className="d-flex gap-3">
           <Select
-            id="fieldName"
-            name="fieldName"
-            options={dataFacultyOption}
-            // onChange={handleOptionChange}
-            // value={selectedOption}
+            id="facultyName"
+            name="facultyName"
+            options={optionFaculty}
+            onChange={handleSelectFaculty}
             placeholder="คณะ"
             isSearchable={false}
             className="react-select-container w-100"
             classNamePrefix="react-select"
           />
           <Select
-            id="fieldName"
-            name="fieldName"
-            options={dataMajorOption}
-            // onChange={handleOptionChange}
-            // value={selectedOption}
+            id="majorName"
+            name="majorName"
+            options={optionMajor}
+            onChange={handleSelectMajor}
             placeholder="สาขา"
             isSearchable={false}
             className="react-select-container w-100"
@@ -394,21 +444,24 @@ const Schedule = () => {
         </Col>
         <Col className="d-flex gap-3">
           <Select
-            id="fieldName"
-            name="fieldName"
-            options={dataGradeOption}
-            // onChange={handleOptionChange}
-            // value={selectedOption}
+            id="gradeName"
+            name="gradeName"
+            options={optionGrade}
+            onChange={handleSelectGrade}
             placeholder="ชั้นปี"
             isSearchable={false}
             className="react-select-container w-100"
             classNamePrefix="react-select"
           />
-          <Button className="d-flex align-items-center gap-2" variant="info">
+          <Button
+            className="d-flex align-items-center gap-2"
+            variant="info"
+            onClick={() => handleClickSearchMajor()}
+          >
             <FaMagnifyingGlass />
             <p className="mb-0">ค้นหา</p>
           </Button>
-          <Button className="d-flex align-items-center gap-2" variant="danger">
+          <Button className="d-flex align-items-center gap-2" variant="danger" onClick={() => handleClickResetMajor()}>
             <FaArrowsRotate />
             <p className="mb-0">รีเซ็ต</p>
           </Button>
@@ -485,8 +538,6 @@ const Schedule = () => {
                     <Button
                       className="d-flex align-items-center justify-content-center gap-2"
                       variant="dark"
-                      // variant={isEditing ? "secondary" : "dark"}
-                      // disabled={isEditing === true}
                       onClick={() => handleEditClick()}
                     >
                       <FaPenToSquare />
@@ -511,10 +562,10 @@ const Schedule = () => {
                 <Row className="pb-3">
                   <Col className="d-flex gap-3">
                     <Form.Control
-                      style={{ fontSize: "16px" }}
+                      id="searchName"
+                      name="searchName"
                       type="search"
                       placeholder="ค้นหารหัสวิชา/ชื่อวิชา"
-                      aria-label="Search"
                       className="custom-input"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
@@ -522,7 +573,7 @@ const Schedule = () => {
                     <Button
                       className="d-flex align-items-center gap-2"
                       variant="info"
-                      onClick={() => handleClickSearch()}
+                      onClick={() => handleClickSearchSubject()}
                     >
                       <FaMagnifyingGlass />
                       <p className="mb-0">ค้นหา</p>
@@ -554,8 +605,12 @@ const Schedule = () => {
                                   <p>รหัสวิชา : {item.cs_id}</p>
                                   <p>ชื่อวิชา : {item.cs_name_en}</p>
                                   <p>สาขา : {`${item.major_id}`}</p>
-                                  <p>บรรยาย : {`${item.lc_sec}`}</p>
-                                  <p>ปฎิบัติ : {`${item.lb_sec}`}</p>
+                                  {item.lc_sec.length > 0 && (
+                                    <p>บรรยาย : {`${item.lc_sec}`}</p>
+                                  )}
+                                  {item.lb_sec.length > 0 && (
+                                    <p>ปฎิบัติ : {`${item.lb_sec}`}</p>
+                                  )}
                                 </Card.Body>
                               </Card>
                             )}

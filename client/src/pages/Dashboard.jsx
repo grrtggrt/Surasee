@@ -34,6 +34,7 @@ const Dashboard = () => {
   const [dataSubject, setDataSubject] = useState([]);
   const [viewDetail, setViewDetail] = useState(null);
 
+  //ดึงข้อมูล
   const fetchSubjects = useCallback(async () => {
     try {
       const response = await axios.get("http://localhost:5500/api/subject");
@@ -58,6 +59,8 @@ const Dashboard = () => {
     fetchMajor();
   }, [fetchSubjects, fetchMajor]);
 
+  //ค้นหา
+
   const handleSelectFaculty = (e) => {
     setSelectedFaculty(e.value);
   };
@@ -66,8 +69,21 @@ const Dashboard = () => {
     setSelectedGrade(e.value);
   };
 
+  //คณะ
+  const filterFaculty = [...new Set(dataMajor.map((item) => item.fac_name))];
+  const optionFaculty = filterFaculty.map((faculty) => ({
+    label: faculty,
+    value: faculty,
+  }));
+
+  //ชั้นปี
+  const filterGrade = [...new Set(dataMajor.map((item) => item.major_grade))];
+  const optionsGrade = filterGrade.map((grade) => ({
+    label: grade.toString(),
+    value: grade.toString(),
+  }));
+
   const handleClickSearch = () => {
-    // คำนวณข้อมูลที่ต้องการแสดงตามเงื่อนไขที่กำหนด
     const filteredData = fetchData.filter((item) => {
       return (
         (!selectedFaculty ||
@@ -92,21 +108,6 @@ const Dashboard = () => {
     setFetchData(filteredData);
     setCurrentPage(1);
   };
-
-  console.log(dataSubject);
-
-  // กรองข้อมูลแล้วเก็บไว้ในตัวแปร options
-  const filterFaculty = [...new Set(dataMajor.map((item) => item.fac_name))];
-  const optionFaculty = filterFaculty.map((faculty) => ({
-    label: faculty,
-    value: faculty,
-  }));
-
-  const filterGrade = [...new Set(dataMajor.map((item) => item.major_grade))];
-  const optionsGrade = filterGrade.map((grade) => ({
-    label: grade.toString(),
-    value: grade.toString(),
-  }));
 
   const handleClickReset = () => {
     setFetchData(dataMajor);
@@ -292,8 +293,8 @@ const Dashboard = () => {
                 </Col>
                 <Col md={1}>
                   <Select
-                    id="fieldName"
-                    name="fieldName"
+                    id="gradeName"
+                    name="gradeName"
                     options={optionsGrade}
                     onChange={handleSelectGrade}
                     placeholder="ชั้นปี"
@@ -305,10 +306,10 @@ const Dashboard = () => {
                 <Col md={2}>
                   <Form className="d-flex ">
                     <Form.Control
-                      style={{ fontSize: "16px" }}
+                      id="searchName"
+                      name="searchName"
                       type="search"
                       placeholder="ค้นหา"
-                      aria-label="Search"
                       className="custom-input"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
@@ -419,7 +420,7 @@ const Dashboard = () => {
                         variant="success"
                         onClick={() => paginate(currentPage - 1)}
                       >
-                        <FaChevronLeft/>
+                        <FaChevronLeft />
                       </Button>
                     )}
                     {pageNumbers.map((number) => (
@@ -437,7 +438,7 @@ const Dashboard = () => {
                         variant="success"
                         onClick={() => paginate(currentPage + 1)}
                       >
-                        <FaChevronRight/>
+                        <FaChevronRight />
                       </Button>
                     )}
                   </Pagination>

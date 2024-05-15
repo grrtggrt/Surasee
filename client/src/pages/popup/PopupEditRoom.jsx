@@ -3,6 +3,7 @@ import { Modal, Row, Col, Form, Button, CloseButton, Card } from "react-bootstra
 import { FaBan, FaFloppyDisk, FaCircleMinus  } from "react-icons/fa6";
 import Swal from "sweetalert2";
 import Select from "react-select";
+
 // styles
 import "../../styles/Modal.scss";
 import "../../styles/Select.scss";

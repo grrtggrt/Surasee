@@ -8,6 +8,7 @@ import "../../styles/Modal.scss";
 const PopupResetPassword = (props) => {
   const { show, hide } = props;
 
+  //Alert Confirm
   const handleSaveConfirm = () => {
     Swal.fire({
       title: "ต้องการบันทึกข้อมูลใช่หรือไม่",
@@ -37,7 +38,6 @@ const PopupResetPassword = (props) => {
     });
   };
 
-  
   return (
     <Modal show={show} onHide={hide} centered>
       <Modal.Header>

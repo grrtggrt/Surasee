@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Row, Col, Card, Form, Button } from "react-bootstrap";
 import {
   FaMagnifyingGlass,
   FaArrowsRotate,
   FaPenToSquare,
-  FaCirclePlus
+  FaCirclePlus,
 } from "react-icons/fa6";
 import Select from "react-select";
+import axios from "axios";
+
 // styles
 import "../styles/Select.scss";
 import "../styles/Input.scss";
@@ -16,19 +18,63 @@ import "./ManageRoom.scss";
 import PopupEditRoom from "./popup/PopupEditRoom";
 import PopupManageRoom from "./popup/PopupManageRoom";
 
-import {
-  dataMajorOption,
-  dataGradeOption,
-  dataTypeSubjectOption,
-  dataSubjects,
-  dataBuildingOption,
-  dataBuilding,
-} from "../MockupData";
-
 const ManageRoom = () => {
   const [showEditRoom, setShowEditRoom] = useState(false);
   const [showManageRoom, setShowManageRoom] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [selectedMajor, setSelectedMajor] = useState(null);
+  const [selectedGrade, setSelectedGrade] = useState(null);
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [selectedFloor, setSelectedFloor] = useState(null);
+  const [inputAmount, setInputAmount] = useState("");
+  const [inputSubject, setInputSubject] = useState("");
+  const [fetchDataRoom, setFetchDataRoom] = useState([]);
+  const [fetchDataSubject, setFetchDataSubject] = useState([]);
+  const [dataRoom, setDataRoom] = useState([]);
+  const [dataSubject, setDataSubject] = useState([]);
+  const [dataMajor, setDataMajor] = useState([]);
+
+  //ดึงข้อมูล
+  const fetchRoom = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/building");
+      setFetchDataRoom(response.data);
+      setDataRoom(response.data);
+    } catch (error) {
+      console.error("Error fetching room:", error);
+    }
+  }, []);
+
+  const fetchSubjects = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/subject");
+      setDataSubject(response.data);
+      setFetchDataSubject(response.data);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+    }
+  }, []);
+
+  const fetchMajor = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/major");
+      setDataMajor(response.data);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRoom();
+    fetchSubjects();
+    fetchMajor();
+  }, [fetchRoom, fetchSubjects, fetchMajor]);
+
+  //Modal
+  const handleEditClick = () => {
+    setIsEditing(!isEditing);
+  };
 
   const handleShowEditRoom = () => setShowEditRoom(true);
 
@@ -43,6 +89,146 @@ const ManageRoom = () => {
     setShowManageRoom(false);
     setSelectedSubject(null);
   };
+
+  //Search
+  const handleSelectBuilding = (e) => {
+    setSelectedBuilding(e.value);
+  };
+
+  const handleSelectFloor = (e) => {
+    setSelectedFloor(e.value);
+  };
+
+  const handleSelectMajor = (e) => {
+    setSelectedMajor(e.value);
+  };
+
+  const handleSelectGrade = (e) => {
+    setSelectedGrade(e.value);
+  };
+
+  //ตึก
+  const filterBuilding = [
+    ...new Set(dataRoom.map((item) => item.build_name)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
+
+  const optionBuilding = filterBuilding.map((building) => ({
+    label: building,
+    value: building,
+  }));
+
+  //ชั้น
+  // const filterfloor = [...new Set(dataRoom.map((item) => item.id))];
+  // const optionsfloor = filterfloor.map((floor) => ({
+  //   label: floor,
+  //   value: floor,
+  // }));
+
+  //สาขา
+  const filterMajor = [...new Set(dataMajor.map((item) => item.major_id))].sort(
+    (a, b) => parseInt(a) - parseInt(b)
+  );
+  const optionMajor = filterMajor.map((major) => ({
+    label: major,
+    value: major,
+  }));
+
+  //ชั้นปี
+  const filterGrade = [
+    ...new Set(dataMajor.map((item) => item.major_grade)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
+
+  const optionGrade = filterGrade.map((grade) => ({
+    label: grade,
+    value: grade,
+  }));
+
+  const handleClickSearchRoom = () => {
+    const filteredData = dataRoom.filter((item) => {
+      return (
+        (!selectedBuilding || item.build_name === selectedBuilding) &&
+        (!inputAmount || parseFloat(inputAmount) < parseFloat(item.amount))
+      );
+    });
+
+    setFetchDataRoom(filteredData);
+  };
+
+  const handleClickSearchSubject = () => {
+    const filteredData = dataSubject.filter((item) => {
+      return (
+        (!selectedGrade ||
+          item.grade
+            .toString()
+            .toLowerCase()
+            .includes(selectedGrade.toString().toLowerCase())) &&
+        (!selectedMajor ||
+          item.major_id
+            .toString()
+            .toLowerCase()
+            .includes(selectedMajor.toString().toLowerCase())) &&
+        (!inputSubject ||
+          item.cs_id.toLowerCase().includes(inputSubject.toLowerCase()) ||
+          item.cs_name_en.toLowerCase().includes(inputSubject.toLowerCase()) ||
+          item.cs_name_th.toLowerCase().includes(inputSubject.toLowerCase()) ||
+          item.major_id
+            .toString()
+            .toLowerCase()
+            .includes(inputSubject.toLowerCase()) ||
+          item.lb_sec
+            .toString()
+            .toLowerCase()
+            .includes(inputSubject.toLowerCase()) ||
+          item.lc_sec
+            .toString()
+            .toLowerCase()
+            .includes(inputSubject.toLowerCase()))
+      );
+    });
+    setFetchDataSubject(filteredData);
+  };
+
+  const handleClickResetSubject = () => {
+    setFetchDataSubject(dataSubject);
+    setInputSubject("");
+    setSelectedMajor(null);
+    setSelectedGrade(null);
+  };
+
+  const handleClickResetRoom = () => {
+    setFetchDataRoom(dataRoom);
+    setInputAmount("");
+    setSelectedBuilding(null);
+    setSelectedFloor(null);
+  };
+
+  useEffect(() => {
+    setFetchDataRoom(dataRoom);
+  }, [inputAmount]);
+
+  useEffect(() => {
+    setFetchDataRoom(dataRoom);
+    if (selectedBuilding !== null || selectedFloor !== null) {
+      setInputAmount("");
+    }
+  }, [selectedBuilding, selectedFloor]);
+
+  useEffect(() => {
+    setFetchDataSubject(dataSubject);
+    if (!inputSubject) {
+      return;
+    } else {
+      setSelectedMajor(null);
+      setSelectedGrade(null);
+    }
+  }, [inputSubject]);
+
+  useEffect(() => {
+    setFetchDataSubject(dataSubject);
+    if (selectedMajor !== null || selectedGrade !== null) {
+      setInputSubject("");
+    }
+  }, [selectedMajor, selectedGrade]);
 
   return (
     <div className="main-content-center">
@@ -62,8 +248,8 @@ const ManageRoom = () => {
                 </Col>
                 <Col md={8}>
                   <Select
-                    id="date"
-                    name="date"
+                    id="dateName"
+                    name="dateName"
                     // options={options}
                     // onChange={handleOptionChange}
                     placeholder="กรุณาเลือก"
@@ -86,11 +272,10 @@ const ManageRoom = () => {
               >
                 <Col md={2}>
                   <Select
-                    id="fieldName"
-                    name="fieldName"
-                    options={dataMajorOption}
-                    // onChange={handleOptionChange}
-                    // value={selectedOption}
+                    id="majorName"
+                    name="majorName"
+                    options={optionMajor}
+                    onChange={handleSelectMajor}
                     placeholder="สาขา"
                     isSearchable={false}
                     className="react-select-container"
@@ -99,25 +284,11 @@ const ManageRoom = () => {
                 </Col>
                 <Col md={1}>
                   <Select
-                    id="fieldName"
-                    name="fieldName"
-                    options={dataGradeOption}
-                    // onChange={handleOptionChange}
-                    // value={selectedOption}
+                    id="gradeName"
+                    name="gradeName"
+                    options={optionGrade}
+                    onChange={handleSelectGrade}
                     placeholder="ชั้นปี"
-                    isSearchable={false}
-                    className="react-select-container"
-                    classNamePrefix="react-select"
-                  />
-                </Col>
-                <Col md="auto">
-                  <Select
-                    id="fieldName"
-                    name="fieldName"
-                    options={dataTypeSubjectOption}
-                    // onChange={handleOptionChange}
-                    // value={selectedOption}
-                    placeholder="ประเภทวิชา"
                     isSearchable={false}
                     className="react-select-container"
                     classNamePrefix="react-select"
@@ -125,17 +296,20 @@ const ManageRoom = () => {
                 </Col>
                 <Col md={2}>
                   <Form.Control
-                    id="fieldName"
-                    name="fieldName"
-                    type="input"
-                    className="custom-input"
+                    id="searchName"
+                    name="searchName"
+                    type="search"
                     placeholder="รหัสวิชา/ชื่อวิชา"
+                    className="custom-input"
+                    value={inputSubject}
+                    onChange={(e) => setInputSubject(e.target.value)}
                   />
                 </Col>
                 <Col md="auto" className="d-flex justify-content-center gap-2">
                   <Button
                     className="d-flex align-items-center gap-2"
                     variant="info"
+                    onClick={() => handleClickSearchSubject()}
                   >
                     <FaMagnifyingGlass />
                     <p className="mb-0">ค้นหา</p>
@@ -143,6 +317,7 @@ const ManageRoom = () => {
                   <Button
                     className="d-flex align-items-center gap-2"
                     variant="danger"
+                    onClick={() => handleClickResetSubject()}
                   >
                     <FaArrowsRotate />
                     <p className="mb-0">รีเซ็ต</p>
@@ -151,21 +326,25 @@ const ManageRoom = () => {
               </Row>
               <Row>
                 <Col className="subject-card-grid-manageroom">
-                  {dataSubjects.map((item, id) => (
+                  {fetchDataSubject.map((item, id) => (
                     <Card key={id}>
                       <Card.Body>
                         <Button
                           className="btn-icon"
-                          style={{ position: "absolute", top:"0", right:"0"}}
+                          style={{ position: "absolute", top: "0", right: "0" }}
                           onClick={() => handleShowManageRoom(item)}
                         >
                           <FaCirclePlus className="text-info fs-5" />
                         </Button>
-                        <p>รหัสวิชา : {item.id}</p>
-                        <p>ชื่อวิชา : {item.name_th}</p>
-                        <p>สาขา : {`${item.majorId}`}</p>
-                        <p>หมู่เรียน : {`${item.sec}`}</p>
-                        <p>ประเภท : {item.type}</p>
+                        <p>รหัสวิชา : {item.cs_id}</p>
+                        <p>ชื่อวิชา : {item.cs_name_th}</p>
+                        <p>สาขา : {`${item.major_id}`}</p>
+                        {item.lc_sec.length > 0 && (
+                          <p>บรรยาย : {`${item.lc_sec}`}</p>
+                        )}
+                        {item.lb_sec.length > 0 && (
+                          <p>ปฎิบัติ : {`${item.lb_sec}`}</p>
+                        )}
                       </Card.Body>
                     </Card>
                   ))}
@@ -186,7 +365,7 @@ const ManageRoom = () => {
                 <Col className="d-flex justify-content-start">
                   <Button
                     className="btn-outline d-flex align-items-center gap-2"
-                    onClick={() => handleShow()}
+                    onClick={() => handleEditClick()}
                   >
                     <FaPenToSquare />
                     แก้ไข
@@ -194,11 +373,10 @@ const ManageRoom = () => {
                 </Col>
                 <Col md={1}>
                   <Select
-                    id="fieldName"
-                    name="fieldName"
-                    options={dataBuildingOption}
-                    // onChange={handleOptionChange}
-                    // value={selectedOption}
+                    id="buildName"
+                    name="buildName"
+                    options={optionBuilding}
+                    onChange={handleSelectBuilding}
                     placeholder="อาคาร"
                     isSearchable={false}
                     className="react-select-container"
@@ -207,12 +385,11 @@ const ManageRoom = () => {
                 </Col>
                 <Col md={1}>
                   <Select
-                    id="fieldName"
-                    name="fieldName"
-                    options={dataGradeOption}
-                    // onChange={handleOptionChange}
-                    // value={selectedOption}
-                    placeholder="ชั้นปี"
+                    id="floorName"
+                    name="floorName"
+                    // options={dataGradeOption}
+                    onChange={handleSelectFloor}
+                    placeholder="ชั้น"
                     isSearchable={false}
                     className="react-select-container"
                     classNamePrefix="react-select"
@@ -220,17 +397,25 @@ const ManageRoom = () => {
                 </Col>
                 <Col md={1}>
                   <Form.Control
-                    id="fieldName"
-                    name="fieldName"
-                    type="input"
+                    id="searchName"
+                    name="searchName"
+                    type="number"
                     className="custom-input"
                     placeholder="จำนวน"
+                    value={inputAmount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (!isNaN(value)) {
+                        setInputAmount(value);
+                      }
+                    }}
                   />
                 </Col>
                 <Col md="auto" className="d-flex justify-content-center gap-2">
                   <Button
                     className="d-flex align-items-center gap-2"
                     variant="info"
+                    onClick={() => handleClickSearchRoom()}
                   >
                     <FaMagnifyingGlass />
                     <p className="mb-0">ค้นหา</p>
@@ -238,6 +423,7 @@ const ManageRoom = () => {
                   <Button
                     className="d-flex align-items-center gap-2"
                     variant="danger"
+                    onClick={() => handleClickResetRoom()}
                   >
                     <FaArrowsRotate />
                     <p className="mb-0">รีเซ็ต</p>
@@ -246,15 +432,30 @@ const ManageRoom = () => {
               </Row>
               <Row>
                 <Col className="room-card-grid-manageroom">
-                  {dataBuilding.map((item, id) => (
+                  {fetchDataRoom.sort((a, b) => a.build_name - b.build_name).map((item, id) => (
                     <Card key={id}>
                       <Card.Header
                         className="d-flex justify-content-center gap-3"
                         style={{ background: "#03A96B", color: "white" }}
                       >
-                        <p>{item.room_num}</p>
+                        {isEditing ? (
+                          <Button
+                            className="btn-icon"
+                            style={{
+                              position: "absolute",
+                              right: "0",
+                              top: "0",
+                            }}
+                            onClick={() => {
+                              handleShowEditRoom();
+                            }}
+                          >
+                            <FaPenToSquare className="text-dark fs-5" />
+                          </Button>
+                        ) : null}
+                        <p>{item.room_id}</p>
                         <p>|</p>
-                        <p>{`${item.amount} / ${item.max_amount}`}</p>
+                        <p>{`0 / ${item.amount}${item.seat}`}</p>
                       </Card.Header>
                       <Card.Body style={{ maxHeight: "7vw" }}></Card.Body>
                     </Card>
@@ -266,7 +467,11 @@ const ManageRoom = () => {
         </Row>
       </Row>
       <PopupEditRoom show={showEditRoom} hide={handleHideEditRoom} />
-      <PopupManageRoom show={showManageRoom} hide={handleHideManageRoom} selectedSubject={selectedSubject}  />
+      <PopupManageRoom
+        show={showManageRoom}
+        hide={handleHideManageRoom}
+        selectedSubject={selectedSubject}
+      />
     </div>
   );
 };

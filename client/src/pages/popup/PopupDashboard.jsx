@@ -23,20 +23,20 @@ const PopupDashboard = (props) => {
           </Row>
           <Row>
             <Col className="d-flex align-items-center gap-4">
-              <h5 style={{ fontSize: "16px", color: "#03A96B" }}>
+              <p style={{ fontSize: "16px", color: "#03A96B" }}>
                 21 เมษายน 2567 - 29 เมษายน 2567
-              </h5>
-              <h5
+              </p>
+              <p
                 style={{
-                  fontSize: "15px",
+                  fontSize: "16px",
                   color: "#fff",
                   background: "#03A96B",
-                  padding: ".4rem .8rem",
+                  padding: ".2rem .8rem",
                   borderRadius: "20px",
                 }}
               >
                 กลางภาค
-              </h5>
+              </p>
             </Col>
           </Row>
         </Modal.Title>
@@ -54,6 +54,10 @@ const PopupDashboard = (props) => {
               }}
             >
               {viewDetail ? viewDetail.major_id : ""}
+            </p>
+            <p>ชั้นปี</p>
+            <p style={{ color: "#03A96B" }}>
+              {viewDetail ? viewDetail.major_grade : ""}
             </p>
           </Col>
           <Col className="d-flex justify-content-end gap-2">
@@ -85,7 +89,9 @@ const PopupDashboard = (props) => {
                           <p style={{ color: "#5B5B5B" }}>
                             หมู่{" "}
                             {`${item.lc_sec || ""}${
-                              item.lc_sec && item.lb_sec ? "," : ""
+                              item.lc_sec.length && item.lb_sec.length
+                                ? ","
+                                : ""
                             }${item.lb_sec || ""}`}
                           </p>
                         )}

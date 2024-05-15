@@ -5,14 +5,16 @@ import Swal from "sweetalert2";
 
 // assets
 import Profile from "../../assets/profile.png";
+
 // styles
 import "../../styles/Modal.scss";
 
 const PopupUserSetting = (props) => {
   const { show, hide } = props;
+
   const [selectedImage, setSelectedImage] = useState(null);
 
-
+  //Edit Profile
   const handleProfileImageChange = (event) => {
     setSelectedImage(URL.createObjectURL(event.target.files[0]));
   };
@@ -21,6 +23,7 @@ const PopupUserSetting = (props) => {
     setSelectedImage(null);
   };
 
+  //Alert Confirm
   const handleSaveConfirm = () => {
     Swal.fire({
       title: "ต้องการบันทึกข้อมูลใช่หรือไม่",

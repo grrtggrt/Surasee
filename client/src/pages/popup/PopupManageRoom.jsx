@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Modal,
   Row,
@@ -11,38 +11,129 @@ import {
 import { FaCirclePlus, FaFloppyDisk, FaBan } from "react-icons/fa6";
 import Select from "react-select";
 import Swal from "sweetalert2";
+import axios from "axios";
+
 // styles
 import "../../styles/Modal.scss";
 import "../../styles/Select.scss";
 import "../../styles/Input.scss";
 import "../../styles/Button.scss";
 
-import { dataSeatOption } from "../../MockupData";
-
 const PopupManageRoom = (props) => {
   const { show, hide, selectedSubject } = props;
 
-  const [selectedOption, setSelectedOption] = useState("");
-  const [cardColor, setCardColor] = useState("");
+  const [dataRoom, setDataRoom] = useState([]);
+  const [selectedStartTime, setSelectedStartTime] = useState(null);
+  const [selectedStartEnd, setSelectedStartEnd] = useState(null);
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [selectedSeat, setSelectedSeat] = useState(null);
+  const [inputAmount, setInputAmount] = useState(null);
 
-  const handleTypeSelect = (e) => {
-    setSelectedOption(e.value);
+  //ดึงข้อมูล
+  const fetchRoom = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/building");
+      setDataRoom(response.data);
+    } catch (error) {
+      console.error("Error fetching room:", error);
+    }
+  }, []);
+
+  console.log(dataRoom);
+
+  useEffect(() => {
+    fetchRoom();
+  }, [fetchRoom]);
+
+  //ค้นหา
+  const handleSelectStartTime = (e) => {
+    setSelectedStartTime(e.value);
   };
 
-  const customStyleBackground = (selectedOption) => {
-    if (selectedOption === "A") {
-      setCardColor("#03A96B");
-    } else if (selectedOption === "B") {
-      setCardColor("#D3E9E1");
-    } else if (selectedOption === "C") {
-      setCardColor("#A4E5EE");
+  const handleSelectEndTime = (e) => {
+    setSelectedStartEnd(e.value);
+  };
+
+  const handleSelectBuilding = (e) => {
+    setSelectedBuilding(e.value);
+  };
+
+  const handleSelectRoom = (e) => {
+    setSelectedRoom(e.value);
+  };
+
+  const handleSelectSeat = (e) => {
+    setSelectedSeat(e.value);
+  };
+
+  const filterBuilding = [
+    ...new Set(dataRoom.map((item) => item.build_name)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
+
+  const optionBuilding = filterBuilding.map((building) => ({
+    label: building,
+    value: building,
+  }));
+
+  const filteredRoom = dataRoom.filter(
+    (item) => item.build_name === selectedBuilding
+  );
+
+  const filterRoom = [
+    ...new Set(filteredRoom.map((item) => item.room_id)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
+
+  const optionRoom = filterRoom.map((room) => ({
+    label: room,
+    value: room,
+  }));
+
+  const filteredSeat = dataRoom.filter((item) => item.room_id === selectedRoom);
+
+  const filterSeat = [...new Set(filteredSeat.map((item) => item.seat))].sort(
+    (a, b) => parseInt(a) - parseInt(b)
+  );
+
+  const optionSeat = filterSeat.map((seat) => ({
+    label: seat,
+    value: seat,
+  }));
+
+  const filterAmount = dataRoom
+    .filter((item) => item.seat === selectedSeat)
+    .map((item) => item.amount);
+
+  useEffect(() => {
+    setInputAmount(filterAmount);
+  }, [selectedSeat]);
+
+  useEffect(() => {
+    setSelectedRoom(null);
+    setSelectedSeat(null);
+    setInputAmount("");
+  }, [selectedBuilding]);
+
+  useEffect(() => {
+    setSelectedSeat(null);
+    setInputAmount("");
+  },[selectedRoom]);
+
+  //Color
+  const customStyleBackground = (selectedSeat) => {
+    if (selectedSeat && filterSeat.includes(selectedSeat)) {
+      const colorMap = {
+        A: "#03A96B",
+        B: "#D3E9E1",
+        C: "#A4E5EE",
+      };
+      return colorMap[selectedSeat];
+    } else {
+      return "#FFFFFF";
     }
   };
 
-  useEffect(() => {
-    customStyleBackground(selectedOption);
-  }, [selectedOption]);
-
+  //Alert Confirm
   const handleSaveConfirm = () => {
     Swal.fire({
       title: "ต้องการบันทึกข้อมูลใช่หรือไม่",
@@ -102,7 +193,7 @@ const PopupManageRoom = (props) => {
                     type="text"
                     readOnly
                     disabled
-                    value={selectedSubject ? selectedSubject.cs_id : ''}
+                    value={selectedSubject ? selectedSubject.cs_id : ""}
                   />
                 </Form>
               </Col>
@@ -114,7 +205,7 @@ const PopupManageRoom = (props) => {
                     type="text"
                     readOnly
                     disabled
-                    value={selectedSubject ? selectedSubject.cs_name_th : ''}
+                    value={selectedSubject ? selectedSubject.cs_name_th : ""}
                   />
                 </Form>
               </Col>
@@ -126,7 +217,7 @@ const PopupManageRoom = (props) => {
                     type="text"
                     readOnly
                     disabled
-                    value={selectedSubject ? selectedSubject.amount : ''}
+                    value={selectedSubject ? selectedSubject.amount : ""}
                   />
                 </Form>
               </Col>
@@ -151,7 +242,7 @@ const PopupManageRoom = (props) => {
                   id="timeStart"
                   name="timeStart"
                   // options={options}
-                  // onChange={handleTypeSelect}
+                  onChange={handleSelectStartTime}
                   placeholder="กรุณาเลือก"
                   isSearchable={false}
                   className="react-select-container"
@@ -169,7 +260,7 @@ const PopupManageRoom = (props) => {
                   id="timeEnd"
                   name="timeEnd"
                   // options={options}
-                  // onChange={handleTypeSelect}
+                  onChange={handleSelectEndTime}
                   placeholder="กรุณาเลือก"
                   isSearchable={false}
                   className="react-select-container"
@@ -192,15 +283,17 @@ const PopupManageRoom = (props) => {
               </Card.Body>
             </Card>
             <Card>
-              <Card.Body style={{ background: cardColor }}>
+              <Card.Body
+                style={{ background: customStyleBackground(selectedSeat) }}
+              >
                 <Row className="gx-2">
                   <Col md={3}>
                     <Form.Label>อาคาร</Form.Label>
                     <Select
-                      id="timeEnd"
-                      name="timeEnd"
-                      // options={options}
-                      // onChange={handleTypeSelect}
+                      id="buildName"
+                      name="buildName"
+                      options={optionBuilding}
+                      onChange={handleSelectBuilding}
                       placeholder="กรุณาเลือก"
                       isSearchable={false}
                       className="react-select-container"
@@ -210,10 +303,10 @@ const PopupManageRoom = (props) => {
                   <Col md={3}>
                     <Form.Label>ห้อง</Form.Label>
                     <Select
-                      id="timeEnd"
-                      name="timeEnd"
-                      // options={options}
-                      // onChange={handleTypeSelect}
+                      id="roomName"
+                      name="roomName"
+                      options={optionRoom}
+                      onChange={handleSelectRoom}
                       placeholder="กรุณาเลือก"
                       isSearchable={false}
                       className="react-select-container"
@@ -223,10 +316,10 @@ const PopupManageRoom = (props) => {
                   <Col md={3}>
                     <Form.Label>ที่นั่ง</Form.Label>
                     <Select
-                      id="timeEnd"
-                      name="timeEnd"
-                      options={dataSeatOption}
-                      onChange={handleTypeSelect}
+                      id="seatName"
+                      name="seatName"
+                      options={optionSeat}
+                      onChange={handleSelectSeat}
                       placeholder="กรุณาเลือก"
                       isSearchable={false}
                       className="react-select-container"
@@ -236,11 +329,18 @@ const PopupManageRoom = (props) => {
                   <Col md={2}>
                     <Form.Label>จำนวน</Form.Label>
                     <Form.Control
-                      id="total"
-                      name="total"
+                      id="searchName"
+                      name="searchName"
                       type="number"
                       className="custom-input"
-                      placeholder="กรุณากรอก"
+                      placeholder="จำนวน"
+                      value={inputAmount}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (!isNaN(value)) {
+                          setInputAmount(value);
+                        }
+                      }}
                     />
                   </Col>
                   <Col

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Row,
   Col,
@@ -10,8 +10,9 @@ import {
 } from "react-bootstrap";
 import Swal from "sweetalert2";
 import Select from "react-select";
+import axios from "axios";
 
-import { dataReport, dataBuildingOption } from "../MockupData";
+import { dataReport } from "../MockupData";
 
 //icon
 import {
@@ -21,6 +22,82 @@ import {
 } from "react-icons/fa6";
 
 const Report = () => {
+  const [fetchData, setFetchData] = useState(dataReport);
+  const [dataRoom, setDataRoom] = useState([]);
+  const [input, setInput] = useState("");
+
+  //ดึงข้อมูล
+  const fetchRoom = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/building");
+      setDataRoom(response.data);
+    } catch (error) {
+      console.error("Error fetching room:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRoom();
+  }, [fetchRoom]);
+
+  // นับ CurrentItems ที่แสดงใน Table
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 14;
+
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+  const indexOfLastItem = Math.min(
+    currentPage * itemsPerPage,
+    fetchData.length
+  );
+
+  const displayData = fetchData.slice(indexOfFirstItem, indexOfLastItem);
+
+  const pageNumbers = [];
+  for (let i = 1; i <= Math.ceil(fetchData.length / itemsPerPage); i++) {
+    pageNumbers.push(i);
+  }
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  //ค้นหา
+  //ตึก
+  const filterBuilding = [
+    ...new Set(dataRoom.map((item) => item.build_name)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
+
+  const optionBuilding = filterBuilding.map((building) => ({
+    label: building,
+    value: building,
+  }));
+
+  const handleClickSearch = () => {
+    const filteredData = fetchData.filter((item) => {
+      return (
+        !input ||
+        item.id.toLowerCase().includes(input.toLowerCase()) ||
+        item.name_en.toLowerCase().includes(input.toLowerCase()) ||
+        item.sec.toString().toLowerCase().includes(input.toLowerCase()) ||
+        item.room_num.toLowerCase().includes(input.toLowerCase()) ||
+        item.date.toLowerCase().includes(input.toLowerCase()) ||
+        item.start_time.toLowerCase().includes(input.toLowerCase()) ||
+        item.end_time.toLowerCase().includes(input.toLowerCase()) ||
+        item.amount.toString().toLowerCase().includes(input.toLowerCase())
+      );
+    });
+    setFetchData(filteredData);
+    setCurrentPage(1);
+  };
+
+  const handleClickReset = () => {
+    setFetchData(dataReport);
+    setInput("");
+  };
+
+  useEffect(() => {
+    setFetchData(dataReport);
+  }, [input]);
+
+  //Alert Confirm
   const handleReportConfirm = () => {
     Swal.fire({
       title: "ต้องการส่งออกข้อมูลใช่หรือไม่",
@@ -49,57 +126,6 @@ const Report = () => {
     });
   };
 
-  // นับ CurrentItems ที่แสดงใน Table
-  const [fetchData, setFetchData] = useState(dataReport);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [input, setInput] = useState("");
-
-  const itemsPerPage = 14;
-
-  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-  const indexOfLastItem = Math.min(
-    currentPage * itemsPerPage,
-    fetchData.length
-  );
-
-  const displayData = fetchData.slice(indexOfFirstItem, indexOfLastItem);
-
-  const pageNumbers = [];
-  for (let i = 1; i <= Math.ceil(fetchData.length / itemsPerPage); i++) {
-    pageNumbers.push(i);
-  }
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  //Search
-  const handleClickSearch = () => {
-    // คำนวณข้อมูลที่ต้องการแสดงตามเงื่อนไขที่กำหนด
-    const filteredData = fetchData.filter((item) => {
-      return (
-        !input ||
-        item.id.toLowerCase().includes(input.toLowerCase()) ||
-        item.name_en.toLowerCase().includes(input.toLowerCase()) ||
-        item.sec.toString().toLowerCase().includes(input.toLowerCase()) ||
-        item.room_num.toLowerCase().includes(input.toLowerCase()) ||
-        item.date.toLowerCase().includes(input.toLowerCase()) ||
-        item.start_time.toLowerCase().includes(input.toLowerCase()) ||
-        item.end_time.toLowerCase().includes(input.toLowerCase()) ||
-        item.amount.toString().toLowerCase().includes(input.toLowerCase())
-      );
-    });
-    setFetchData(filteredData);
-    setCurrentPage(1);
-  };
-
-  const handleClickReset = () => {
-    setFetchData(dataReport);
-    setInput("");
-  };
-
-  useEffect(() => {
-    setFetchData(dataReport);
-  }, [input]);
-
   return (
     <div className="main-content-center">
       <Row className="m-0">
@@ -108,11 +134,10 @@ const Report = () => {
             <Row className="d-flex justify-content-end gx-2 mb-3 p-2">
               <Col md={1}>
                 <Select
-                  id="fieldName"
-                  name="fieldName"
+                  id="dateName"
+                  name="dateName"
                   // options={dataMajorOption}
                   // onChange={handleOptionChange}
-                  // value={selectedOption}
                   placeholder="วันที่"
                   isSearchable={false}
                   className="react-select-container"
@@ -121,11 +146,10 @@ const Report = () => {
               </Col>
               <Col md={1}>
                 <Select
-                  id="fieldName"
-                  name="fieldName"
-                  options={dataBuildingOption}
+                  id="buildName"
+                  name="buildName"
+                  options={optionBuilding}
                   // onChange={handleOptionChange}
-                  // value={selectedOption}
                   placeholder="อาคาร"
                   isSearchable={false}
                   className="react-select-container"
@@ -134,9 +158,9 @@ const Report = () => {
               </Col>
               <Col md={2}>
                 <Form.Control
-                  id="fieldName"
-                  name="fieldName"
-                  type="input"
+                  id="searchName"
+                  name="searchName"
+                  type="search"
                   className="custom-input"
                   placeholder="รหัสวิชา/ชื่อวิชา"
                   value={input}
