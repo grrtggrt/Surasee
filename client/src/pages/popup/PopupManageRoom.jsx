@@ -19,12 +19,14 @@ import "../../styles/Select.scss";
 import "../../styles/Input.scss";
 import "../../styles/Button.scss";
 
+import { dataTimeStart, dataTimeEnd } from "../../MockupData";
+
 const PopupManageRoom = (props) => {
   const { show, hide, selectedSubject } = props;
 
   const [dataRoom, setDataRoom] = useState([]);
   const [selectedStartTime, setSelectedStartTime] = useState(null);
-  const [selectedStartEnd, setSelectedStartEnd] = useState(null);
+  const [selectedEndTime, setSelectedEndTime] = useState(null);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedSeat, setSelectedSeat] = useState(null);
@@ -40,19 +42,36 @@ const PopupManageRoom = (props) => {
     }
   }, []);
 
-  console.log(dataRoom);
-
   useEffect(() => {
     fetchRoom();
   }, [fetchRoom]);
 
+  useEffect(() => {
+    setSelectedBuilding(null);
+    setSelectedRoom(null);
+    setSelectedSeat(null);
+    setInputAmount("");
+  }, [hide]);
+
   //ค้นหา
-  const handleSelectStartTime = (e) => {
-    setSelectedStartTime(e.value);
+  const handleSelectStartTime = (selectedStartTime) => {
+    if (selectedStartTime) {
+      const startTime = parseInt(selectedStartTime.id);
+      const endTimeOptions = [];
+
+      for (let i = 0; i < dataTimeEnd.length; i++) {
+        const endTime = parseInt(dataTimeEnd[i].id);
+        if (endTime >= startTime && endTime - startTime <= 2) {
+          endTimeOptions.push(dataTimeEnd[i]);
+        }
+      }
+      setSelectedStartTime(selectedStartTime);
+      setSelectedEndTime(endTimeOptions);
+    }
   };
 
   const handleSelectEndTime = (e) => {
-    setSelectedStartEnd(e.value);
+    setSelectedEndTime(e.value);
   };
 
   const handleSelectBuilding = (e) => {
@@ -68,16 +87,19 @@ const PopupManageRoom = (props) => {
   };
 
   const filterBuilding = [
-    ...new Set(dataRoom.map((item) => item.build_name)),
+    ...new Set(dataRoom.map((item) => item.build_id)),
   ].sort((a, b) => parseInt(a) - parseInt(b));
 
-  const optionBuilding = filterBuilding.map((building) => ({
-    label: building,
-    value: building,
-  }));
+  const optionBuilding = filterBuilding.map((buildingId) => {
+    const building = dataRoom.find((item) => item.build_id === buildingId);
+    return {
+      label: building.build_name,
+      value: buildingId,
+    };
+  });
 
   const filteredRoom = dataRoom.filter(
-    (item) => item.build_name === selectedBuilding
+    (item) => item.build_id === selectedBuilding
   );
 
   const filterRoom = [
@@ -102,7 +124,7 @@ const PopupManageRoom = (props) => {
 
   const filterAmount = dataRoom
     .filter((item) => item.seat === selectedSeat)
-    .map((item) => item.amount);
+    .map((item) => item.Maxamount);
 
   useEffect(() => {
     setInputAmount(filterAmount);
@@ -117,7 +139,7 @@ const PopupManageRoom = (props) => {
   useEffect(() => {
     setSelectedSeat(null);
     setInputAmount("");
-  },[selectedRoom]);
+  }, [selectedRoom]);
 
   //Color
   const customStyleBackground = (selectedSeat) => {
@@ -241,7 +263,7 @@ const PopupManageRoom = (props) => {
                 <Select
                   id="timeStart"
                   name="timeStart"
-                  // options={options}
+                  options={dataTimeStart}
                   onChange={handleSelectStartTime}
                   placeholder="กรุณาเลือก"
                   isSearchable={false}
@@ -259,8 +281,7 @@ const PopupManageRoom = (props) => {
                 <Select
                   id="timeEnd"
                   name="timeEnd"
-                  // options={options}
-                  onChange={handleSelectEndTime}
+                  options={selectedEndTime}
                   placeholder="กรุณาเลือก"
                   isSearchable={false}
                   className="react-select-container"

@@ -78,7 +78,9 @@ const ManageRoom = () => {
 
   const handleShowEditRoom = () => setShowEditRoom(true);
 
-  const handleHideEditRoom = () => setShowEditRoom(false);
+  const handleHideEditRoom = () => {
+    setShowEditRoom(false);
+  };
 
   const handleShowManageRoom = (subject) => {
     setSelectedSubject(subject);
@@ -109,13 +111,16 @@ const ManageRoom = () => {
 
   //ตึก
   const filterBuilding = [
-    ...new Set(dataRoom.map((item) => item.build_name)),
+    ...new Set(dataRoom.map((item) => item.build_id)),
   ].sort((a, b) => parseInt(a) - parseInt(b));
 
-  const optionBuilding = filterBuilding.map((building) => ({
-    label: building,
-    value: building,
-  }));
+  const optionBuilding = filterBuilding.map((buildingId) => {
+    const building = dataRoom.find((item) => item.build_id === buildingId);
+    return {
+      label: building.build_name,
+      value: buildingId,
+    };
+  });
 
   //ชั้น
   // const filterfloor = [...new Set(dataRoom.map((item) => item.id))];
@@ -146,8 +151,8 @@ const ManageRoom = () => {
   const handleClickSearchRoom = () => {
     const filteredData = dataRoom.filter((item) => {
       return (
-        (!selectedBuilding || item.build_name === selectedBuilding) &&
-        (!inputAmount || parseFloat(inputAmount) < parseFloat(item.amount))
+        (!selectedBuilding || item.build_id === selectedBuilding) &&
+        (!inputAmount || parseFloat(inputAmount) < parseFloat(item.Maxamount))
       );
     });
 
@@ -432,34 +437,36 @@ const ManageRoom = () => {
               </Row>
               <Row>
                 <Col className="room-card-grid-manageroom">
-                  {fetchDataRoom.sort((a, b) => a.build_name - b.build_name).map((item, id) => (
-                    <Card key={id}>
-                      <Card.Header
-                        className="d-flex justify-content-center gap-3"
-                        style={{ background: "#03A96B", color: "white" }}
-                      >
-                        {isEditing ? (
-                          <Button
-                            className="btn-icon"
-                            style={{
-                              position: "absolute",
-                              right: "0",
-                              top: "0",
-                            }}
-                            onClick={() => {
-                              handleShowEditRoom();
-                            }}
-                          >
-                            <FaPenToSquare className="text-dark fs-5" />
-                          </Button>
-                        ) : null}
-                        <p>{item.room_id}</p>
-                        <p>|</p>
-                        <p>{`0 / ${item.amount}${item.seat}`}</p>
-                      </Card.Header>
-                      <Card.Body style={{ maxHeight: "7vw" }}></Card.Body>
-                    </Card>
-                  ))}
+                  {fetchDataRoom
+                    .sort((a, b) => a.build_id - b.build_id)
+                    .map((item, id) => (
+                      <Card key={id}>
+                        <Card.Header
+                          className="d-flex justify-content-center gap-3"
+                          style={{ background: "#03A96B", color: "white" }}
+                        >
+                          {isEditing ? (
+                            <Button
+                              className="btn-icon"
+                              style={{
+                                position: "absolute",
+                                right: "0",
+                                top: "0",
+                              }}
+                              onClick={() => {
+                                handleShowEditRoom();
+                              }}
+                            >
+                              <FaPenToSquare className="text-dark fs-5" />
+                            </Button>
+                          ) : null}
+                          <p>{item.room_id}</p>
+                          <p>|</p>
+                          <p>{`${item.amount} / ${item.Maxamount}${item.seat}`}</p>
+                        </Card.Header>
+                        <Card.Body style={{ maxHeight: "7vw" }}></Card.Body>
+                      </Card>
+                    ))}
                 </Col>
               </Row>
             </Card.Body>

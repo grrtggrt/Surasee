@@ -87,6 +87,8 @@ const Schedule = () => {
     }
   };
 
+  console.log(droppedItems, items)
+
   //DELETE-BTN
   const handleDeleteItem = (droppableId, itemId) => {
     let deletedCount = 0;
@@ -196,6 +198,35 @@ const Schedule = () => {
     });
   };
 
+  const handleDeleteConfirmSubject = (droppableId, itemId) => {
+    Swal.fire({
+      title: "ต้องการลบข้อมูลใช่หรือไม่ ?",
+      icon: "warning",
+      showCancelButton: true,
+      cancelButtonText: "ยกเลิก",
+      confirmButtonText: "ตกลง",
+      confirmButtonColor: "#03A96B",
+      cancelButtonColor: "#BD4636",
+      customClass: {
+        confirmButton: "shadow-none",
+        cancelButton: "shadow-none",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleDeleteItem(droppableId, itemId);
+        Swal.fire({
+          title: "ลบข้อมูลเสร็จสิ้น!",
+          icon: "success",
+          confirmButtonColor: "#03A96B",
+          confirmButtonText: "ตกลง",
+          customClass: {
+            confirmButton: "shadow-none",
+          },
+        });
+      }
+    });
+  };
+
   //Search
   const handleSelectFaculty = (e) => {
     setSelectedFaculty(e.value);
@@ -224,8 +255,6 @@ const Schedule = () => {
     label: major,
     value: major,
   }));
-
-  console.log(dataMajor)
 
   //ชั้นปี
   const filterGrade = [
@@ -381,7 +410,10 @@ const Schedule = () => {
                                 className="btn-icon"
                                 style={{ position: "absolute", right: "0" }}
                                 onClick={() =>
-                                  handleDeleteItem(droppableId, item.id)
+                                  handleDeleteConfirmSubject(
+                                    droppableId,
+                                    item.id
+                                  )
                                 }
                               >
                                 <FaCircleMinus className="text-danger fs-5" />
@@ -461,7 +493,11 @@ const Schedule = () => {
             <FaMagnifyingGlass />
             <p className="mb-0">ค้นหา</p>
           </Button>
-          <Button className="d-flex align-items-center gap-2" variant="danger" onClick={() => handleClickResetMajor()}>
+          <Button
+            className="d-flex align-items-center gap-2"
+            variant="danger"
+            onClick={() => handleClickResetMajor()}
+          >
             <FaArrowsRotate />
             <p className="mb-0">รีเซ็ต</p>
           </Button>
