@@ -60,15 +60,19 @@ const Report = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   //ค้นหา
+  
   //ตึก
   const filterBuilding = [
-    ...new Set(dataRoom.map((item) => item.build_name)),
+    ...new Set(dataRoom.map((item) => item.build_id)),
   ].sort((a, b) => parseInt(a) - parseInt(b));
 
-  const optionBuilding = filterBuilding.map((building) => ({
-    label: building,
-    value: building,
-  }));
+  const optionBuilding = filterBuilding.map((buildingId) => {
+    const building = dataRoom.find((item) => item.build_id === buildingId);
+    return {
+      label: building.build_name,
+      value: buildingId,
+    };
+  });
 
   const handleClickSearch = () => {
     const filteredData = fetchData.filter((item) => {

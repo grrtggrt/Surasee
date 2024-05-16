@@ -86,9 +86,7 @@ const Schedule = () => {
       handleShowManageRoom();
     }
   };
-
-  console.log(droppedItems, items)
-
+  
   //DELETE-BTN
   const handleDeleteItem = (droppableId, itemId) => {
     let deletedCount = 0;

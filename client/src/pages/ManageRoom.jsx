@@ -123,11 +123,13 @@ const ManageRoom = () => {
   });
 
   //ชั้น
-  // const filterfloor = [...new Set(dataRoom.map((item) => item.id))];
-  // const optionsfloor = filterfloor.map((floor) => ({
-  //   label: floor,
-  //   value: floor,
-  // }));
+  const filterfloor = [...new Set(dataRoom.map((item) => item.floor))].sort(
+    (a, b) => parseInt(a) - parseInt(b)
+  );
+  const optionsfloor = filterfloor.map((floor) => ({
+    label: floor,
+    value: floor,
+  }));
 
   //สาขา
   const filterMajor = [...new Set(dataMajor.map((item) => item.major_id))].sort(
@@ -152,6 +154,7 @@ const ManageRoom = () => {
     const filteredData = dataRoom.filter((item) => {
       return (
         (!selectedBuilding || item.build_id === selectedBuilding) &&
+        (!selectedFloor || item.floor === selectedFloor) &&
         (!inputAmount || parseFloat(inputAmount) < parseFloat(item.Maxamount))
       );
     });
@@ -171,7 +174,7 @@ const ManageRoom = () => {
           item.major_id
             .toString()
             .toLowerCase()
-            .includes(selectedMajor.toString().toLowerCase())) &&
+            .includes(selectedFloor.toString().toLowerCase())) &&
         (!inputSubject ||
           item.cs_id.toLowerCase().includes(inputSubject.toLowerCase()) ||
           item.cs_name_en.toLowerCase().includes(inputSubject.toLowerCase()) ||
@@ -392,7 +395,7 @@ const ManageRoom = () => {
                   <Select
                     id="floorName"
                     name="floorName"
-                    // options={dataGradeOption}
+                    options={optionsfloor}
                     onChange={handleSelectFloor}
                     placeholder="ชั้น"
                     isSearchable={false}

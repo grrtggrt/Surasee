@@ -27,6 +27,7 @@ const PopupManageRoom = (props) => {
   const [dataRoom, setDataRoom] = useState([]);
   const [selectedStartTime, setSelectedStartTime] = useState(null);
   const [selectedEndTime, setSelectedEndTime] = useState(null);
+  const [selectedOptionEndTime, setSelectedOptionEndTime] = useState(null);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedSeat, setSelectedSeat] = useState(null);
@@ -50,6 +51,9 @@ const PopupManageRoom = (props) => {
     setSelectedBuilding(null);
     setSelectedRoom(null);
     setSelectedSeat(null);
+    setSelectedStartTime(null);
+    setSelectedEndTime(null);
+    setSelectedOptionEndTime(null);
     setInputAmount("");
   }, [hide]);
 
@@ -66,12 +70,12 @@ const PopupManageRoom = (props) => {
         }
       }
       setSelectedStartTime(selectedStartTime);
-      setSelectedEndTime(endTimeOptions);
+      setSelectedOptionEndTime(endTimeOptions);
     }
   };
-
+  
   const handleSelectEndTime = (e) => {
-    setSelectedEndTime(e.value);
+    setSelectedEndTime(e);
   };
 
   const handleSelectBuilding = (e) => {
@@ -122,13 +126,7 @@ const PopupManageRoom = (props) => {
     value: seat,
   }));
 
-  const filterAmount = dataRoom
-    .filter((item) => item.seat === selectedSeat)
-    .map((item) => item.Maxamount);
-
-  useEffect(() => {
-    setInputAmount(filterAmount);
-  }, [selectedSeat]);
+  const filterAmount = selectedSubject ? selectedSubject.amount : 0;
 
   useEffect(() => {
     setSelectedRoom(null);
@@ -140,6 +138,10 @@ const PopupManageRoom = (props) => {
     setSelectedSeat(null);
     setInputAmount("");
   }, [selectedRoom]);
+
+  useEffect(() => {
+    setInputAmount(filterAmount);
+  }, [selectedSeat]);
 
   //Color
   const customStyleBackground = (selectedSeat) => {
@@ -157,6 +159,44 @@ const PopupManageRoom = (props) => {
 
   //Alert Confirm
   const handleSaveConfirm = () => {
+    if (
+      selectedStartTime === null ||
+      selectedEndTime === null ||
+      selectedBuilding === null ||
+      selectedRoom === null ||
+      selectedSeat === null ||
+      inputAmount === ""
+    ) {
+      Swal.fire({
+        icon: "error",
+        title: "กรุณาเลือกข้อมูลให้ครบ",
+        confirmButtonColor: "#03A96B",
+        confirmButtonText: "ตกลง",
+        customClass: {
+          confirmButton: "shadow-none",
+        },
+      });
+      return;
+    }
+
+    if (
+      inputAmount >
+      dataRoom
+        .filter((item) => item.seat === selectedSeat)
+        .map((item) => item.Maxamount)
+    ) {
+      Swal.fire({
+        icon: "error",
+        title: "จำนวนคนเกิน",
+        confirmButtonColor: "#03A96B",
+        confirmButtonText: "ตกลง",
+        customClass: {
+          confirmButton: "shadow-none",
+        },
+      });
+      return;
+    }
+
     Swal.fire({
       title: "ต้องการบันทึกข้อมูลใช่หรือไม่",
       icon: "question",
@@ -207,7 +247,7 @@ const PopupManageRoom = (props) => {
               </Card.Body>
             </Card>
             <Row>
-              <Col>
+              <Col md={3}>
                 <p>รหัสวิชา</p>
                 <Form>
                   <Form.Control
@@ -219,7 +259,7 @@ const PopupManageRoom = (props) => {
                   />
                 </Form>
               </Col>
-              <Col>
+              <Col md={6}>
                 <p>ชื่อวิชา</p>
                 <Form>
                   <Form.Control
@@ -231,7 +271,7 @@ const PopupManageRoom = (props) => {
                   />
                 </Form>
               </Col>
-              <Col>
+              <Col md={3}>
                 <p>จำนวนคน</p>
                 <Form>
                   <Form.Control
@@ -281,11 +321,13 @@ const PopupManageRoom = (props) => {
                 <Select
                   id="timeEnd"
                   name="timeEnd"
-                  options={selectedEndTime}
+                  options={selectedOptionEndTime}
+                  onChange={handleSelectEndTime}
                   placeholder="กรุณาเลือก"
                   isSearchable={false}
                   className="react-select-container"
                   classNamePrefix="react-select"
+                  isDisabled={!selectedStartTime}
                 />
               </Col>
             </Row>

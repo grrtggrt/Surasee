@@ -61,8 +61,10 @@ const Dashboard = () => {
 
   //ค้นหา
 
-  const handleSelectFaculty = (e) => {
+  const handleSelectFaculty = (selectedOption) => {
+    console.log('handleSelectFaculty', selectedOption);
     setSelectedFaculty(e.value);
+    console.log('selectedFaculty', selectedFaculty);
   };
 
   const handleSelectGrade = (e) => {
@@ -86,25 +88,30 @@ const Dashboard = () => {
   const handleClickSearch = () => {
     const filteredData = fetchData.filter((item) => {
       return (
-        (!selectedFaculty ||
-          item.fac_name
-            .toLowerCase()
-            .includes(selectedFaculty.toLowerCase())) &&
-        (!selectedGrade ||
-          item.major_grade
-            .toString()
-            .toLowerCase()
-            .includes(selectedGrade.toLowerCase())) &&
-        (!input ||
-          item.fac_name.toLowerCase().includes(input.toLowerCase()) ||
-          item.major_id.toLowerCase().includes(input.toLowerCase()) ||
-          item.major_name_th.toLowerCase().includes(input.toLowerCase()) ||
-          item.major_grade
-            .toString()
-            .toLowerCase()
-            .includes(input.toLowerCase()))
+        (!selectedFaculty || item.fac_name.toLowerCase().includes(selectedFaculty))
       );
     });
+    // const filteredData = fetchData.filter((item) => {
+    //   return (
+    //     (!selectedFaculty ||
+    //       item.fac_name
+    //         .toLowerCase()
+    //         .includes(selectedFaculty.toLowerCase())) &&
+    //     (!selectedGrade ||
+    //       item.major_grade
+    //         .toString()
+    //         .toLowerCase()
+    //         .includes(selectedGrade.toLowerCase())) &&
+    //     (!input ||
+    //       item.fac_name.toLowerCase().includes(input.toLowerCase()) ||
+    //       item.major_id.toLowerCase().includes(input.toLowerCase()) ||
+    //       item.major_name_th.toLowerCase().includes(input.toLowerCase()) ||
+    //       item.major_grade
+    //         .toString()
+    //         .toLowerCase()
+    //         .includes(input.toLowerCase()))
+    //   );
+    // });
     setFetchData(filteredData);
     setCurrentPage(1);
   };
@@ -114,6 +121,7 @@ const Dashboard = () => {
     setInput("");
     setSelectedFaculty(null);
     setSelectedGrade(null);
+    console.log("")
   };
 
   useEffect(() => {
@@ -127,6 +135,7 @@ const Dashboard = () => {
   }, [input]);
 
   useEffect(() => {
+    setSelectedFaculty(null);
     setFetchData(dataMajor);
     if (selectedFaculty !== null || selectedGrade !== null) {
       setInput("");
@@ -285,6 +294,7 @@ const Dashboard = () => {
                     name="facultyName"
                     options={optionFaculty}
                     onChange={handleSelectFaculty}
+                    value={selectedFaculty}
                     placeholder="คณะ"
                     isSearchable={false}
                     className="react-select-container"
