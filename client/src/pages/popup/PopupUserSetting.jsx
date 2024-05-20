@@ -32,7 +32,7 @@ const PopupUserSetting = (props) => {
       cancelButtonText: "ยกเลิก",
       confirmButtonText: "บันทึก",
       confirmButtonColor: "#03A96B",
-      cancelButtonColor: "#BD4636",
+      cancelButtonColor: "#dc3545",
       customClass: {
         confirmButton: "shadow-none",
         cancelButton: "shadow-none",
@@ -61,7 +61,7 @@ const PopupUserSetting = (props) => {
       cancelButtonText: "ยกเลิก",
       confirmButtonText: "ตกลง",
       confirmButtonColor: "#03A96B",
-      cancelButtonColor: "#BD4636",
+      cancelButtonColor: "#dc3545",
       customClass: {
         confirmButton: "shadow-none",
         cancelButton: "shadow-none",
@@ -102,17 +102,14 @@ const PopupUserSetting = (props) => {
             <img
               src={selectedImage ? selectedImage : Profile}
               alt="Profile"
-              style={{ width: "100px", borderRadius: "50%" }}
+              style={{ width: "100px", height: "100px", borderRadius: "50%" }}
             />
           </Col>
           <Col md={8} className="d-flex flex-column align-self-center">
             <Row>
               <Col className="d-flex gap-3 pb-2">
                 <label htmlFor="profileImageInput">
-                  <Button
-                    variant="success"
-                    as="span"
-                  >
+                  <Button variant="success" as="span">
                     เลือกรูปโปรไฟล์
                   </Button>
                 </label>
@@ -145,7 +142,7 @@ const PopupUserSetting = (props) => {
             <Col>
               <p>ชื่อ :</p>
               <Form>
-                <Form.Control className="custom-input" type="text" />
+                <Form.Control className="custom-input" type="text" disabled />
               </Form>
             </Col>
           </Row>
@@ -153,43 +150,30 @@ const PopupUserSetting = (props) => {
             <Col>
               <p>นามสกุล :</p>
               <Form>
-                <Form.Control className="custom-input" type="text" />
-              </Form>
-            </Col>
-          </Row>
-          <Row >
-            <Col>
-              <p>ตำแหน่ง :</p>
-              <Form>
-                <Form.Control
-                  className="custom-input"
-                  type="text"
-                  readOnly
-                  disabled
-                />
+                <Form.Control className="custom-input" type="text" disabled />
               </Form>
             </Col>
           </Row>
           <Row className="mt-2 mb-2">
-          <Col className="d-flex justify-content-end">
-            <Button
-              className="d-flex align-items-center justify-content-center gap-2"
-              variant="success"
-              onClick={() => handleSaveConfirm()}
-            >
-              <FaFloppyDisk /> บันทึก
-            </Button>
-          </Col>
-          <Col className="d-flex justify-content-start">
-            <Button
-              className="d-flex align-items-center justify-content-center gap-2"
-              variant="danger"
-              onClick={() => hide()}
-            >
-              <FaBan /> ยกเลิก
-            </Button>
-          </Col>
-        </Row>
+            <Col className="d-flex justify-content-end">
+              <Button
+                className="d-flex align-items-center justify-content-center gap-2"
+                variant="success"
+                onClick={() => handleSaveConfirm()}
+              >
+                <FaFloppyDisk /> บันทึก
+              </Button>
+            </Col>
+            <Col className="d-flex justify-content-start">
+              <Button
+                className="d-flex align-items-center justify-content-center gap-2"
+                variant="danger"
+                onClick={() => hide()}
+              >
+                <FaBan /> ยกเลิก
+              </Button>
+            </Col>
+          </Row>
         </Row>
       </Modal.Body>
     </Modal>

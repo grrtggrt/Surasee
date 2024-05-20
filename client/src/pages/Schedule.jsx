@@ -26,6 +26,7 @@ import "./Schedule.scss";
 const Schedule = () => {
   const [showManageRoom, setShowManageRoom] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
+  const [isDisabledSelect, setIsDisabledSelect] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -37,9 +38,10 @@ const Schedule = () => {
   const [selectedGrade, setSelectedGrade] = useState(null);
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [selectedSemester, setSelectedSemester] = useState(null);
-  const [selectedSubject, setSelectedSubject] = useState(null);
   const [items, setItems] = useState([]);
+  const [backupitems, setBackupItems] = useState([]);
   const [droppedItems, setDroppedItems] = useState([]);
+  const [selectDropped, setSelectDropped] = useState(null);
 
   //ดึงข้อมูล
   const fetchSubjects = useCallback(async () => {
@@ -66,6 +68,10 @@ const Schedule = () => {
     fetchMajor();
   }, [fetchSubjects, fetchMajor]);
 
+  useEffect(() => {
+    setSelectedFaculty(null);
+  }, []);
+
   //DropItems
   const onDragEnd = (result) => {
     const { source, destination } = result;
@@ -77,16 +83,37 @@ const Schedule = () => {
       const newItems = [...items];
       newItems.splice(source.index, 1);
 
+      const colIndex = parseInt(destination.droppableId.split("-")[2], 10) - 1;
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + colIndex);
+
+      const formattedDate = date
+        ? `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}/${(date.getFullYear() + 543)
+            .toString()
+            .slice(-2)}`
+        : "";
+
+      const newDroppedItems = [
+        ...droppedItems,
+        {
+          ...draggedItem,
+          droppableId: destination.droppableId,
+          date: formattedDate,
+        },
+      ];
+
       setItems(newItems);
-      setDroppedItems((prevItems) => [
-        ...prevItems,
-        { ...draggedItem, droppableId: destination.droppableId },
-      ]);
-      setSelectedSubject(draggedItem);
-      handleShowManageRoom();
+      setDroppedItems(newDroppedItems);
+
+      const updatedDroppedItems = newDroppedItems.filter(
+        (item) => item.droppableId === destination.droppableId
+      );
+      handleShowManageRoom(updatedDroppedItems);
     }
   };
-  
+
   //DELETE-BTN
   const handleDeleteItem = (droppableId, itemId) => {
     let deletedCount = 0;
@@ -114,7 +141,6 @@ const Schedule = () => {
 
   const handleClearAll = () => {
     setDroppedItems([]);
-
     setItems([]);
   };
 
@@ -137,31 +163,71 @@ const Schedule = () => {
   };
 
   //Alert Confirm
-  const handleSaveConfirm = () => {
+  const handleSaveConfirm = async () => {
+    if (droppedItems.length === 0) {
+      Swal.fire({
+        icon: "info",
+        title: "ไม่มีข้อมูลที่ต้องบันทึก!",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      return;
+    }
+
     Swal.fire({
-      title: "ต้องการบันทึกข้อมูลใช่หรือไม่",
-      icon: "question",
+      title: "ต้องการบันทึกข้อมูลใช่หรือไม่ ?",
+      icon: "info",
       showCancelButton: true,
       cancelButtonText: "ยกเลิก",
-      confirmButtonText: "บันทึก",
-      confirmButtonColor: "#03A96B ",
-      cancelButtonColor: "#BD4636",
+      confirmButtonText: "ตกลง",
+      confirmButtonColor: "#03A96B",
+      cancelButtonColor: "#dc3545",
       customClass: {
         confirmButton: "shadow-none",
         cancelButton: "shadow-none",
       },
-    }).then((result) => {
+    }).then(async (result) => {
+      // ทำให้เป็น async function
       if (result.isConfirmed) {
-        Swal.fire({
-          title: "บันทึกเสร็จสิ้น!",
-          icon: "success",
-          confirmButtonColor: "#03A96B",
-          confirmButtonText: "ตกลง",
-          customClass: {
-            confirmButton: "shadow-none",
-          },
-        });
-        hide();
+        try {
+          const majorId = droppedItems[0].major_id;
+          const subjects = droppedItems.map((item) => ({
+            cs_id: item.cs_id,
+            cs_name_en: item.cs_name_en,
+            cs_name_th: item.cs_name_th,
+            major_id: item.major_id,
+            date: item.date,
+            droppableIdSchedule: item.droppableId,
+          }));
+
+          // ใช้ฟังก์ชัน then() เพื่อใช้ await
+          const response = await axios.post(
+            "http://localhost:5500/api/update-subjects",
+            {
+              major_id: majorId,
+              subjects: subjects,
+            }
+          );
+
+          // ตรวจสอบว่ามีการอัปเดตข้อมูลเรียบร้อยหรือไม่
+          if (response.status === 200) {
+            Swal.fire({
+              icon: "success",
+              title: "บันทึกข้อมูลสำเร็จแล้ว!",
+              showConfirmButton: false,
+              timer: 2000,
+            });
+          }
+        } catch (error) {
+          console.error("Error saving dropped items:", error);
+          Swal.fire({
+            icon: "error",
+            title: "เกิดข้อผิดพลาด!",
+            text: "ไม่สามารถบันทึกข้อมูลได้",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        }
       }
     });
   };
@@ -174,7 +240,7 @@ const Schedule = () => {
       cancelButtonText: "ยกเลิก",
       confirmButtonText: "ตกลง",
       confirmButtonColor: "#03A96B",
-      cancelButtonColor: "#BD4636",
+      cancelButtonColor: "#dc3545",
       customClass: {
         confirmButton: "shadow-none",
         cancelButton: "shadow-none",
@@ -204,7 +270,7 @@ const Schedule = () => {
       cancelButtonText: "ยกเลิก",
       confirmButtonText: "ตกลง",
       confirmButtonColor: "#03A96B",
-      cancelButtonColor: "#BD4636",
+      cancelButtonColor: "#dc3545",
       customClass: {
         confirmButton: "shadow-none",
         cancelButton: "shadow-none",
@@ -227,42 +293,71 @@ const Schedule = () => {
 
   //Search
   const handleSelectFaculty = (e) => {
-    setSelectedFaculty(e.value);
+    setSelectedFaculty(e);
   };
 
   const handleSelectMajor = (e) => {
-    setSelectedMajor(e.value);
+    setSelectedMajor(e);
   };
 
   const handleSelectGrade = (e) => {
-    setSelectedGrade(e.value);
+    setSelectedGrade(e);
   };
 
   //คณะ
-  const filterFaculty = [...new Set(dataMajor.map((item) => item.fac_name))];
-  const optionFaculty = filterFaculty.map((faculty) => ({
-    label: faculty,
-    value: faculty,
-  }));
+  const filterFaculty = [...new Set(dataMajor.map((item) => item.fac_id))];
+  const optionFaculty = filterFaculty.map((facultyId) => {
+    const faculty = dataMajor.find((item) => item.fac_id === facultyId);
+    return {
+      label: faculty.fac_name,
+      value: facultyId,
+    };
+  });
 
   //สาขา
-  const filterMajor = [...new Set(dataMajor.map((item) => item.major_id))].sort(
-    (a, b) => parseInt(a) - parseInt(b)
-  );
+  const filteredMajor = selectedFaculty
+    ? dataMajor.filter((item) => item.fac_id === selectedFaculty.value)
+    : [];
+
+  const filterMajor = [
+    ...new Set(filteredMajor.map((item) => item.major_id)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
+
   const optionMajor = filterMajor.map((major) => ({
     label: major,
     value: major,
   }));
 
   //ชั้นปี
+
+  const filteredGrade = selectedMajor
+    ? dataMajor.filter((item) => item.major_id === selectedMajor.value)
+    : [];
+
   const filterGrade = [
-    ...new Set(dataMajor.map((item) => item.major_grade)),
+    ...new Set(filteredGrade.map((item) => item.major_grade)),
   ].sort((a, b) => parseInt(a) - parseInt(b));
 
   const optionGrade = filterGrade.map((grade) => ({
     label: grade,
     value: grade,
   }));
+
+  const handleClickSearchMajor = () => {
+    if (selectedMajor && selectedGrade) {
+      const filteredData = items.filter((item) => {
+        return (
+          (!selectedMajor || item.major_id === selectedMajor.value) &&
+          (!selectedGrade || item.grade === selectedGrade.value)
+        );
+      });
+      setItems(filteredData);
+      setBackupItems(filteredData);
+      setIsDisabledSelect(true);
+    } else {
+      return;
+    }
+  };
 
   const handleClickSearchSubject = () => {
     const filteredData = items.filter((item) => {
@@ -280,26 +375,54 @@ const Schedule = () => {
     setItems(filteredData);
   };
 
-  const handleClickSearchMajor = () => {};
-
   const handleClickResetMajor = () => {
     setSelectedFaculty(null);
     setSelectedMajor(null);
     setSelectedGrade(null);
+    setIsDisabledSelect(false);
+    setBackupItems([]);
+    setItems(
+      dataSubject.filter(
+        (item) =>
+          !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
+      )
+    );
   };
 
   useEffect(() => {
-    const filteredItems = dataSubject.filter(
-      (item) =>
-        !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
-    );
-    setItems(filteredItems);
+    setSelectedMajor(null);
+    setSelectedGrade(null);
+  }, [selectedFaculty]);
+
+  useEffect(() => {
+    setSelectedGrade(null);
+  }, [selectedMajor]);
+
+  useEffect(() => {
+    if (backupitems.length > 0) {
+      const filteredItems = backupitems.filter(
+        (item) =>
+          !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
+      );
+      setItems(filteredItems);
+    } else {
+      const filteredItems = dataSubject.filter(
+        (item) =>
+          !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
+      );
+      setSelectedFaculty(null);
+      setSelectedMajor(null);
+      setSelectedGrade(null);
+      setItems(filteredItems);
+    }
   }, [input, dataSubject, droppedItems]);
 
   //PopupManageRoom
-  const handleShowManageRoom = () => setShowManageRoom(true);
+  const handleShowManageRoom = (updatedDroppedItems) => {
+    setSelectDropped(updatedDroppedItems);
+    setShowManageRoom(true);
+  };
   const handleHideManageRoom = () => {
-    setSelectedSubject(null);
     setShowManageRoom(false);
   };
   //PopupSchedule
@@ -309,7 +432,6 @@ const Schedule = () => {
   //TABLE
   const numRows = 4; // จำนวนวันที่ต้องการสร้าง
   const numCols = 10; // จำนวนคอลัมน์ในแต่ละแถว
-
   const renderRows = () => {
     const rows = [];
     for (let i = 0; i < numRows; i++) {
@@ -456,8 +578,10 @@ const Schedule = () => {
             name="facultyName"
             options={optionFaculty}
             onChange={handleSelectFaculty}
+            value={selectedFaculty}
             placeholder="คณะ"
             isSearchable={false}
+            isDisabled={isDisabledSelect}
             className="react-select-container w-100"
             classNamePrefix="react-select"
           />
@@ -466,8 +590,10 @@ const Schedule = () => {
             name="majorName"
             options={optionMajor}
             onChange={handleSelectMajor}
+            value={selectedMajor}
             placeholder="สาขา"
             isSearchable={false}
+            isDisabled={isDisabledSelect}
             className="react-select-container w-100"
             classNamePrefix="react-select"
           />
@@ -478,8 +604,10 @@ const Schedule = () => {
             name="gradeName"
             options={optionGrade}
             onChange={handleSelectGrade}
+            value={selectedGrade}
             placeholder="ชั้นปี"
             isSearchable={false}
+            isDisabled={isDisabledSelect}
             className="react-select-container w-100"
             classNamePrefix="react-select"
           />
@@ -524,7 +652,9 @@ const Schedule = () => {
                           endDate &&
                           selectedTerm &&
                           selectedSemester ? (
-                            `ตารางสอบ${selectedSemester} ภาค${selectedTerm} ${startDate.getDate()} ${startDate.toLocaleString(
+                            `ตารางสอบ${selectedSemester.value} ภาค${
+                              selectedTerm.value
+                            } ${startDate.getDate()} ${startDate.toLocaleString(
                               "th-TH",
                               { month: "long" }
                             )} - ${endDate.getDate()} ${endDate.toLocaleString(
@@ -664,7 +794,7 @@ const Schedule = () => {
       <PopupManageRoom
         show={showManageRoom}
         hide={handleHideManageRoom}
-        selectedSubject={selectedSubject}
+        updatedDroppedItems={selectDropped}
       />
       <PopupManageSchedule
         show={showSchedule}

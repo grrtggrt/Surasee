@@ -7,8 +7,14 @@ import {
   Form,
   Button,
   CloseButton,
+  Badge,
 } from "react-bootstrap";
-import { FaCirclePlus, FaFloppyDisk, FaBan } from "react-icons/fa6";
+import {
+  FaCirclePlus,
+  FaFloppyDisk,
+  FaBan,
+  FaCircleMinus,
+} from "react-icons/fa6";
 import Select from "react-select";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -22,7 +28,7 @@ import "../../styles/Button.scss";
 import { dataTimeStart, dataTimeEnd } from "../../MockupData";
 
 const PopupManageRoom = (props) => {
-  const { show, hide, selectedSubject } = props;
+  const { show, hide, updatedDroppedItems, droppedRoom } = props;
 
   const [dataRoom, setDataRoom] = useState([]);
   const [selectedStartTime, setSelectedStartTime] = useState(null);
@@ -31,7 +37,10 @@ const PopupManageRoom = (props) => {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedSeat, setSelectedSeat] = useState(null);
-  const [inputAmount, setInputAmount] = useState(null);
+  const [inputAmount, setInputAmount] = useState(0);
+  const [cards, setCards] = useState([]);
+  const [amountSubject, setAmountSubject] = useState(null);
+  const [isDisabled, setIsDisabled] = useState(false);
 
   //ดึงข้อมูล
   const fetchRoom = useCallback(async () => {
@@ -55,7 +64,45 @@ const PopupManageRoom = (props) => {
     setSelectedEndTime(null);
     setSelectedOptionEndTime(null);
     setInputAmount("");
-  }, [hide]);
+    setCards([]);
+    setAmountSubject(
+      updatedDroppedItems && Array.isArray(updatedDroppedItems)
+        ? updatedDroppedItems.map((item) => item.amount).join(", ")
+        : ""
+    );
+  }, [show]);
+
+  useEffect(() => {
+    if (droppedRoom && droppedRoom.length > 0) {
+      const building = droppedRoom[0];
+      setSelectedBuilding({
+        label: building.build_name,
+        value: building.build_id,
+      });
+
+      const room = droppedRoom[0];
+      setSelectedRoom({
+        label: room.room_id,
+        value: room.room_id,
+      });
+
+      const seat = droppedRoom[0];
+      setSelectedSeat({
+        label: seat.seat,
+        value: seat.seat,
+      });
+    }
+  }, [droppedRoom]);
+
+  //isDisabled
+  useEffect(() => {
+    // เงื่อนไขที่ 1: ถ้ามีค่า droppedRoom ให้ isDisabled เป็น true
+    if (droppedRoom && droppedRoom.length > 0) {
+      setIsDisabled(true);
+    } else {
+      setIsDisabled(false);
+    }
+  }, [droppedRoom]);
 
   //ค้นหา
   const handleSelectStartTime = (selectedStartTime) => {
@@ -73,21 +120,87 @@ const PopupManageRoom = (props) => {
       setSelectedOptionEndTime(endTimeOptions);
     }
   };
-  
+
   const handleSelectEndTime = (e) => {
     setSelectedEndTime(e);
   };
 
   const handleSelectBuilding = (e) => {
-    setSelectedBuilding(e.value);
+    setSelectedBuilding(e);
   };
 
   const handleSelectRoom = (e) => {
-    setSelectedRoom(e.value);
+    setSelectedRoom(e);
   };
 
   const handleSelectSeat = (e) => {
-    setSelectedSeat(e.value);
+    setSelectedSeat(e);
+  };
+
+  const handleAddCard = () => {
+    if (
+      inputAmount > filterAmoutSubject ||
+      inputAmount > filterAmount ||
+      selectedSeat === null ||
+      filterAmoutSubject <= 0 ||
+      inputAmount === 0 ||
+      isNaN(inputAmount)
+    ) {
+      Swal.fire({
+        icon: "error",
+        title: "โปรดกรอกข้อมูลให้ถูกต้อง",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+    } else {
+      const newCard = {
+        selectedBuilding,
+        selectedRoom,
+        selectedSeat,
+        inputAmount,
+        filterAmount,
+      };
+      setCards([...cards, newCard]);
+      setAmountSubject(amountSubject - inputAmount);
+      // Reset inputs
+      setSelectedBuilding(null);
+      setSelectedRoom(null);
+      setSelectedSeat(null);
+      setInputAmount(0);
+      setIsDisabled(false);
+    }
+  };
+
+  const handleRemoveCard = (index) => {
+    Swal.fire({
+      title: "ต้องการลบข้อมูลใช่หรือไม่ ?",
+      icon: "warning",
+      showCancelButton: true,
+      cancelButtonText: "ยกเลิก",
+      confirmButtonText: "บันทึก",
+      confirmButtonColor: "#03A96B",
+      cancelButtonColor: "#dc3545",
+      customClass: {
+        confirmButton: "shadow-none",
+        cancelButton: "shadow-none",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "ลบข้อมูลเสร็จสิ้น!",
+          icon: "success",
+          confirmButtonColor: "#03A96B",
+          confirmButtonText: "ตกลง",
+          customClass: {
+            confirmButton: "shadow-none",
+          },
+        });
+        const cardToRemove = cards[index];
+        const updatedCards = cards.filter((_, i) => i !== index);
+        setCards(updatedCards);
+        setAmountSubject(amountSubject + parseInt(cardToRemove.inputAmount));
+      }
+    });
   };
 
   const filterBuilding = [
@@ -102,9 +215,13 @@ const PopupManageRoom = (props) => {
     };
   });
 
-  const filteredRoom = dataRoom.filter(
-    (item) => item.build_id === selectedBuilding
-  );
+  const filteredRoom = selectedBuilding
+    ? dataRoom.filter(
+        (item) =>
+          item.build_id === selectedBuilding.value &&
+          !cards.some((card) => card.selectedRoom.value === item.room_id)
+      )
+    : [];
 
   const filterRoom = [
     ...new Set(filteredRoom.map((item) => item.room_id)),
@@ -115,7 +232,9 @@ const PopupManageRoom = (props) => {
     value: room,
   }));
 
-  const filteredSeat = dataRoom.filter((item) => item.room_id === selectedRoom);
+  const filteredSeat = selectedRoom
+    ? dataRoom.filter((item) => item.room_id === selectedRoom.value)
+    : [];
 
   const filterSeat = [...new Set(filteredSeat.map((item) => item.seat))].sort(
     (a, b) => parseInt(a) - parseInt(b)
@@ -126,26 +245,58 @@ const PopupManageRoom = (props) => {
     value: seat,
   }));
 
-  const filterAmount = selectedSubject ? selectedSubject.amount : 0;
+  //จำนวนคนในวิชา
+  const filterAmoutSubject = selectedSeat ? amountSubject : 0;
+
+  //จำนวนความจุห้อง
+  const filterAmount =
+    selectedSeat &&
+    ((droppedRoom &&
+      droppedRoom.length > 0 &&
+      droppedRoom
+        .filter((item) => item.seat === selectedSeat.value)
+        .map((item) => item.Maxamount)[0]) ||
+      (selectedSeat &&
+        dataRoom &&
+        dataRoom
+          .filter((item) => item.seat === selectedSeat.value)
+          .map((item) => item.Maxamount)[0]) ||
+      0);
 
   useEffect(() => {
-    setSelectedRoom(null);
-    setSelectedSeat(null);
-    setInputAmount("");
+    setSelectedEndTime(null);
+  }, [selectedStartTime]);
+
+  useEffect(() => {
+    if (droppedRoom && !cards.length) {
+      return;
+    } else {
+      setSelectedRoom(null);
+      setSelectedSeat(null);
+      setInputAmount(0);
+    }
   }, [selectedBuilding]);
 
   useEffect(() => {
-    setSelectedSeat(null);
-    setInputAmount("");
+    if (droppedRoom && !cards.length) {
+      return;
+    } else {
+      setSelectedSeat(null);
+      setInputAmount(0);
+    }
   }, [selectedRoom]);
 
   useEffect(() => {
-    setInputAmount(filterAmount);
+    setInputAmount(filterAmoutSubject);
   }, [selectedSeat]);
 
   //Color
   const customStyleBackground = (selectedSeat) => {
-    if (selectedSeat && filterSeat.includes(selectedSeat)) {
+    if (
+      selectedSeat && droppedRoom
+        ? droppedRoom.map((item) => item.seat === selectedSeat)
+        : selectedSeat === selectedSeat
+    ) {
       const colorMap = {
         A: "#03A96B",
         B: "#D3E9E1",
@@ -162,37 +313,14 @@ const PopupManageRoom = (props) => {
     if (
       selectedStartTime === null ||
       selectedEndTime === null ||
-      selectedBuilding === null ||
-      selectedRoom === null ||
-      selectedSeat === null ||
-      inputAmount === ""
+      !cards.length ||
+      amountSubject !== 0
     ) {
       Swal.fire({
         icon: "error",
-        title: "กรุณาเลือกข้อมูลให้ครบ",
-        confirmButtonColor: "#03A96B",
-        confirmButtonText: "ตกลง",
-        customClass: {
-          confirmButton: "shadow-none",
-        },
-      });
-      return;
-    }
-
-    if (
-      inputAmount >
-      dataRoom
-        .filter((item) => item.seat === selectedSeat)
-        .map((item) => item.Maxamount)
-    ) {
-      Swal.fire({
-        icon: "error",
-        title: "จำนวนคนเกิน",
-        confirmButtonColor: "#03A96B",
-        confirmButtonText: "ตกลง",
-        customClass: {
-          confirmButton: "shadow-none",
-        },
+        title: "โปรดกรอกข้อมูลให้ถูกต้อง",
+        showConfirmButton: false,
+        timer: 2000,
       });
       return;
     }
@@ -204,7 +332,7 @@ const PopupManageRoom = (props) => {
       cancelButtonText: "ยกเลิก",
       confirmButtonText: "บันทึก",
       confirmButtonColor: "#03A96B",
-      cancelButtonColor: "#BD4636",
+      cancelButtonColor: "#dc3545",
       customClass: {
         confirmButton: "shadow-none",
         cancelButton: "shadow-none",
@@ -255,7 +383,13 @@ const PopupManageRoom = (props) => {
                     type="text"
                     readOnly
                     disabled
-                    value={selectedSubject ? selectedSubject.cs_id : ""}
+                    value={
+                      updatedDroppedItems && Array.isArray(updatedDroppedItems)
+                        ? updatedDroppedItems
+                            .map((item) => item.cs_id)
+                            .join(", ")
+                        : ""
+                    }
                   />
                 </Form>
               </Col>
@@ -267,7 +401,13 @@ const PopupManageRoom = (props) => {
                     type="text"
                     readOnly
                     disabled
-                    value={selectedSubject ? selectedSubject.cs_name_th : ""}
+                    value={
+                      updatedDroppedItems && Array.isArray(updatedDroppedItems)
+                        ? updatedDroppedItems
+                            .map((item) => item.cs_name_en)
+                            .join(", ")
+                        : ""
+                    }
                   />
                 </Form>
               </Col>
@@ -279,7 +419,7 @@ const PopupManageRoom = (props) => {
                     type="text"
                     readOnly
                     disabled
-                    value={selectedSubject ? selectedSubject.amount : ""}
+                    value={amountSubject}
                   />
                 </Form>
               </Col>
@@ -305,6 +445,7 @@ const PopupManageRoom = (props) => {
                   name="timeStart"
                   options={dataTimeStart}
                   onChange={handleSelectStartTime}
+                  value={selectedStartTime}
                   placeholder="กรุณาเลือก"
                   isSearchable={false}
                   className="react-select-container"
@@ -323,6 +464,7 @@ const PopupManageRoom = (props) => {
                   name="timeEnd"
                   options={selectedOptionEndTime}
                   onChange={handleSelectEndTime}
+                  value={selectedEndTime}
                   placeholder="กรุณาเลือก"
                   isSearchable={false}
                   className="react-select-container"
@@ -345,79 +487,211 @@ const PopupManageRoom = (props) => {
                 โปรดระบุอาคารสอบ :
               </Card.Body>
             </Card>
-            <Card>
-              <Card.Body
-                style={{ background: customStyleBackground(selectedSeat) }}
-              >
-                <Row className="gx-2">
-                  <Col md={3}>
-                    <Form.Label>อาคาร</Form.Label>
-                    <Select
-                      id="buildName"
-                      name="buildName"
-                      options={optionBuilding}
-                      onChange={handleSelectBuilding}
-                      placeholder="กรุณาเลือก"
-                      isSearchable={false}
-                      className="react-select-container"
-                      classNamePrefix="react-select"
-                    />
-                  </Col>
-                  <Col md={3}>
-                    <Form.Label>ห้อง</Form.Label>
-                    <Select
-                      id="roomName"
-                      name="roomName"
-                      options={optionRoom}
-                      onChange={handleSelectRoom}
-                      placeholder="กรุณาเลือก"
-                      isSearchable={false}
-                      className="react-select-container"
-                      classNamePrefix="react-select"
-                    />
-                  </Col>
-                  <Col md={3}>
-                    <Form.Label>ที่นั่ง</Form.Label>
-                    <Select
-                      id="seatName"
-                      name="seatName"
-                      options={optionSeat}
-                      onChange={handleSelectSeat}
-                      placeholder="กรุณาเลือก"
-                      isSearchable={false}
-                      className="react-select-container"
-                      classNamePrefix="react-select"
-                    />
-                  </Col>
-                  <Col md={2}>
-                    <Form.Label>จำนวน</Form.Label>
-                    <Form.Control
-                      id="searchName"
-                      name="searchName"
-                      type="number"
-                      className="custom-input"
-                      placeholder="จำนวน"
-                      value={inputAmount}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (!isNaN(value)) {
-                          setInputAmount(value);
-                        }
-                      }}
-                    />
-                  </Col>
-                  <Col
-                    md={1}
-                    className="d-flex justify-content-center align-items-end pb-2"
-                  >
-                    <Button className="btn-icon">
-                      <FaCirclePlus className="text-info fs-5" />
-                    </Button>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
+            {amountSubject !== 0 ? (
+              <Card>
+                <Card.Body
+                  style={{
+                    background: customStyleBackground(selectedSeat?.value),
+                  }}
+                >
+                  <Row className="gx-2">
+                    <Col md={3}>
+                      <Form.Label>อาคาร</Form.Label>
+                      <Select
+                        id="buildName"
+                        name="buildName"
+                        options={optionBuilding}
+                        onChange={handleSelectBuilding}
+                        value={selectedBuilding}
+                        isDisabled={isDisabled}
+                        placeholder="กรุณาเลือก"
+                        isSearchable={false}
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                      />
+                    </Col>
+                    <Col md={3}>
+                      <Form.Label>ห้อง</Form.Label>
+                      <Select
+                        id="roomName"
+                        name="roomName"
+                        options={optionRoom}
+                        onChange={handleSelectRoom}
+                        value={selectedRoom}
+                        isDisabled={isDisabled}
+                        placeholder="กรุณาเลือก"
+                        isSearchable={false}
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                      />
+                    </Col>
+                    <Col md={3}>
+                      <Form.Label>ที่นั่ง</Form.Label>
+                      <Select
+                        id="seatName"
+                        name="seatName"
+                        options={optionSeat}
+                        onChange={handleSelectSeat}
+                        value={selectedSeat}
+                        isDisabled={isDisabled}
+                        placeholder="กรุณาเลือก"
+                        isSearchable={false}
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                      />
+                    </Col>
+                    <Col md={2}>
+                      <Form.Label>
+                        <Row>
+                          <Col className="d-flex flex-row gap-2">
+                            <p>จำนวน</p>
+                            {selectedSeat ? (
+                              <Badge
+                                bg="primary"
+                                className="d-flex align-items-center"
+                              >{`${selectedSeat.value} : ${filterAmount} คน`}</Badge>
+                            ) : (
+                              ""
+                            )}
+                          </Col>
+                        </Row>
+                      </Form.Label>
+                      <Form.Control
+                        id="amountName"
+                        name="amountName"
+                        type="number"
+                        className={`custom-input ${
+                          inputAmount > filterAmoutSubject ? "text-danger" : ""
+                        }`}
+                        placeholder="จำนวน"
+                        value={inputAmount}
+                        min="0"
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (!isNaN(value)) {
+                            setInputAmount(parseInt(value));
+                          }
+                        }}
+                      />
+                    </Col>
+                    <Col
+                      md={1}
+                      className="d-flex justify-content-center align-items-end pb-2"
+                    >
+                      <Button
+                        className="btn-icon"
+                        onClick={() => handleAddCard()}
+                      >
+                        <FaCirclePlus className="text-info fs-5" />
+                      </Button>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            ) : (
+              ""
+            )}
           </Col>
+          {cards.map((card, index) => (
+            <Col key={index} className="mb-2">
+              <Card className="mb-2">
+                <Card.Body
+                  style={{
+                    background: customStyleBackground(card.selectedSeat.value),
+                  }}
+                >
+                  <Row className="gx-2">
+                    <Col md={3}>
+                      <Form.Label>อาคาร</Form.Label>
+                      <Select
+                        id={`buildName-${index}`}
+                        name={`buildName-${index}`}
+                        options={optionBuilding}
+                        onChange={handleSelectBuilding}
+                        value={card.selectedBuilding}
+                        isDisabled
+                        placeholder="กรุณาเลือก"
+                        isSearchable={false}
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                      />
+                    </Col>
+                    <Col md={3}>
+                      <Form.Label>ห้อง</Form.Label>
+                      <Select
+                        id={`roomName-${index}`}
+                        name={`roomName-${index}`}
+                        options={optionRoom}
+                        onChange={handleSelectRoom}
+                        value={card.selectedRoom}
+                        isDisabled
+                        placeholder="กรุณาเลือก"
+                        isSearchable={false}
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                      />
+                    </Col>
+                    <Col md={3}>
+                      <Form.Label>ที่นั่ง</Form.Label>
+                      <Select
+                        id={`seatName-${index}`}
+                        name={`seatName-${index}`}
+                        options={optionSeat}
+                        onChange={handleSelectSeat}
+                        value={card.selectedSeat}
+                        isDisabled
+                        placeholder="กรุณาเลือก"
+                        isSearchable={false}
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                      />
+                    </Col>
+                    <Col md={2}>
+                      <Form.Label>
+                        <Row>
+                          <Col className="d-flex flex-row gap-2">
+                            <p>จำนวน</p>
+                            {card.selectedSeat ? (
+                              <Badge
+                                bg="primary"
+                                className="d-flex align-items-center"
+                              >{`${card.selectedSeat.value} : ${card.filterAmount} คน`}</Badge>
+                            ) : (
+                              ""
+                            )}
+                          </Col>
+                        </Row>
+                      </Form.Label>
+                      <Form.Control
+                        id={`amountName-${index}`}
+                        name={`amountName-${index}`}
+                        type="number"
+                        className={`custom-input ${
+                          card.inputAmount > card.filterAmoutSubject
+                            ? "text-danger"
+                            : ""
+                        }`}
+                        placeholder="จำนวน"
+                        value={card.inputAmount}
+                        readOnly
+                      />
+                    </Col>
+                    <Col
+                      md={1}
+                      className="d-flex justify-content-center align-items-end pb-2"
+                    >
+                      <Button
+                        className="btn-icon"
+                        onClick={() => handleRemoveCard(index)}
+                      >
+                        <FaCircleMinus className="text-danger fs-5" />
+                      </Button>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
           <Col className="d-flex justify-content-center gap-3">
             <Button
               className="d-flex align-items-center justify-content-center gap-2"

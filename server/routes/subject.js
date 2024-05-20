@@ -10,11 +10,4 @@ router.get('/subject', (req, res, next) => {
     })
 })
 
-router.post('/subject', (req, res, next) => {
-    Subject.create(req.body, (err, post) => {
-        if(err) return next(err);
-        res.json(post);
-    })
-})
-
 module.exports=router

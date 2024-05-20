@@ -8,6 +8,7 @@ const authRoute = require('./routes/auth')
 const subject = require('./routes/subject')
 const major = require('./routes/major')
 const building = require('./routes/building')
+const schedule = require('./routes/schedule')
 
 
 const app = express()
@@ -30,6 +31,7 @@ app.use('/api', authRoute) // เปลี่ยนเส้นทางขอ�
 app.use('/api', subject)
 app.use('/api', major)
 app.use('/api', building)
+app.use('/api', schedule)
 
 const port = process.env.PORT || 8080
 app.listen(port, () => console.log(`start sever in port ${port}`)) // ใช้ template literals ในการระบุพอร์ต

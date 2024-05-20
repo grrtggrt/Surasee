@@ -11,6 +11,8 @@ import {
 import Swal from "sweetalert2";
 import Select from "react-select";
 import axios from "axios";
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
 
 import { dataReport } from "../MockupData";
 
@@ -24,6 +26,7 @@ import {
 const Report = () => {
   const [fetchData, setFetchData] = useState(dataReport);
   const [dataRoom, setDataRoom] = useState([]);
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [input, setInput] = useState("");
 
   //ดึงข้อมูล
@@ -60,7 +63,10 @@ const Report = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   //ค้นหา
-  
+  const handleSelectBuilding = (e) => {
+    setSelectedBuilding(e);
+  };
+
   //ตึก
   const filterBuilding = [
     ...new Set(dataRoom.map((item) => item.build_id)),
@@ -94,12 +100,41 @@ const Report = () => {
 
   const handleClickReset = () => {
     setFetchData(dataReport);
+    setSelectedBuilding(null);
     setInput("");
   };
 
   useEffect(() => {
     setFetchData(dataReport);
   }, [input]);
+
+  const exportToExcel = (data) => {
+    // แปลงข้อมูลในอาร์เรย์ให้มีโครงสร้างที่เหมาะสมก่อนส่งออก
+    const modifiedData = data.map((item) => ({
+      id: item.id,
+      name_en: item.name_en,
+      sec: Array.isArray(item.sec) ? item.sec.join(", ") : item.sec,
+      room_num: item.room_num,
+      date:
+        item.date instanceof Date ? item.date.toLocaleDateString() : item.date,
+      start_time: item.start_time,
+      end_time: item.end_time,
+      amount: Array.isArray(item.amount) ? item.amount.join(", ") : item.amount,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(modifiedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const dataBlob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+    });
+    saveAs(dataBlob, `report_${new Date().getDate()}.xlsx`);
+  };
 
   //Alert Confirm
   const handleReportConfirm = () => {
@@ -110,13 +145,14 @@ const Report = () => {
       cancelButtonText: "ยกเลิก",
       confirmButtonText: "ตกลง",
       confirmButtonColor: "#03A96B ",
-      cancelButtonColor: "#BD4636",
+      cancelButtonColor: "#dc3545",
       customClass: {
         confirmButton: "shadow-none",
         cancelButton: "shadow-none",
       },
     }).then((result) => {
       if (result.isConfirmed) {
+        exportToExcel(dataReport);
         Swal.fire({
           title: "ส่งออกเสร็จสิ้น!",
           icon: "success",
@@ -153,7 +189,8 @@ const Report = () => {
                   id="buildName"
                   name="buildName"
                   options={optionBuilding}
-                  // onChange={handleOptionChange}
+                  onChange={handleSelectBuilding}
+                  value={selectedBuilding}
                   placeholder="อาคาร"
                   isSearchable={false}
                   className="react-select-container"

@@ -14,3 +14,15 @@
   gap: 1rem;
   
 }
+
+.room-body-card {
+  display: grid;
+  gap: 1rem;
+  padding: 0.7rem;
+  height: 7vw;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

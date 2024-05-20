@@ -60,15 +60,12 @@ const Dashboard = () => {
   }, [fetchSubjects, fetchMajor]);
 
   //ค้นหา
-
-  const handleSelectFaculty = (selectedOption) => {
-    console.log('handleSelectFaculty', selectedOption);
-    setSelectedFaculty(e.value);
-    console.log('selectedFaculty', selectedFaculty);
+  const handleSelectFaculty = (e) => {
+    setSelectedFaculty(e);
   };
 
   const handleSelectGrade = (e) => {
-    setSelectedGrade(e.value);
+    setSelectedGrade(e);
   };
 
   //คณะ
@@ -85,33 +82,31 @@ const Dashboard = () => {
     value: grade.toString(),
   }));
 
+  //นับจำนวนสาขา
+  const filterMajor = [...new Set(dataMajor.map((item) => item.major_id))];
+
   const handleClickSearch = () => {
     const filteredData = fetchData.filter((item) => {
       return (
-        (!selectedFaculty || item.fac_name.toLowerCase().includes(selectedFaculty))
+        (!selectedFaculty ||
+          item.fac_name
+            .toLowerCase()
+            .includes(selectedFaculty.value.toLowerCase())) &&
+        (!selectedGrade ||
+          item.major_grade
+            .toString()
+            .toLowerCase()
+            .includes(selectedGrade.value.toLowerCase())) &&
+        (!input ||
+          item.fac_name.toLowerCase().includes(input.toLowerCase()) ||
+          item.major_id.toLowerCase().includes(input.toLowerCase()) ||
+          item.major_name_th.toLowerCase().includes(input.toLowerCase()) ||
+          item.major_grade
+            .toString()
+            .toLowerCase()
+            .includes(input.toLowerCase()))
       );
     });
-    // const filteredData = fetchData.filter((item) => {
-    //   return (
-    //     (!selectedFaculty ||
-    //       item.fac_name
-    //         .toLowerCase()
-    //         .includes(selectedFaculty.toLowerCase())) &&
-    //     (!selectedGrade ||
-    //       item.major_grade
-    //         .toString()
-    //         .toLowerCase()
-    //         .includes(selectedGrade.toLowerCase())) &&
-    //     (!input ||
-    //       item.fac_name.toLowerCase().includes(input.toLowerCase()) ||
-    //       item.major_id.toLowerCase().includes(input.toLowerCase()) ||
-    //       item.major_name_th.toLowerCase().includes(input.toLowerCase()) ||
-    //       item.major_grade
-    //         .toString()
-    //         .toLowerCase()
-    //         .includes(input.toLowerCase()))
-    //   );
-    // });
     setFetchData(filteredData);
     setCurrentPage(1);
   };
@@ -121,7 +116,7 @@ const Dashboard = () => {
     setInput("");
     setSelectedFaculty(null);
     setSelectedGrade(null);
-    console.log("")
+    console.log("");
   };
 
   useEffect(() => {
@@ -135,7 +130,6 @@ const Dashboard = () => {
   }, [input]);
 
   useEffect(() => {
-    setSelectedFaculty(null);
     setFetchData(dataMajor);
     if (selectedFaculty !== null || selectedGrade !== null) {
       setInput("");
@@ -204,7 +198,7 @@ const Dashboard = () => {
               }}
               className="d-flex justify-content-center p-2"
             >
-              วิชาที่ยังไม่ได้จัด
+              <p>วิชาที่ยังไม่ได้จัด</p>
             </Card.Header>
             <Card.Body>
               <Card.Text
@@ -226,7 +220,7 @@ const Dashboard = () => {
               }}
               className="d-flex justify-content-center p-2"
             >
-              วิชาที่จัดแล้ว
+              <p>วิชาที่จัดแล้ว</p>
             </Card.Header>
             <Card.Body>
               <Card.Text
@@ -248,7 +242,7 @@ const Dashboard = () => {
               }}
               className="d-flex justify-content-center p-2"
             >
-              วิชาทั้งหมด
+              <p>วิชาทั้งหมด</p>
             </Card.Header>
             <Card.Body>
               <Card.Text
@@ -270,14 +264,14 @@ const Dashboard = () => {
               }}
               className="d-flex justify-content-center p-2"
             >
-              จำนวนสาขา
+              <p>จำนวนสาขา</p>
             </Card.Header>
             <Card.Body>
               <Card.Text
                 className="d-flex justify-content-center"
                 style={{ fontSize: "60px" }}
               >
-                {dataMajor.length}
+                {filterMajor.length}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -307,6 +301,7 @@ const Dashboard = () => {
                     name="gradeName"
                     options={optionsGrade}
                     onChange={handleSelectGrade}
+                    value={selectedGrade}
                     placeholder="ชั้นปี"
                     isSearchable={false}
                     className="react-select-container"

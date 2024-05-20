@@ -19,7 +19,7 @@ const PopupManageSchedule = (props) => {
 
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
-  const [selectTerm, SetSelectTerm] = useState("");
+  const [selectTerm, SetSelectTerm] = useState(null);
   const [selectSemester, SetSelectSemester] = useState(null);
 
   const maxDate = startDate
@@ -27,13 +27,14 @@ const PopupManageSchedule = (props) => {
     : null;
 
   const handleTermSelect = (e) => {
-    SetSelectTerm(e.value);
+    SetSelectTerm(e);
   };
 
   const handleSemesterSelect = (e) => {
-    SetSelectSemester(e.value);
+    SetSelectSemester(e);
   };
 
+  //Alert Confirm
   const handleSaveConfirm = () => {
     if (
       selectTerm === null ||
@@ -43,12 +44,9 @@ const PopupManageSchedule = (props) => {
     ) {
       Swal.fire({
         icon: "error",
-        title: "กรุณาเลือกข้อมูลให้ครบ",
-        confirmButtonColor: "#03A96B",
-        confirmButtonText: "ตกลง",
-        customClass: {
-          confirmButton: "shadow-none",
-        },
+        title: "โปรดกรอกข้อมูลให้ถูกต้อง",
+        showConfirmButton: false,
+        timer: 2000,
       });
       return;
     }
@@ -58,12 +56,9 @@ const PopupManageSchedule = (props) => {
     if (differenceInDays < 8) {
       Swal.fire({
         icon: "error",
-        title: "กรุณาเลือกช่วงเวลาให้มีระยะเวลาอย่างน้อย 9 วัน",
-        confirmButtonColor: "#03A96B",
-        confirmButtonText: "ตกลง",
-        customClass: {
-          confirmButton: "shadow-none",
-        },
+        title: "โปรดเลือกช่วงเวลาให้มีระยะเวลาอย่างน้อย 9 วัน",
+        showConfirmButton: false,
+        timer: 2000,
       });
       return;
     }
@@ -75,7 +70,7 @@ const PopupManageSchedule = (props) => {
       cancelButtonText: "ยกเลิก",
       confirmButtonText: "บันทึก",
       confirmButtonColor: "#03A96B",
-      cancelButtonColor: "#BD4636",
+      cancelButtonColor: "#dc3545",
       customClass: {
         confirmButton: "shadow-none",
         cancelButton: "shadow-none",
@@ -111,6 +106,7 @@ const PopupManageSchedule = (props) => {
               name="termSelect"
               options={dataTermOption}
               onChange={handleTermSelect}
+              value={selectTerm}
               placeholder="ภาคเรียน"
               isSearchable={false}
               className="react-select-container"
@@ -123,6 +119,7 @@ const PopupManageSchedule = (props) => {
               name="semesterSelect"
               options={dataSemesterOption}
               onChange={handleSemesterSelect}
+              value={selectSemester}
               placeholder="เทอม"
               isSearchable={false}
               className="react-select-container"

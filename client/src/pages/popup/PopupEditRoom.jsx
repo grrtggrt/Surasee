@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Row, Col, Form, Button, CloseButton, Card } from "react-bootstrap";
-import { FaBan, FaFloppyDisk, FaCircleMinus  } from "react-icons/fa6";
+import {
+  Modal,
+  Row,
+  Col,
+  Form,
+  Button,
+  CloseButton,
+  Card,
+} from "react-bootstrap";
+import { FaBan, FaFloppyDisk, FaCircleMinus } from "react-icons/fa6";
 import Swal from "sweetalert2";
 import Select from "react-select";
 
@@ -10,34 +18,40 @@ import "../../styles/Select.scss";
 import "../../styles/Input.scss";
 
 const PopupEditRoom = (props) => {
-  const { show, hide } = props;
-  const [cardColor, setCardColor] = useState("");
-  const [selectedOption, setSelectedOption] = useState("");
+  const { show, hide, droppedItems, droppedRoom } = props;
+  const [selectedSeat, setSelectedSeat] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
 
-  const options = [
-    { value: "A", label: "A" },
-    { value: "B", label: "B" },
-    { value: "C", label: "C" },
-  ];
+  useEffect(() => {
+    if (droppedRoom && droppedRoom.length > 0) {
+      const seat = droppedRoom[0];
+      setSelectedSeat({
+        label: seat.seat,
+        value: seat.seat,
+      });
 
-  const handleOptionChange = (e) => {
-    setSelectedOption(e.value);
-  };
+      const roomId = droppedRoom.map((item) => item.room_id);
+      setSelectedRoom(roomId);
+    }
+  }, [droppedRoom]);
 
-  const customStyleBackground = (selectedOption) => {
-    if (selectedOption === "A") {
-      setCardColor("#03A96B");
-    } else if (selectedOption === "B") {
-      setCardColor("#D3E9E1");
-    } else if (selectedOption === "C") {
-      setCardColor("#A4E5EE");
+  const customStyleBackground = (selectedSeat) => {
+    if (
+      selectedSeat &&
+      droppedRoom.some((item) => item.seat === selectedSeat)
+    ) {
+      const colorMap = {
+        A: "#03A96B",
+        B: "#D3E9E1",
+        C: "#A4E5EE",
+      };
+      return colorMap[selectedSeat];
+    } else {
+      return "#FFFFFF";
     }
   };
 
-  useEffect(() => {
-    customStyleBackground(selectedOption);
-  }, [selectedOption]);
-
+  //Alert Confirm
   const handleSaveConfirm = () => {
     Swal.fire({
       title: "ต้องการบันทึกข้อมูลใช่หรือไม่",
@@ -46,7 +60,7 @@ const PopupEditRoom = (props) => {
       cancelButtonText: "ยกเลิก",
       confirmButtonText: "บันทึก",
       confirmButtonColor: "#03A96B",
-      cancelButtonColor: "#BD4636",
+      cancelButtonColor: "#dc3545",
       customClass: {
         confirmButton: "shadow-none",
         cancelButton: "shadow-none",
@@ -70,42 +84,56 @@ const PopupEditRoom = (props) => {
   return (
     <Modal show={show} onHide={hide} centered size="lg">
       <Modal.Header>
-        <Modal.Title>แก้ไขห้องสอบ</Modal.Title>
+        <Modal.Title>{`แก้ไขห้องสอบ ${selectedRoom}`}</Modal.Title>
         <CloseButton variant="white" onClick={hide} />
       </Modal.Header>
       <Modal.Body>
         <Row className="ps-3 pe-3 mb-3">
-          <Card className="mb-2 " style={{ backgroundColor: cardColor}}>
-            <Card.Body className="p-2">
+          <Card className="p-0">
+            <Card.Body
+              style={{ background: customStyleBackground(selectedSeat?.value) }}
+            >
               <Row className="gx-2">
-                <Col md={2}>
+                <Col>
                   <Form.Label>รหัสวิชา</Form.Label>
                   <Form.Control
-                    id="subjectID"
-                    name="subjectID"
-                    type="input"
-                    value="0141711-65"
+                    className="custom-input"
+                    type="text"
+                    readOnly
                     disabled
+                    value={
+                      droppedItems && Array.isArray(droppedItems)
+                        ? droppedItems.map((item) => item.cs_id).join(", ")
+                        : ""
+                    }
                   />
                 </Col>
                 <Col md={3}>
                   <Form.Label>ชื่อวิชา</Form.Label>
                   <Form.Control
-                    id="subjectName"
-                    name="subjectName"
-                    type="input"
-                    value="Econometrics I "
+                    className="custom-input"
+                    type="text"
+                    readOnly
                     disabled
+                    value={
+                      droppedItems && Array.isArray(droppedItems)
+                        ? droppedItems.map((item) => item.cs_name_en).join(", ")
+                        : ""
+                    }
                   />
                 </Col>
-                <Col md={2}>
+                <Col>
                   <Form.Label>สาขา</Form.Label>
                   <Form.Control
-                    id="subjectBrach"
-                    name="subjectBrach"
-                    type="input"
-                    value="S09" //
+                    className="custom-input"
+                    type="text"
+                    readOnly
                     disabled
+                    value={
+                      droppedItems && Array.isArray(droppedItems)
+                        ? droppedItems.map((item) => item.major_id).join(", ")
+                        : ""
+                    }
                   />
                 </Col>
                 <Col>
@@ -113,9 +141,8 @@ const PopupEditRoom = (props) => {
                   <Select
                     id="seat"
                     name="seat"
-                    options={options}
-                    onChange={handleOptionChange}
-                    // value={selectedOption}
+                    value={selectedSeat}
+                    isDisabled
                     placeholder="กรุณาเลือก"
                     isSearchable={false}
                     className="react-select-container"
@@ -130,6 +157,12 @@ const PopupEditRoom = (props) => {
                     type="number"
                     className="custom-input"
                     placeholder="กรุณากรอก"
+                    value={
+                      droppedItems && Array.isArray(droppedItems)
+                        ? droppedItems.map((item) => item.amount).join(", ")
+                        : ""
+                    }
+                    disabled
                   />
                 </Col>
                 <Col
@@ -137,7 +170,7 @@ const PopupEditRoom = (props) => {
                   className="d-flex justify-content-center align-items-end pb-2"
                 >
                   <Button className="btn-icon">
-                    <FaCircleMinus  className="text-danger fs-5"/>
+                    <FaCircleMinus className="text-danger fs-5" />
                   </Button>
                 </Col>
               </Row>
