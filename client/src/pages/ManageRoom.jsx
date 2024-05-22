@@ -26,6 +26,7 @@ const ManageRoom = () => {
   const [selectedGrade, setSelectedGrade] = useState(null);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [selectedFloor, setSelectedFloor] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [selectDropped, setSelectDropped] = useState(null);
   const [selectRoom, setSelectRoom] = useState(null);
   const [inputAmount, setInputAmount] = useState("");
@@ -51,8 +52,11 @@ const ManageRoom = () => {
   const fetchSubjects = useCallback(async () => {
     try {
       const response = await axios.get("http://localhost:5500/api/subjects");
-      setDataSubject(response.data);
-      setFetchDataSubject(response.data);
+      const subjects = response.data[0].subject;
+      setDataSubject(subjects);
+      setFetchDataSubject(
+        subjects.filter((subject) => !subject.room || subject.room.length === 0)
+      );
     } catch (error) {
       console.error("Error fetching subjects from schedule:", error);
     }
@@ -67,8 +71,6 @@ const ManageRoom = () => {
     }
   }, []);
 
-  console.log(fetchDataSubject);
-
   useEffect(() => {
     fetchRoom();
     fetchSubjects();
@@ -82,29 +84,60 @@ const ManageRoom = () => {
     if (!destination) return;
 
     if (source.droppableId !== destination.droppableId) {
-      const draggedItem = fetchDataSubject[source.index];
-      const newItems = [...fetchDataSubject];
-      newItems.splice(source.index, 1);
+      const sourceIndex = source.index;
+      const draggedItem = fetchDataSubject[sourceIndex];
+
+      const newSubjects = fetchDataSubject.filter(
+        (_, index) => index !== sourceIndex
+      );
+
+      setFetchDataSubject(newSubjects);
 
       const newDroppedItems = [
         ...droppedItems,
         { ...draggedItem, droppableId: destination.droppableId },
       ];
 
-      setFetchDataSubject(newItems);
       setDroppedItems(newDroppedItems);
 
       const updatedDroppedItems = newDroppedItems.filter(
         (item) => item.droppableId === destination.droppableId
       );
 
-      const droppedRoom = fetchDataRoom.filter(
-        (room) => `droppable-${room._id}` === destination.droppableId
-      );
+      const droppedRoom = fetchDataRoom
+        .filter((room) => `droppable-${room._id}` === destination.droppableId)
+        .map((room) => {
+          const relatedSubjects = dataSubject.filter((subject) =>
+            subject.room.some(
+              (r) =>
+                r.room_id === room.room_id &&
+                r.seat.some((seat) => room.seat.includes(seat))
+            )
+          );
+
+          const totalSubjectAmount = relatedSubjects.reduce(
+            (total, subject) =>
+              total +
+              subject.room.reduce(
+                (sum, r) =>
+                  r.room_id === room.room_id &&
+                  r.seat.some((seat) => room.seat.includes(seat))
+                    ? sum + r.amount
+                    : sum,
+                0
+              ),
+            0
+          );
+
+          const updatedMaxAmount = room.Maxamount - totalSubjectAmount;
+
+          return { ...room, Maxamount: updatedMaxAmount, amount: totalSubjectAmount };
+        });
 
       handleShowManageRoom(updatedDroppedItems, droppedRoom);
     }
   };
+  
 
   const droppableId = [];
   for (let i = 0; i < fetchDataRoom.length; i++) {
@@ -123,8 +156,10 @@ const ManageRoom = () => {
     // ทำสิ่งที่ต้องการกับ items ที่ถูกส่งเข้ามา
   };
 
-  const handleHideEditRoom = () => {
+  const handleHideEditRoom = async () => {
     setShowEditRoom(false);
+    await fetchSubjects(); // รอให้ข้อมูลถูกบันทึกเสร็จสมบูรณ์ก่อนที่จะเรียกใช้
+    setDroppedItems([]);
   };
 
   const handleShowManageRoom = (updatedDroppedItems, droppedRoom) => {
@@ -133,11 +168,17 @@ const ManageRoom = () => {
     setShowManageRoom(true);
   };
 
-  const handleHideManageRoom = () => {
+  const handleHideManageRoom = async () => {
     setShowManageRoom(false);
+    await fetchSubjects(); // รอให้ข้อมูลถูกบันทึกเสร็จสมบูรณ์ก่อนที่จะเรียกใช้
+    setDroppedItems([]);
   };
 
   //Search
+  const handleSelectDate = (e) => {
+    setSelectedDate(e);
+  };
+
   const handleSelectBuilding = (e) => {
     setSelectedBuilding(e);
   };
@@ -153,6 +194,18 @@ const ManageRoom = () => {
   const handleSelectGrade = (e) => {
     setSelectedGrade(e);
   };
+
+  //วัน
+  const filterDate = [...new Set(dataSubject.map((item) => item.date))].sort(
+    (a, b) => parseInt(a) - parseInt(b)
+  );
+
+  const optionDate = filterDate.map((date) => {
+    return {
+      label: date,
+      value: date,
+    };
+  });
 
   //ตึก
   const filterBuilding = [
@@ -207,6 +260,19 @@ const ManageRoom = () => {
     setFetchDataRoom(filteredData);
   };
 
+  const handleClickSearchDate = () => {
+    const filteredData = fetchDataSubject.filter((item) => {
+      return (
+        !selectedDate ||
+        item.date
+          .toString()
+          .toLowerCase()
+          .includes(selectedDate.value.toString().toLowerCase())
+      );
+    });
+    setFetchDataSubject(filteredData);
+  };
+
   const handleClickSearchSubject = () => {
     const filteredData = fetchDataSubject.filter((item) => {
       return (
@@ -227,14 +293,6 @@ const ManageRoom = () => {
           item.major_id
             .toString()
             .toLowerCase()
-            .includes(inputSubject.toLowerCase()) ||
-          item.lb_sec
-            .toString()
-            .toLowerCase()
-            .includes(inputSubject.toLowerCase()) ||
-          item.lc_sec
-            .toString()
-            .toLowerCase()
             .includes(inputSubject.toLowerCase()))
       );
     });
@@ -243,9 +301,9 @@ const ManageRoom = () => {
 
   const handleClickResetSubject = () => {
     const filteredItems = dataSubject.filter(
-      (item) =>
-        !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
+      (subject) => !subject.room || subject.room.length === 0
     );
+
     setFetchDataSubject(filteredItems);
     setSelectedMajor(null);
     setSelectedGrade(null);
@@ -272,9 +330,9 @@ const ManageRoom = () => {
 
   useEffect(() => {
     const filteredItems = dataSubject.filter(
-      (item) =>
-        !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
+      (subject) => !subject.room || subject.room.length === 0
     );
+
     setFetchDataSubject(filteredItems);
     if (!inputSubject) {
       return;
@@ -282,18 +340,29 @@ const ManageRoom = () => {
       setSelectedMajor(null);
       setSelectedGrade(null);
     }
-  }, [inputSubject, dataSubject, droppedItems]);
+  }, [inputSubject]);
 
   useEffect(() => {
     const filteredItems = dataSubject.filter(
-      (item) =>
-        !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
+      (subject) => !subject.room || subject.room.length === 0
     );
+
     setFetchDataSubject(filteredItems);
     if (selectedMajor !== null || selectedGrade !== null) {
       setInputSubject("");
     }
   }, [selectedMajor, selectedGrade]);
+
+  useEffect(() => {
+    if (fetchDataSubject.length !== 0) {
+      handleClickSearchDate();
+    } else {
+      const filteredItems = dataSubject.filter(
+        (subject) => !subject.room || subject.room.length === 0
+      );
+      setFetchDataSubject(filteredItems);
+    }
+  }, [selectedDate]);
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
@@ -316,8 +385,9 @@ const ManageRoom = () => {
                     <Select
                       id="dateName"
                       name="dateName"
-                      // options={options}
-                      // onChange={handleOptionChange}
+                      options={optionDate}
+                      onChange={handleSelectDate}
+                      value={selectedDate}
                       placeholder="กรุณาเลือก"
                       isSearchable={false}
                       className="react-select-container"
@@ -328,7 +398,6 @@ const ManageRoom = () => {
               </Card>
             </Col>
           </Row>
-
           <Row className="mx-0">
             <Card>
               <Card.Body>
@@ -396,41 +465,38 @@ const ManageRoom = () => {
                   </Col>
                 </Row>
                 <Row>
-                  {fetchDataSubject.map((item, index) => (
-                    <Droppable droppableId="subject">
-                      {(provided) => (
-                        <div
-                          key={index}
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                          className="subject-card-grid-manageroom"
-                        >
-                          {item.subject.map((item, subIndex) => (
-                            <Draggable
-                              key={item.cs_id}
-                              draggableId={item.cs_id}
-                              index={index * 1000 + subIndex}
-                            >
-                              {(provided) => (
-                                <Card
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                >
-                                  <Card.Body>
-                                    <p>รหัสวิชา : {item.cs_id}</p>
-                                    <p>ชื่อวิชา : {item.cs_name_en}</p>
-                                    <p>สาขา : {`${item.major_id}`}</p>
-                                  </Card.Body>
-                                </Card>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  ))}
+                  <Droppable droppableId="subject">
+                    {(provided) => (
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        className="subject-card-grid-manageroom"
+                      >
+                        {fetchDataSubject.map((item, index) => (
+                          <Draggable
+                            key={item.cs_id}
+                            draggableId={item.cs_id}
+                            index={index}
+                          >
+                            {(provided) => (
+                              <Card
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                              >
+                                <Card.Body>
+                                  <p>รหัสวิชา : {item.cs_id}</p>
+                                  <p>ชื่อวิชา : {item.cs_name_en}</p>
+                                  <p>สาขา : {`${item.major_id}`}</p>
+                                </Card.Body>
+                              </Card>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
                 </Row>
               </Card.Body>
             </Card>
@@ -520,71 +586,106 @@ const ManageRoom = () => {
                   <Col className="room-card-grid-manageroom">
                     {fetchDataRoom
                       .sort((a, b) => a.build_id - b.build_id)
-                      .map((item, index) => (
-                        <Droppable droppableId={droppableId[index]} key={index}>
-                          {(provided) => (
-                            <Card
-                              {...provided.droppableProps}
-                              ref={provided.innerRef}
-                            >
-                              <Card.Header
-                                className="d-flex justify-content-center gap-3"
-                                style={{
-                                  background: "#03A96B",
-                                  color: "white",
-                                }}
+                      .map((item, index) => {
+                        // คำนวณ totalAmount โดยรวม amount ของ fetchDataRoom และ dataSubject ที่เกี่ยวข้องในห้องเดียวกัน
+                        const totalAmount = dataSubject
+                          .filter((subject) =>
+                            subject.room.some(
+                              (r) =>
+                                r.room_id === item.room_id &&
+                                r.seat.includes(item.seat[0])
+                            )
+                          )
+                          .reduce(
+                            (sum, subject) =>
+                              sum +
+                              subject.room.find(
+                                (r) => r.room_id === item.room_id
+                              ).amount,
+                            item.amount
+                          );
+
+                        const isDropDisabled = totalAmount >= item.Maxamount;
+
+                        return (
+                          <Droppable
+                            droppableId={droppableId[index]}
+                            key={index}
+                            isDropDisabled={isDropDisabled}
+                          >
+                            {(provided) => (
+                              <Card
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
                               >
-                                {isEditing ? (
-                                  <Button
-                                    className="btn-icon"
-                                    style={{
-                                      position: "absolute",
-                                      right: "0",
-                                      top: "0",
-                                    }}
-                                    onClick={() =>
-                                      handleShowEditRoom(
-                                        droppedItems.filter(
-                                          (droppedItems) =>
-                                            droppedItems.droppableId ===
-                                            droppableId[index]
-                                        ),
-                                        fetchDataRoom.filter(
-                                          (droppedRoom) =>
-                                            `droppable-${droppedRoom._id}` ===
-                                            droppableId[index]
+                                <Card.Header
+                                  className="d-flex justify-content-center gap-3"
+                                  style={{
+                                    background: "#03A96B",
+                                    color: "white",
+                                  }}
+                                >
+                                  {isEditing ? (
+                                    <Button
+                                      className="btn-icon"
+                                      style={{
+                                        position: "absolute",
+                                        right: "0",
+                                        top: "0",
+                                      }}
+                                      onClick={() =>
+                                        handleShowEditRoom(
+                                          droppedItems.filter(
+                                            (droppedItems) =>
+                                              droppedItems.droppableId ===
+                                              droppableId[index]
+                                          ),
+                                          fetchDataRoom.filter(
+                                            (droppedRoom) =>
+                                              `droppable-${droppedRoom._id}` ===
+                                              droppableId[index]
+                                          )
                                         )
+                                      }
+                                    >
+                                      <FaPenToSquare className="text-dark fs-5" />
+                                    </Button>
+                                  ) : null}
+                                  <p>{item.room_id}</p>
+                                  <p>|</p>
+                                  <p
+                                    className={`${
+                                      totalAmount >= item.Maxamount
+                                        ? "text-danger"
+                                        : ""
+                                    }`}
+                                  >{`${totalAmount} / ${item.Maxamount}${item.seat}`}</p>
+                                </Card.Header>
+                                <Card.Body className="room-body-card">
+                                  {dataSubject
+                                    .filter((subject) =>
+                                      subject.room.some(
+                                        (r) =>
+                                          r.room_id === item.room_id &&
+                                          r.seat.includes(item.seat[0])
                                       )
-                                    }
-                                  >
-                                    <FaPenToSquare className="text-dark fs-5" />
-                                  </Button>
-                                ) : null}
-                                <p>{item.room_id}</p>
-                                <p>|</p>
-                                <p>{`${item.amount} / ${item.Maxamount}${item.seat}`}</p>
-                              </Card.Header>
-                              <Card.Body className="room-body-card">
-                                {droppedItems
-                                  .filter(
-                                    (item) =>
-                                      item.droppableId === droppableId[index]
-                                  )
-                                  .map((item, index) => (
-                                    <Card key={item.cs_id} index={index}>
-                                      <Card.Body>
-                                        <p>รหัสวิชา : {item.cs_id}</p>
-                                        <p>ชื่อวิชา : {item.cs_name_en}</p>
-                                        <p>สาขา : {`${item.major_id}`}</p>
-                                      </Card.Body>
-                                    </Card>
-                                  ))}
-                                {provided.placeholder}
-                              </Card.Body>
-                            </Card>
-                          )}
-                        </Droppable>
-                      ))}
+                                    )
+                                    .map((subject, index) => (
+                                      <Card key={subject.cs_id} index={index}>
+                                        <Card.Body>
+                                          <p>รหัสวิชา : {subject.cs_id}</p>
+                                          <p>ชื่อวิชา : {subject.cs_name_en}</p>
+                                          <p>สาขา : {`${subject.major_id}`}</p>
+                                        </Card.Body>
+                                      </Card>
+                                    ))}
+                                  {provided.placeholder}
+                                </Card.Body>
+                              </Card>
+                            )}
+                          </Droppable>
+                        );
+                      })}
                   </Col>
                 </Row>
               </Card.Body>
@@ -602,6 +703,7 @@ const ManageRoom = () => {
           hide={handleHideManageRoom}
           updatedDroppedItems={selectDropped}
           droppedRoom={selectRoom}
+          fetchSubjects={fetchSubjects}
         />
       </div>
     </DragDropContext>

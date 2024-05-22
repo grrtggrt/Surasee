@@ -67,7 +67,7 @@ const PopupResetPassword = (props) => {
       setMessageError("รหัสผ่านไม่ถูกต้อง");
     } else if (newPassword.length < 8) {
       setMessageError("ตั้งรหัสใหม่ 8-16 ตัวอักษร ");
-    } else if (!currentPassword || !newPassword || !confirmNewPassword) {
+    } else {
       setMessageError("กรุณากรอกข้อมูลให้ครบ");
     }
   };
@@ -75,19 +75,17 @@ const PopupResetPassword = (props) => {
   //Alert Confirm
   const handleSaveConfirm = () => {
     if (
-      !currentPassword ||
-      !newPassword ||
+      newPassword !== confirmNewPassword ||
+      currentPassword !== "12345678" ||
       newPassword.length < 8 ||
-      !confirmNewPassword
+      confirmNewPassword.length < 8
     ) {
       handleCheckErrorMessage();
       return;
     }
-
     if (messageError) {
       return;
     }
-
     Swal.fire({
       title: "ต้องการบันทึกข้อมูลใช่หรือไม่",
       icon: "question",

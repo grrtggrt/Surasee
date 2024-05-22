@@ -131,7 +131,7 @@ const PopupUserSetting = (props) => {
             <Row>
               <Col>
                 <p style={{ color: "#525252" }}>
-                  ขนาดรูป 132 x 132px PNG หรือ JPG file.
+                  ขนาดรูป 100 x 100px PNG หรือ JPG file.
                 </p>
               </Col>
             </Row>

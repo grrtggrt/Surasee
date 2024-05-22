@@ -38,6 +38,7 @@ const PopupManageRoom = (props) => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedSeat, setSelectedSeat] = useState(null);
   const [inputAmount, setInputAmount] = useState(0);
+  const [inputSec, setInputSec] = useState(0);
   const [cards, setCards] = useState([]);
   const [amountSubject, setAmountSubject] = useState(null);
   const [isDisabled, setIsDisabled] = useState(false);
@@ -144,7 +145,9 @@ const PopupManageRoom = (props) => {
       selectedSeat === null ||
       filterAmoutSubject <= 0 ||
       inputAmount === 0 ||
-      isNaN(inputAmount)
+      isNaN(inputAmount) ||
+      isNaN(inputSec) ||
+      inputSec === 0
     ) {
       Swal.fire({
         icon: "error",
@@ -158,14 +161,16 @@ const PopupManageRoom = (props) => {
         selectedRoom,
         selectedSeat,
         inputAmount,
+        inputSec,
         filterAmount,
+        droppableId: updatedDroppedItems[0].droppableId,
       };
       setCards([...cards, newCard]);
       setAmountSubject(amountSubject - inputAmount);
-      // Reset inputs
       setSelectedBuilding(null);
       setSelectedRoom(null);
       setSelectedSeat(null);
+      setInputSec(0);
       setInputAmount(0);
       setIsDisabled(false);
     }
@@ -187,13 +192,10 @@ const PopupManageRoom = (props) => {
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.fire({
-          title: "ลบข้อมูลเสร็จสิ้น!",
           icon: "success",
-          confirmButtonColor: "#03A96B",
-          confirmButtonText: "ตกลง",
-          customClass: {
-            confirmButton: "shadow-none",
-          },
+          title: "ลบข้อมูลเสร็จสิ้น",
+          showConfirmButton: false,
+          timer: 2000,
         });
         const cardToRemove = cards[index];
         const updatedCards = cards.filter((_, i) => i !== index);
@@ -219,7 +221,7 @@ const PopupManageRoom = (props) => {
     ? dataRoom.filter(
         (item) =>
           item.build_id === selectedBuilding.value &&
-          !cards.some((card) => card.selectedRoom.value === item.room_id)
+          !cards.some((card) => card.selectedRoom.value === item.room_id) 
       )
     : [];
 
@@ -231,6 +233,8 @@ const PopupManageRoom = (props) => {
     label: room,
     value: room,
   }));
+
+  console.log(updatedDroppedItems, droppedRoom);
 
   const filteredSeat = selectedRoom
     ? dataRoom.filter((item) => item.room_id === selectedRoom.value)
@@ -339,18 +343,57 @@ const PopupManageRoom = (props) => {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        Swal.fire({
-          title: "บันทึกเสร็จสิ้น!",
-          icon: "success",
-          confirmButtonColor: "#03A96B",
-          confirmButtonText: "ตกลง",
-          customClass: {
-            confirmButton: "shadow-none",
-          },
-        });
+        handleSave();
         hide();
       }
     });
+  };
+
+  const handleSave = async () => {
+    const dataToSave = updatedDroppedItems
+      .map((item) => {
+        const filteredCards = cards.filter(
+          (card) => card.droppableId === item.droppableId
+        );
+
+        return filteredCards.map((filteredCard) => ({
+          build_name: filteredCard.selectedBuilding.label,
+          room_id: filteredCard.selectedRoom.value,
+          seat: filteredCard.selectedSeat.value,
+          timeStart: selectedStartTime.label,
+          timeEnd: selectedEndTime.label,
+          amount: filteredCard.inputAmount,
+          section: filteredCard.inputSec,
+          droppableIdRoom: filteredCard.droppableId,
+          major_id: item.major_id,
+          cs_id: item.cs_id,
+        }));
+      })
+      .flat();
+
+    try {
+      await axios.post(
+        "http://localhost:5500/api/update-subjects-room",
+        dataToSave
+      );
+
+      props.fetchSubjects();
+
+      Swal.fire({
+        icon: "success",
+        title: "บันทึกข้อมูลสำเร็จ",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+    } catch (error) {
+      console.error("Error saving data:", error);
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาดในการบันทึกข้อมูล",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+    }
   };
 
   return (
@@ -495,7 +538,7 @@ const PopupManageRoom = (props) => {
                   }}
                 >
                   <Row className="gx-2">
-                    <Col md={3}>
+                    <Col>
                       <Form.Label>อาคาร</Form.Label>
                       <Select
                         id="buildName"
@@ -510,7 +553,7 @@ const PopupManageRoom = (props) => {
                         classNamePrefix="react-select"
                       />
                     </Col>
-                    <Col md={3}>
+                    <Col>
                       <Form.Label>ห้อง</Form.Label>
                       <Select
                         id="roomName"
@@ -525,7 +568,7 @@ const PopupManageRoom = (props) => {
                         classNamePrefix="react-select"
                       />
                     </Col>
-                    <Col md={3}>
+                    <Col>
                       <Form.Label>ที่นั่ง</Form.Label>
                       <Select
                         id="seatName"
@@ -540,7 +583,7 @@ const PopupManageRoom = (props) => {
                         classNamePrefix="react-select"
                       />
                     </Col>
-                    <Col md={2}>
+                    <Col>
                       <Form.Label>
                         <Row>
                           <Col className="d-flex flex-row gap-2">
@@ -561,7 +604,10 @@ const PopupManageRoom = (props) => {
                         name="amountName"
                         type="number"
                         className={`custom-input ${
-                          inputAmount > filterAmoutSubject ? "text-danger" : ""
+                          inputAmount > filterAmoutSubject ||
+                          inputAmount > filterAmount
+                            ? "text-danger"
+                            : ""
                         }`}
                         placeholder="จำนวน"
                         value={inputAmount}
@@ -570,6 +616,25 @@ const PopupManageRoom = (props) => {
                           const value = e.target.value;
                           if (!isNaN(value)) {
                             setInputAmount(parseInt(value));
+                          }
+                        }}
+                      />
+                    </Col>
+                    <Col>
+                      <Form.Label>
+                        <p>หมู่เรียน</p>
+                      </Form.Label>
+                      <Form.Control
+                        id="secName"
+                        name="secName"
+                        type="number"
+                        placeholder="จำนวน"
+                        value={inputSec}
+                        min="0"
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (!isNaN(value)) {
+                            setInputSec(parseInt(value));
                           }
                         }}
                       />
@@ -601,7 +666,7 @@ const PopupManageRoom = (props) => {
                   }}
                 >
                   <Row className="gx-2">
-                    <Col md={3}>
+                    <Col>
                       <Form.Label>อาคาร</Form.Label>
                       <Select
                         id={`buildName-${index}`}
@@ -616,7 +681,7 @@ const PopupManageRoom = (props) => {
                         classNamePrefix="react-select"
                       />
                     </Col>
-                    <Col md={3}>
+                    <Col>
                       <Form.Label>ห้อง</Form.Label>
                       <Select
                         id={`roomName-${index}`}
@@ -631,7 +696,7 @@ const PopupManageRoom = (props) => {
                         classNamePrefix="react-select"
                       />
                     </Col>
-                    <Col md={3}>
+                    <Col>
                       <Form.Label>ที่นั่ง</Form.Label>
                       <Select
                         id={`seatName-${index}`}
@@ -646,7 +711,7 @@ const PopupManageRoom = (props) => {
                         classNamePrefix="react-select"
                       />
                     </Col>
-                    <Col md={2}>
+                    <Col>
                       <Form.Label>
                         <Row>
                           <Col className="d-flex flex-row gap-2">
@@ -673,6 +738,19 @@ const PopupManageRoom = (props) => {
                         }`}
                         placeholder="จำนวน"
                         value={card.inputAmount}
+                        readOnly
+                      />
+                    </Col>
+                    <Col>
+                      <Form.Label>
+                        <p>หมู่เรียน</p>
+                      </Form.Label>
+                      <Form.Control
+                        id={`secName-${index}`}
+                        name={`secName-${index}`}
+                        type="text"
+                        placeholder="หมู่เรียน"
+                        value={card.inputSec}
                         readOnly
                       />
                     </Col>

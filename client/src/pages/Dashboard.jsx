@@ -32,6 +32,7 @@ const Dashboard = () => {
   const [fetchData, setFetchData] = useState([]);
   const [dataMajor, setDataMajor] = useState([]);
   const [dataSubject, setDataSubject] = useState([]);
+  const [dataScheduleSubject, setDataScheduleSubject] = useState([]);
   const [viewDetail, setViewDetail] = useState(null);
 
   //ดึงข้อมูล
@@ -41,6 +42,16 @@ const Dashboard = () => {
       setDataSubject(response.data);
     } catch (error) {
       console.error("Error fetching subjects:", error);
+    }
+  }, []);
+
+  const fetchScheduleSubject = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/subjects");
+      const subjects = response.data[0].subject;
+      setDataScheduleSubject(subjects);
+    } catch (error) {
+      console.error("Error fetching subjects from schedule:", error);
     }
   }, []);
 
@@ -56,8 +67,9 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchSubjects();
+    fetchScheduleSubject();
     fetchMajor();
-  }, [fetchSubjects, fetchMajor]);
+  }, [fetchSubjects, fetchMajor, fetchScheduleSubject]);
 
   //ค้นหา
   const handleSelectFaculty = (e) => {
@@ -205,7 +217,7 @@ const Dashboard = () => {
                 className="d-flex justify-content-center"
                 style={{ fontSize: "60px" }}
               >
-                {dataSubject.length}
+                {dataSubject.length - dataScheduleSubject.length}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -227,7 +239,7 @@ const Dashboard = () => {
                 className="d-flex justify-content-center"
                 style={{ fontSize: "60px" }}
               >
-                {dataSubject.length}
+                {dataScheduleSubject.length}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -457,7 +469,7 @@ const Dashboard = () => {
         show={showModal}
         hide={handleHide}
         viewDetail={viewDetail}
-        dataSubject={dataSubject}
+        dataSubject={dataScheduleSubject}
       />
     </div>
   );

@@ -195,7 +195,9 @@ const Schedule = () => {
             cs_id: item.cs_id,
             cs_name_en: item.cs_name_en,
             cs_name_th: item.cs_name_th,
+            grade : item.grade,
             major_id: item.major_id,
+            amount: item.amount,
             date: item.date,
             droppableIdSchedule: item.droppableId,
           }));

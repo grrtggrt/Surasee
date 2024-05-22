@@ -12,6 +12,8 @@ const PopupDashboard = (props) => {
       )
     : [];
 
+  console.log(dataSubject);
+
   return (
     <Modal show={show} onHide={hide} size="xl" centered>
       <Modal.Header closeButton style={{ background: "#fff" }}>
@@ -72,16 +74,31 @@ const PopupDashboard = (props) => {
               <Card.Body className="p-0">
                 <Row>
                   <Col sm={2} className="p-0">
-                    <Card style={{ background: "#03A96B" }}>
+                    <Card
+                      style={{
+                        background:
+                          item.room && item.room.length > 0
+                            ? "#03A96B"
+                            : "#dc3545",
+                      }}
+                    >
                       <Card.Body style={{ fontSize: "22px", color: "white" }}>
-                        <p>29/04/24</p>
-                        <p style={{ fontSize: "16px" }}>09:00 - 12:00</p>
+                        <p>{item.date}</p>
+                        <p style={{ fontSize: "16px" }}>{`${
+                          item.room && item.room.length > 0
+                            ? item.room[0].timeStart
+                            : "00:00"
+                        } - ${
+                          item.room && item.room.length > 0
+                            ? item.room[0].timeEnd
+                            : "00:00"
+                        }`}</p>
                       </Card.Body>
                     </Card>
                   </Col>
                   <Col sm={10}>
                     <Row className="pt-4">
-                      <Col md={3} className="px-3">
+                      <Col md={2} className="px-3">
                         <p style={{ fontSize: "16px", color: "#424242" }}>
                           {item.cs_id}
                         </p>
@@ -96,7 +113,7 @@ const PopupDashboard = (props) => {
                           </p>
                         )}
                       </Col>
-                      <Col md={7}>
+                      <Col md={6}>
                         <p style={{ fontSize: "16px", color: "#424242" }}>
                           {item.cs_name_en}
                         </p>
@@ -104,10 +121,28 @@ const PopupDashboard = (props) => {
                       </Col>
                       <Col>
                         <p style={{ fontSize: "16px", color: "#424242" }}>
-                          ห้อง 17201A
+                          {`${
+                            item.room && item.room.length > 0
+                              ? [...new Set (item.room
+                                  .map((room) => room.build_name))]
+                                  .join(", ")
+                              : "อาคาร ?"
+                          }`}
                         </p>
                         <p style={{ color: "#5B5B5B" }}>
-                          {`อาคาร 17 ( ${item.amount} ที่นั่ง )`}
+                          {`${
+                            item.room && item.room.length > 0
+                              ? item.room
+                                  .map((room) => `${room.room_id} ${room.seat}`)
+                                  .join(", ")
+                              : "????"
+                          } ( ${
+                            item.room &&
+                            item.room.length > 0 &&
+                            item.room[0].amount
+                              ? item.room.map((room) => room.amount).join(", ")
+                              : "?"
+                          } ที่นั่ง )`}
                         </p>
                       </Col>
                     </Row>
