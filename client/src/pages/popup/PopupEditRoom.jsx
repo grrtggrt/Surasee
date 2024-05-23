@@ -37,13 +37,21 @@ const PopupEditRoom = (props) => {
 
   const customStyleBackground = (selectedSeat) => {
     if (
-      selectedSeat &&
-      droppedRoom.some((item) => item.seat === selectedSeat)
+      selectedSeat && droppedRoom
+        ? droppedRoom.map((item) => item.seat === selectedSeat)
+        : selectedSeat === selectedSeat
     ) {
       const colorMap = {
         A: "#03A96B",
         B: "#D3E9E1",
         C: "#A4E5EE",
+        D: "#A4B4EE",
+        E: "#6685F4",
+        F: "#415083",
+        G: "#6D51A8",
+        H: "#B25ABA",
+        I: "#7B3D41",
+        J: "#B66D4D",
       };
       return colorMap[selectedSeat];
     } else {
@@ -68,7 +76,7 @@ const PopupEditRoom = (props) => {
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.fire({
-          title: "บันทึกเสร็จสิ้น!",
+          title: "บันทึกข้อมูลสำเร็จ",
           icon: "success",
           confirmButtonColor: "#03A96B",
           confirmButtonText: "ตกลง",

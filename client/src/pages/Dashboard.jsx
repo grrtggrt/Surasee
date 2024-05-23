@@ -18,9 +18,11 @@ import {
 } from "react-icons/fa6";
 import Select from "react-select";
 import axios from "axios";
+import Swal from "sweetalert2";
 
 //styles
 import "../styles/Select.scss";
+import "../styles/Loader.scss";
 
 // Popup
 import PopupDashboard from "./popup/PopupDashboard";
@@ -34,6 +36,9 @@ const Dashboard = () => {
   const [dataSubject, setDataSubject] = useState([]);
   const [dataScheduleSubject, setDataScheduleSubject] = useState([]);
   const [viewDetail, setViewDetail] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
 
   //ดึงข้อมูล
   const fetchSubjects = useCallback(async () => {
@@ -98,37 +103,54 @@ const Dashboard = () => {
   const filterMajor = [...new Set(dataMajor.map((item) => item.major_id))];
 
   const handleClickSearch = () => {
-    const filteredData = fetchData.filter((item) => {
-      return (
-        (!selectedFaculty ||
-          item.fac_name
-            .toLowerCase()
-            .includes(selectedFaculty.value.toLowerCase())) &&
-        (!selectedGrade ||
-          item.major_grade
-            .toString()
-            .toLowerCase()
-            .includes(selectedGrade.value.toLowerCase())) &&
-        (!input ||
-          item.fac_name.toLowerCase().includes(input.toLowerCase()) ||
-          item.major_id.toLowerCase().includes(input.toLowerCase()) ||
-          item.major_name_th.toLowerCase().includes(input.toLowerCase()) ||
-          item.major_grade
-            .toString()
-            .toLowerCase()
-            .includes(input.toLowerCase()))
-      );
-    });
-    setFetchData(filteredData);
-    setCurrentPage(1);
+    if (!selectedFaculty && !selectedGrade && !input) {
+      Swal.fire({
+        title: "กรุณากรอกข้อมูลเพื่อค้นหา",
+        icon: "warning",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } else {
+      setLoading(true);
+      setTimeout(() => {
+        const filteredData = fetchData.filter((item) => {
+          return (
+            (!selectedFaculty ||
+              item.fac_name
+                .toLowerCase()
+                .includes(selectedFaculty.value.toLowerCase())) &&
+            (!selectedGrade ||
+              item.major_grade
+                .toString()
+                .toLowerCase()
+                .includes(selectedGrade.value.toLowerCase())) &&
+            (!input ||
+              item.fac_name.toLowerCase().includes(input.toLowerCase()) ||
+              item.major_id.toLowerCase().includes(input.toLowerCase()) ||
+              item.major_name_th.toLowerCase().includes(input.toLowerCase()) ||
+              item.major_grade
+                .toString()
+                .toLowerCase()
+                .includes(input.toLowerCase()))
+          );
+        });
+
+        setFetchData(filteredData);
+        setCurrentPage(1);
+        setLoading(false);
+      }, 600);
+    }
   };
 
   const handleClickReset = () => {
-    setFetchData(dataMajor);
-    setInput("");
-    setSelectedFaculty(null);
-    setSelectedGrade(null);
-    console.log("");
+    setLoading(true);
+    setTimeout(() => {
+      setFetchData(dataMajor);
+      setInput("");
+      setSelectedFaculty(null);
+      setSelectedGrade(null);
+      setLoading(false);
+    }, 600);
   };
 
   useEffect(() => {
@@ -147,6 +169,13 @@ const Dashboard = () => {
       setInput("");
     }
   }, [selectedFaculty, selectedGrade]);
+
+  
+  useEffect(() => {
+    setTimeout(() => {
+      setInitialLoading(false);
+    }, 800);
+  }, []);
 
   // นับ CurrentItems ที่แสดงใน Table
   const [currentPage, setCurrentPage] = useState(1);
@@ -198,280 +227,290 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="main-content-center">
-      <Row>
-        <Col>
-          <Card bg="light">
-            <Card.Header
-              style={{
-                background: "#03a96b",
-                color: "white",
-                fontSize: "18px",
-              }}
-              className="d-flex justify-content-center p-2"
-            >
-              <p>วิชาที่ยังไม่ได้จัด</p>
-            </Card.Header>
-            <Card.Body>
-              <Card.Text
-                className="d-flex justify-content-center"
-                style={{ fontSize: "60px" }}
+    <>
+      {initialLoading && (
+        <div className="overlay">
+          <div className="loader" />
+        </div>
+      )}
+      {loading && !initialLoading && (
+        <div className="loader" />
+      )}
+      <div className="main-content-center">
+        <Row>
+          <Col>
+            <Card bg="light">
+              <Card.Header
+                style={{
+                  background: "#03a96b",
+                  color: "white",
+                  fontSize: "18px",
+                }}
+                className="d-flex justify-content-center p-2"
               >
-                {dataSubject.length - dataScheduleSubject.length}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col>
-          <Card bg="light">
-            <Card.Header
-              style={{
-                background: "#03a96b",
-                color: "white",
-                fontSize: "18px",
-              }}
-              className="d-flex justify-content-center p-2"
-            >
-              <p>วิชาที่จัดแล้ว</p>
-            </Card.Header>
-            <Card.Body>
-              <Card.Text
-                className="d-flex justify-content-center"
-                style={{ fontSize: "60px" }}
+                <p>วิชาที่ยังไม่ได้จัด</p>
+              </Card.Header>
+              <Card.Body>
+                <Card.Text
+                  className="d-flex justify-content-center"
+                  style={{ fontSize: "60px" }}
+                >
+                  {dataSubject.length - dataScheduleSubject.length}
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col>
+            <Card bg="light">
+              <Card.Header
+                style={{
+                  background: "#03a96b",
+                  color: "white",
+                  fontSize: "18px",
+                }}
+                className="d-flex justify-content-center p-2"
               >
-                {dataScheduleSubject.length}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col>
-          <Card bg="light">
-            <Card.Header
-              style={{
-                background: "#03a96b",
-                color: "white",
-                fontSize: "18px",
-              }}
-              className="d-flex justify-content-center p-2"
-            >
-              <p>วิชาทั้งหมด</p>
-            </Card.Header>
-            <Card.Body>
-              <Card.Text
-                className="d-flex justify-content-center"
-                style={{ fontSize: "60px" }}
+                <p>วิชาที่จัดแล้ว</p>
+              </Card.Header>
+              <Card.Body>
+                <Card.Text
+                  className="d-flex justify-content-center"
+                  style={{ fontSize: "60px" }}
+                >
+                  {dataScheduleSubject.length}
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col>
+            <Card bg="light">
+              <Card.Header
+                style={{
+                  background: "#03a96b",
+                  color: "white",
+                  fontSize: "18px",
+                }}
+                className="d-flex justify-content-center p-2"
               >
-                {dataSubject.length}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col>
-          <Card bg="light">
-            <Card.Header
-              style={{
-                background: "#03a96b",
-                color: "white",
-                fontSize: "18px",
-              }}
-              className="d-flex justify-content-center p-2"
-            >
-              <p>จำนวนสาขา</p>
-            </Card.Header>
-            <Card.Body>
-              <Card.Text
-                className="d-flex justify-content-center"
-                style={{ fontSize: "60px" }}
+                <p>วิชาทั้งหมด</p>
+              </Card.Header>
+              <Card.Body>
+                <Card.Text
+                  className="d-flex justify-content-center"
+                  style={{ fontSize: "60px" }}
+                >
+                  {dataSubject.length}
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col>
+            <Card bg="light">
+              <Card.Header
+                style={{
+                  background: "#03a96b",
+                  color: "white",
+                  fontSize: "18px",
+                }}
+                className="d-flex justify-content-center p-2"
               >
-                {filterMajor.length}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      <Row className="pt-4">
-        <Col>
-          <Card bg="light">
-            <Card.Body>
-              <Row className="d-flex justify-content-end gx-2">
-                <Col md={2}>
-                  <Select
-                    id="facultyName"
-                    name="facultyName"
-                    options={optionFaculty}
-                    onChange={handleSelectFaculty}
-                    value={selectedFaculty}
-                    placeholder="คณะ"
-                    isSearchable={false}
-                    className="react-select-container"
-                    classNamePrefix="react-select"
-                  />
-                </Col>
-                <Col md={1}>
-                  <Select
-                    id="gradeName"
-                    name="gradeName"
-                    options={optionsGrade}
-                    onChange={handleSelectGrade}
-                    value={selectedGrade}
-                    placeholder="ชั้นปี"
-                    isSearchable={false}
-                    className="react-select-container"
-                    classNamePrefix="react-select"
-                  />
-                </Col>
-                <Col md={2}>
-                  <Form className="d-flex ">
-                    <Form.Control
-                      id="searchName"
-                      name="searchName"
-                      type="search"
-                      placeholder="ค้นหา"
-                      className="custom-input"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
+                <p>จำนวนสาขา</p>
+              </Card.Header>
+              <Card.Body>
+                <Card.Text
+                  className="d-flex justify-content-center"
+                  style={{ fontSize: "60px" }}
+                >
+                  {filterMajor.length}
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+        <Row className="pt-4">
+          <Col>
+            <Card bg="light">
+              <Card.Body>
+                <Row className="d-flex justify-content-end gx-2">
+                  <Col md={2}>
+                    <Select
+                      id="facultyName"
+                      name="facultyName"
+                      options={optionFaculty}
+                      onChange={handleSelectFaculty}
+                      value={selectedFaculty}
+                      placeholder="คณะ"
+                      isSearchable={false}
+                      className="react-select-container"
+                      classNamePrefix="react-select"
                     />
-                  </Form>
-                </Col>
-                <Col md="auto" className="d-flex gap-2">
-                  <Button
-                    className="d-flex align-items-center gap-2"
-                    variant="info"
-                    onClick={() => handleClickSearch()}
-                  >
-                    <FaMagnifyingGlass />
-                    <p className="mb-0">ค้นหา</p>
-                  </Button>
-                  <Button
-                    className="d-flex align-items-center gap-2"
-                    variant="danger"
-                    onClick={() => handleClickReset()}
-                  >
-                    <FaArrowsRotate />
-                    <p className="mb-0">รีเซ็ต</p>
-                  </Button>
-                </Col>
-              </Row>
-              <Row className="pt-3">
-                <Col>
-                  <Table
-                    responsive
-                    striped
-                    hover
-                    bordered
-                    style={{ fontSize: "16px" }}
-                  >
-                    <thead>
-                      <tr
-                        style={{
-                          background: "#03a96b",
-                          color: "white",
-                          textAlign: "center",
-                        }}
-                      >
-                        <th style={{ width: "15%" }}>คณะ</th>
-                        <th style={{ width: "10%" }}>รหัสสาขา</th>
-                        <th style={{ width: "65%" }}>ชื่อสาขา</th>
-                        <th style={{ width: "5%" }}>ชั้นปี</th>
-                        <th style={{ width: "5%" }}>ดู</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayData.map((item, id) => (
-                        <tr key={id} style={{ textAlign: "center" }}>
-                          <td>{item.fac_name}</td>
-                          <td>{item.major_id}</td>
-                          <td
-                            style={{
-                              textAlign: "start",
-                              paddingLeft: "1rem",
-                            }}
-                          >
-                            {item.major_name_th}
-                          </td>
-                          <td>{item.major_grade}</td>
-                          <td>
-                            <FaEye
-                              onClick={() => {
-                                handleShow(item);
-                              }}
-                              style={{ cursor: "pointer" }}
-                            />
-                          </td>
+                  </Col>
+                  <Col md={1}>
+                    <Select
+                      id="gradeName"
+                      name="gradeName"
+                      options={optionsGrade}
+                      onChange={handleSelectGrade}
+                      value={selectedGrade}
+                      placeholder="ชั้นปี"
+                      isSearchable={false}
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                    />
+                  </Col>
+                  <Col md={2}>
+                    <Form className="d-flex ">
+                      <Form.Control
+                        id="searchName"
+                        name="searchName"
+                        type="search"
+                        placeholder="ค้นหา"
+                        className="custom-input"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                      />
+                    </Form>
+                  </Col>
+                  <Col md="auto" className="d-flex gap-2">
+                    <Button
+                      className="d-flex align-items-center gap-2"
+                      variant="info"
+                      onClick={() => handleClickSearch()}
+                    >
+                      <FaMagnifyingGlass />
+                      <p className="mb-0">ค้นหา</p>
+                    </Button>
+                    <Button
+                      className="d-flex align-items-center gap-2"
+                      variant="danger"
+                      onClick={() => handleClickReset()}
+                    >
+                      <FaArrowsRotate />
+                      <p className="mb-0">รีเซ็ต</p>
+                    </Button>
+                  </Col>
+                </Row>
+                <Row className="pt-3">
+                  <Col>
+                    <Table
+                      responsive
+                      striped
+                      hover
+                      bordered
+                      style={{ fontSize: "16px" }}
+                    >
+                      <thead>
+                        <tr
+                          style={{
+                            background: "#03a96b",
+                            color: "white",
+                            textAlign: "center",
+                          }}
+                        >
+                          <th style={{ width: "15%" }}>คณะ</th>
+                          <th style={{ width: "10%" }}>รหัสสาขา</th>
+                          <th style={{ width: "65%" }}>ชื่อสาขา</th>
+                          <th style={{ width: "5%" }}>ชั้นปี</th>
+                          <th style={{ width: "5%" }}>ดู</th>
                         </tr>
-                      ))}
-                      {displayData.length < itemsPerPage && (
-                        <>
-                          {[...Array(itemsPerPage - displayData.length)].map(
-                            (_, index) => (
-                              <tr key={index}>
-                                <td>
-                                  <br />
-                                </td>
-                                <td>
-                                  <br />
-                                </td>
-                                <td>
-                                  <br />
-                                </td>
-                                <td>
-                                  <br />
-                                </td>
-                                <td>
-                                  <br />
-                                </td>
-                              </tr>
-                            )
-                          )}
-                        </>
+                      </thead>
+                      <tbody>
+                        {displayData.map((item, id) => (
+                          <tr key={id} style={{ textAlign: "center" }}>
+                            <td>{item.fac_name}</td>
+                            <td>{item.major_id}</td>
+                            <td
+                              style={{
+                                textAlign: "start",
+                                paddingLeft: "1rem",
+                              }}
+                            >
+                              {item.major_name_th}
+                            </td>
+                            <td>{item.major_grade}</td>
+                            <td>
+                              <FaEye
+                                onClick={() => {
+                                  handleShow(item);
+                                }}
+                                style={{ cursor: "pointer" }}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                        {displayData.length < itemsPerPage && (
+                          <>
+                            {[...Array(itemsPerPage - displayData.length)].map(
+                              (_, index) => (
+                                <tr key={index}>
+                                  <td>
+                                    <br />
+                                  </td>
+                                  <td>
+                                    <br />
+                                  </td>
+                                  <td>
+                                    <br />
+                                  </td>
+                                  <td>
+                                    <br />
+                                  </td>
+                                  <td>
+                                    <br />
+                                  </td>
+                                </tr>
+                              )
+                            )}
+                          </>
+                        )}
+                      </tbody>
+                    </Table>
+                    <Pagination className="d-flex justify-content-end align-items-center gap-3">
+                      <p style={{ color: "#4a4f55" }}>
+                        Page {currentPage} of{" "}
+                        {Math.ceil(fetchData.length / itemsPerPage)}
+                      </p>
+                      {currentPage > 1 && (
+                        <Button
+                          variant="success"
+                          onClick={() => paginate(currentPage - 1)}
+                        >
+                          <FaChevronLeft />
+                        </Button>
                       )}
-                    </tbody>
-                  </Table>
-                  <Pagination className="d-flex justify-content-end align-items-center gap-3">
-                    <p style={{ color: "#4a4f55" }}>
-                      Page {currentPage} of{" "}
-                      {Math.ceil(fetchData.length / itemsPerPage)}
-                    </p>
-                    {currentPage > 1 && (
-                      <Button
-                        variant="success"
-                        onClick={() => paginate(currentPage - 1)}
-                      >
-                        <FaChevronLeft />
-                      </Button>
-                    )}
-                    {pageNumbers.map((number) => (
-                      <Pagination.Item
-                        key={number}
-                        active={number === currentPage}
-                        onClick={() => paginate(number)}
-                      >
-                        {number}
-                      </Pagination.Item>
-                    ))}
-                    {currentPage <
-                      Math.ceil(fetchData.length / itemsPerPage) && (
-                      <Button
-                        variant="success"
-                        onClick={() => paginate(currentPage + 1)}
-                      >
-                        <FaChevronRight />
-                      </Button>
-                    )}
-                  </Pagination>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      <PopupDashboard
-        show={showModal}
-        hide={handleHide}
-        viewDetail={viewDetail}
-        dataSubject={dataScheduleSubject}
-      />
-    </div>
+                      {pageNumbers.map((number) => (
+                        <Pagination.Item
+                          key={number}
+                          active={number === currentPage}
+                          onClick={() => paginate(number)}
+                        >
+                          {number}
+                        </Pagination.Item>
+                      ))}
+                      {currentPage <
+                        Math.ceil(fetchData.length / itemsPerPage) && (
+                        <Button
+                          variant="success"
+                          onClick={() => paginate(currentPage + 1)}
+                        >
+                          <FaChevronRight />
+                        </Button>
+                      )}
+                    </Pagination>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+        <PopupDashboard
+          show={showModal}
+          hide={handleHide}
+          viewDetail={viewDetail}
+          dataSubject={dataScheduleSubject}
+        />
+      </div>
+    </>
   );
 };
 

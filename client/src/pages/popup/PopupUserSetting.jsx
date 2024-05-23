@@ -23,6 +23,10 @@ const PopupUserSetting = (props) => {
     setSelectedImage(null);
   };
 
+  const handleHide = () => {
+    hide();
+  };
+
   //Alert Confirm
   const handleSaveConfirm = () => {
     Swal.fire({
@@ -40,15 +44,12 @@ const PopupUserSetting = (props) => {
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.fire({
-          title: "บันทึกเสร็จสิ้น!",
+          title: "บันทึกข้อมูลสำเร็จ",
           icon: "success",
-          confirmButtonColor: "#03A96B",
-          confirmButtonText: "ตกลง",
-          customClass: {
-            confirmButton: "shadow-none",
-          },
+          showConfirmButton: false,
+          timer: 1000,
         });
-        hide();
+        handleHide();
       }
     });
   };
@@ -69,7 +70,7 @@ const PopupUserSetting = (props) => {
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.fire({
-          title: "ลบเสร็จสิ้น!",
+          title: "ลบข้อมูลสำเร็จ",
           icon: "success",
           confirmButtonColor: "#03A96B",
           confirmButtonText: "ตกลง",

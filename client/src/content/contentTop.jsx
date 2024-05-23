@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./contentTop.scss";
 import { SidebarContext } from "../context/sidebarContext";
 import { NavDropdown } from "react-bootstrap";
@@ -12,46 +12,65 @@ import PopupResetPassword from "../pages/popup/PopupResetPassword";
 import "../styles/Nav.scss";
 
 const content = () => {
+  const navigateTo = useNavigate();
+  
   const { toggleSidebar } = useContext(SidebarContext);
   const [showPopupUserSetting, setShowPopupUserSetting] = useState(false);
   const [showPopupResetPassword, setShowPopupResetPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleShowPopupUserSetting = () => setShowPopupUserSetting(true);
   const handleHidePopupUserSetting = () => setShowPopupUserSetting(false);
   const handleShowPopupResetPassword = () => setShowPopupResetPassword(true);
   const handleHidePopupResetPassword = () => setShowPopupResetPassword(false);
 
-  return (
-    <div className="main-content-top">
-      <div className="content-top-left">
-        <span className="sidebar-toggler" onClick={() => toggleSidebar()}>
-          <FaBars />
-        </span>
-      </div>
+  const handleLogout = () => {
+    navigateTo("/");
+  };
 
-      <div className="content-top-btns">
-        <div className="profile">
-          <img src={Profile} alt="Profile" />
-          <h2>นายสุรสีห์ ไวยวุฒิโท</h2>
+  return (
+    <>
+      {loading && <div className="loader" />}
+      <div className="main-content-top">
+        <div className="content-top-left">
+          <span className="sidebar-toggler" onClick={() => toggleSidebar()}>
+            <FaBars />
+          </span>
         </div>
-        <NavDropdown title={<FaGear className="setting-btn" />} id="basic-nav-dropdown">
-          <NavDropdown.Item onClick={() => handleShowPopupUserSetting()}>
-              <FaUserPen className="me-2 fs-5"/>
+
+        <div className="content-top-btns">
+          <div className="profile">
+            <img src={Profile} alt="Profile" />
+            <h2>นายสุรสีห์ ไวยวุฒิโท</h2>
+          </div>
+          <NavDropdown
+            title={<FaGear className="setting-btn" />}
+            id="basic-nav-dropdown"
+          >
+            <NavDropdown.Item onClick={() => handleShowPopupUserSetting()}>
+              <FaUserPen className="me-2 fs-5" />
               แก้ไขข้อมูลส่วนตัว
             </NavDropdown.Item>
-          <NavDropdown.Item onClick={() => handleShowPopupResetPassword()} >
+            <NavDropdown.Item onClick={() => handleShowPopupResetPassword()}>
               <FaLock className="me-2 fs-6" />
               เปลี่ยนรหัสผ่าน
             </NavDropdown.Item>
-        </NavDropdown>
+          </NavDropdown>
 
-        <Link to="/">
-          <FaPowerOff className="logout-btn" />
-        </Link>
-        <PopupUserSetting show={showPopupUserSetting} hide={handleHidePopupUserSetting} />
-        <PopupResetPassword show={showPopupResetPassword} hide={handleHidePopupResetPassword} />
+          <Link to="/">
+            <FaPowerOff className="logout-btn" />
+          </Link>
+          <PopupUserSetting
+            show={showPopupUserSetting}
+            hide={handleHidePopupUserSetting}
+          />
+          <PopupResetPassword
+            show={showPopupResetPassword}
+            hide={handleHidePopupResetPassword}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

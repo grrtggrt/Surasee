@@ -31,6 +31,7 @@ const PopupManageRoom = (props) => {
   const { show, hide, updatedDroppedItems, droppedRoom } = props;
 
   const [dataRoom, setDataRoom] = useState([]);
+  const [dataSubject, setDataSubject] = useState([]);
   const [selectedStartTime, setSelectedStartTime] = useState(null);
   const [selectedEndTime, setSelectedEndTime] = useState(null);
   const [selectedOptionEndTime, setSelectedOptionEndTime] = useState(null);
@@ -53,9 +54,20 @@ const PopupManageRoom = (props) => {
     }
   }, []);
 
+  const fetchSubjects = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/subjects");
+      const subjects = response.data[0].subject;
+      setDataSubject(subjects);
+    } catch (error) {
+      console.error("Error fetching subjects from schedule:", error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchRoom();
-  }, [fetchRoom]);
+    fetchSubjects();
+  }, [fetchRoom, fetchSubjects]);
 
   useEffect(() => {
     setSelectedBuilding(null);
@@ -151,9 +163,9 @@ const PopupManageRoom = (props) => {
     ) {
       Swal.fire({
         icon: "error",
-        title: "โปรดกรอกข้อมูลให้ถูกต้อง",
+        title: "กรุณากรอกข้อมูลให้ถูกต้อง",
         showConfirmButton: false,
-        timer: 2000,
+        timer: 1500,
       });
     } else {
       const newCard = {
@@ -193,7 +205,7 @@ const PopupManageRoom = (props) => {
       if (result.isConfirmed) {
         Swal.fire({
           icon: "success",
-          title: "ลบข้อมูลเสร็จสิ้น",
+          title: "ลบข้อมูลสำเร็จ",
           showConfirmButton: false,
           timer: 2000,
         });
@@ -218,11 +230,32 @@ const PopupManageRoom = (props) => {
   });
 
   const filteredRoom = selectedBuilding
-    ? dataRoom.filter(
-        (item) =>
+    ? dataRoom.filter((item) => {
+        // คำนวณ totalAmount สำหรับแต่ละห้อง
+        const totalAmount = dataSubject
+          .filter((subject) =>
+            updatedDroppedItems.some(
+              (droppedItem) => droppedItem.date === subject.date
+            )
+          )
+          .filter((subject) =>
+            subject.room.some(
+              (r) => r.room_id === item.room_id && r.seat.includes(item.seat[0])
+            )
+          )
+          .reduce(
+            (sum, subject) =>
+              sum + subject.room.find((r) => r.room_id === item.room_id).amount,
+            item.amount
+          );
+
+        // ตรวจสอบว่า amount ของห้องไม่เกิน Maxamount และห้องนั้นไม่ได้ถูกเลือกใน cards
+        return (
           item.build_id === selectedBuilding.value &&
-          !cards.some((card) => card.selectedRoom.value === item.room_id) 
-      )
+          !cards.some((card) => card.selectedRoom.value === item.room_id) &&
+          totalAmount < item.Maxamount
+        );
+      })
     : [];
 
   const filterRoom = [
@@ -233,8 +266,6 @@ const PopupManageRoom = (props) => {
     label: room,
     value: room,
   }));
-
-  console.log(updatedDroppedItems, droppedRoom);
 
   const filteredSeat = selectedRoom
     ? dataRoom.filter((item) => item.room_id === selectedRoom.value)
@@ -252,7 +283,6 @@ const PopupManageRoom = (props) => {
   //จำนวนคนในวิชา
   const filterAmoutSubject = selectedSeat ? amountSubject : 0;
 
-  //จำนวนความจุห้อง
   const filterAmount =
     selectedSeat &&
     ((droppedRoom &&
@@ -264,8 +294,27 @@ const PopupManageRoom = (props) => {
         dataRoom &&
         dataRoom
           .filter((item) => item.seat === selectedSeat.value)
-          .map((item) => item.Maxamount)[0]) ||
-      0);
+          .map((item) => {
+            const totalAmount = dataSubject
+              .filter((subject) =>
+                updatedDroppedItems.some(
+                  (droppedItem) => droppedItem.date === subject.date
+                )
+              )
+              .filter((subject) =>
+                subject.room.some(
+                  (r) =>
+                    r.room_id === item.room_id && r.seat.includes(item.seat[0])
+                )
+              )
+              .reduce(
+                (sum, subject) =>
+                  sum +
+                  subject.room.find((r) => r.room_id === item.room_id).amount,
+                item.amount
+              );
+            return item.Maxamount - totalAmount;
+          })));
 
   useEffect(() => {
     setSelectedEndTime(null);
@@ -305,6 +354,13 @@ const PopupManageRoom = (props) => {
         A: "#03A96B",
         B: "#D3E9E1",
         C: "#A4E5EE",
+        D: "#A4B4EE",
+        E: "#6685F4",
+        F: "#415083",
+        G: "#6D51A8",
+        H: "#B25ABA",
+        I: "#7B3D41",
+        J: "#B66D4D",
       };
       return colorMap[selectedSeat];
     } else {
@@ -322,9 +378,9 @@ const PopupManageRoom = (props) => {
     ) {
       Swal.fire({
         icon: "error",
-        title: "โปรดกรอกข้อมูลให้ถูกต้อง",
+        title: "กรุณากรอกข้อมูลให้ถูกต้อง",
         showConfirmButton: false,
-        timer: 2000,
+        timer: 1500,
       });
       return;
     }

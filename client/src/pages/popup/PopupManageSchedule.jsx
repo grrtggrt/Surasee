@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Row, Col, Button, CloseButton } from "react-bootstrap";
 import { FaBan, FaFloppyDisk } from "react-icons/fa6";
 import Select from "react-select";
 import Swal from "sweetalert2";
 import DatePicker from "react-datepicker";
+import axios from 'axios';
 
 // styles
 import "react-datepicker/dist/react-datepicker.css";
@@ -34,8 +35,24 @@ const PopupManageSchedule = (props) => {
     SetSelectSemester(e);
   };
 
+  useEffect(() => {
+    const savedStartDate = localStorage.getItem("startDate");
+    const savedEndDate = localStorage.getItem("endDate");
+
+    if (savedStartDate && savedEndDate) {
+      setDateRange([new Date(savedStartDate), new Date(savedEndDate)]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (startDate && endDate) {
+      localStorage.setItem("startDate", startDate.toISOString());
+      localStorage.setItem("endDate", endDate.toISOString());
+    }
+  }, [startDate, endDate]);
+
   //Alert Confirm
-  const handleSaveConfirm = () => {
+  const handleSaveConfirm = async () => {
     if (
       selectTerm === null ||
       selectSemester === null ||
@@ -43,10 +60,10 @@ const PopupManageSchedule = (props) => {
       endDate === null
     ) {
       Swal.fire({
-        icon: "error",
-        title: "โปรดกรอกข้อมูลให้ถูกต้อง",
+        icon: "warning",
+        title: "กรุณากรอกข้อมูลให้ครบ",
         showConfirmButton: false,
-        timer: 2000,
+        timer: 1500,
       });
       return;
     }
@@ -55,10 +72,10 @@ const PopupManageSchedule = (props) => {
 
     if (differenceInDays < 8) {
       Swal.fire({
-        icon: "error",
-        title: "โปรดเลือกช่วงเวลาให้มีระยะเวลาอย่างน้อย 9 วัน",
+        icon: "warning",
+        title: "กรุณาเลือกช่วงเวลาให้มีระยะเวลาอย่างน้อย 9 วัน",
         showConfirmButton: false,
-        timer: 2000,
+        timer: 1500,
       });
       return;
     }
@@ -75,19 +92,36 @@ const PopupManageSchedule = (props) => {
         confirmButton: "shadow-none",
         cancelButton: "shadow-none",
       },
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        Swal.fire({
-          title: "บันทึกเสร็จสิ้น!",
-          icon: "success",
-          confirmButtonColor: "#03A96B",
-          confirmButtonText: "ตกลง",
-          customClass: {
-            confirmButton: "shadow-none",
-          },
-        });
-        props.onSave(startDate, endDate, selectTerm, selectSemester);
-        hide();
+        try {
+          const response = await axios.post("http://localhost:5500/api/update-schedules", {
+            semester: selectSemester.value,
+            term: selectTerm.value,
+          });
+
+          if (response.status === 200) {
+            Swal.fire({
+              icon: "success",
+              title: "บันทึกข้อมูลสำเร็จ",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            props.onSave(startDate, endDate, selectTerm, selectSemester);
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "การบันทึกล้มเหลว",
+              text: response.data.error || "เกิดข้อผิดพลาดในการบันทึกข้อมูล",
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "เกิดข้อผิดพลาดในการบันทึกข้อมูล",
+            text: error.message,
+          });
+        }
       }
     });
   };

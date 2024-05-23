@@ -61,10 +61,12 @@ const PopupResetPassword = (props) => {
   }, [messageError]);
 
   const handleCheckErrorMessage = () => {
-    if (newPassword !== confirmNewPassword) {
+    if (currentPassword.trim() === "" || newPassword.trim() === "" || confirmNewPassword.trim() === "") {
+      setMessageError("กรุณากรอกข้อมูลให้ครบ");
+    } else if (newPassword !== confirmNewPassword) {
       setMessageError("รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ไม่ถูกต้อง");
     } else if (currentPassword !== "12345678") {
-      setMessageError("รหัสผ่านไม่ถูกต้อง");
+      setMessageError("รหัสผ่านปัจจุบันไม่ถูกต้อง");
     } else if (newPassword.length < 8) {
       setMessageError("ตั้งรหัสใหม่ 8-16 ตัวอักษร ");
     } else {
@@ -102,7 +104,7 @@ const PopupResetPassword = (props) => {
       if (result.isConfirmed) {
         handleSubmit();
         Swal.fire({
-          title: "บันทึกเสร็จสิ้น!",
+          title: "บันทึกข้อมูลสำเร็จ",
           icon: "success",
           showConfirmButton: false,
           timer: 1000,
@@ -127,9 +129,9 @@ const PopupResetPassword = (props) => {
         <Form onSubmit={handleSubmit}>
           <Row className="d-flex justify-content-center gap-2 ">
             <Row>
-              <Col>
+              {/* <Col> */}
                 <span className={statusHolder}>{messageError}</span>
-              </Col>
+              {/* </Col> */}
             </Row>
             <Row>
               <Col>

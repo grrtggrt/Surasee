@@ -1,7 +1,9 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { FaCloudArrowUp, FaX, FaRegFileLines, FaCheck } from "react-icons/fa6";
 import axios from "axios";
+//styles
 import "./ImportData.scss";
+import "../styles/Loader.scss";
 
 const ImportData = () => {
   const inputRef = useRef();
@@ -9,6 +11,14 @@ const ImportData = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [progress, setProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("select");
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setInitialLoading(false);
+    }, 800);
+  }, []);
 
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -55,69 +65,77 @@ const ImportData = () => {
   };
 
   return (
-    <div className="main-content-center">
-      <div className="uploadFileContent">
-        <input
-          ref={inputRef}
-          type="file"
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-        />
+    <>
+      {initialLoading && (
+        <div className="overlay">
+          <div className="loader" />
+        </div>
+      )}
+      {loading && !initialLoading && <div className="loader" />}
+      <div className="main-content-center">
+        <div className="uploadFileContent">
+          <input
+            ref={inputRef}
+            type="file"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
 
-        {!selectedFile && (
-          <button className="file-btn" onClick={onChooseFile}>
-            <span>
-              <FaCloudArrowUp />
-            </span>
-            Upload File
-          </button>
-        )}
-
-        {selectedFile && (
-          <>
-            <div className="file-card">
+          {!selectedFile && (
+            <button className="file-btn" onClick={onChooseFile}>
               <span>
-                <FaRegFileLines />
+                <FaCloudArrowUp />
               </span>
-              <div className="file-info">
-                <div style={{ flex: 1 }}>
-                  <h6>{selectedFile.name}</h6>
-                  <div className="progress-bg">
-                    <div
-                      className="progress"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-
-                {uploadStatus === "select" ? (
-                  <button onClick={clearFileInput}>
-                    <span>
-                      <FaX />
-                    </span>
-                  </button>
-                ) : (
-                  <div className="check-circle">
-                    {uploadStatus === "uploading" ? (
-                      `${progress}%`
-                    ) : uploadStatus === "done" ? (
-                      <span>
-                        <FaCheck />
-                      </span>
-                    ) : null}
-                  </div>
-                )}
-              </div>
-            </div>
-            <button className="upload-btn" onClick={handleUpload}>
-              {uploadStatus === "select" || uploadStatus === "uploading"
-                ? "Upload"
-                : "Done"}
+              Upload File
             </button>
-          </>
-        )}
+          )}
+
+          {selectedFile && (
+            <>
+              <div className="file-card">
+                <span>
+                  <FaRegFileLines />
+                </span>
+                <div className="file-info">
+                  <div style={{ flex: 1 }}>
+                    <h6>{selectedFile.name}</h6>
+                    <div className="progress-bg">
+                      <div
+                        className="progress"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {uploadStatus === "select" ? (
+                    <button onClick={clearFileInput}>
+                      <span>
+                        <FaX />
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="check-circle">
+                      {uploadStatus === "uploading" ? (
+                        `${progress}%`
+                      ) : uploadStatus === "done" ? (
+                        <span>
+                          <FaCheck />
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button className="upload-btn" onClick={handleUpload}>
+                {uploadStatus === "select" || uploadStatus === "uploading"
+                  ? "Upload"
+                  : "Done"}
+              </button>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

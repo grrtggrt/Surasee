@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, Row, Col, Form, Button } from "react-bootstrap";
+import { Card, Row, Col, Form, Button, Badge } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Swal from "sweetalert2";
 import Select from "react-select";
@@ -21,6 +21,7 @@ import PopupManageRoom from "./popup/PopupManageRoom";
 import PopupManageSchedule from "./popup/PopupManageSchedule";
 
 //STYLE
+import "../styles/Loader.scss";
 import "./Schedule.scss";
 
 const Schedule = () => {
@@ -32,6 +33,7 @@ const Schedule = () => {
   const [endDate, setEndDate] = useState(null);
   const [input, setInput] = useState("");
   const [dataSubject, setDataSubject] = useState([]);
+  const [dataSchedule, setDataSchedule] = useState([]);
   const [dataMajor, setDataMajor] = useState([]);
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [selectedMajor, setSelectedMajor] = useState(null);
@@ -39,18 +41,56 @@ const Schedule = () => {
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [selectedSemester, setSelectedSemester] = useState(null);
   const [items, setItems] = useState([]);
-  const [backupitems, setBackupItems] = useState([]);
+  const [fetchDataSchedule, setFetchDataSchedule] = useState([]);
   const [droppedItems, setDroppedItems] = useState([]);
   const [selectDropped, setSelectDropped] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   //ดึงข้อมูล
   const fetchSubjects = useCallback(async () => {
     try {
       const response = await axios.get("http://localhost:5500/api/subject");
-      setDataSubject(response.data);
-      setItems(response.data);
+      const subject = response.data;
+      setDataSubject(subject);
     } catch (error) {
       console.error("Error fetching subjects:", error);
+    }
+  }, []);
+
+  const fetchSchedule = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/subjects");
+      const subjects = response.data[0].subject;
+      setDataSchedule(subjects);
+      setFetchDataSchedule(subjects);
+    } catch (error) {
+      console.error("Error fetching subjects from schedule:", error);
+    }
+  }, []);
+
+  const fetchSelected = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/schedule");
+      if (
+        response.data &&
+        Array.isArray(response.data) &&
+        response.data.length > 0
+      ) {
+        const scheduleData = response.data[0].schedule;
+
+        if (typeof scheduleData === "object") {
+          const selectedSemester = scheduleData.semester
+            ? [scheduleData.semester]
+            : [];
+          const selectedTerm = scheduleData.term ? [scheduleData.term] : [];
+
+          setSelectedSemester(selectedSemester);
+          setSelectedTerm(selectedTerm);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching subjects from schedule:", error);
     }
   }, []);
 
@@ -66,11 +106,46 @@ const Schedule = () => {
   useEffect(() => {
     fetchSubjects();
     fetchMajor();
-  }, [fetchSubjects, fetchMajor]);
+    fetchSchedule();
+    fetchSelected();
+  }, [fetchSubjects, fetchMajor, fetchSchedule, fetchSelected]);
+
+  useEffect(() => {
+    const csIds = dataSchedule.map((item) => item.cs_id);
+    const filteredSubjects = dataSubject.filter(
+      (subject) => !csIds.includes(subject.cs_id)
+    );
+    setDataSubject(filteredSubjects);
+    setItems(filteredSubjects);
+  }, [dataSchedule]);
 
   useEffect(() => {
     setSelectedFaculty(null);
   }, []);
+
+  useEffect(() => {
+    const storedStartDate = localStorage.getItem("startDate");
+    const storedEndDate = localStorage.getItem("endDate");
+
+    if (storedStartDate) {
+      setStartDate(new Date(storedStartDate));
+    }
+    if (storedEndDate) {
+      setEndDate(new Date(storedEndDate));
+    }
+  }, []);
+
+  //PopupManageRoom
+  const handleShowManageRoom = (updatedDroppedItems) => {
+    setSelectDropped(updatedDroppedItems);
+    setShowManageRoom(true);
+  };
+  const handleHideManageRoom = () => {
+    setShowManageRoom(false);
+  };
+  //PopupSchedule
+  const handleShowSchedule = () => setShowSchedule(true);
+  const handleHideSchedule = () => setShowSchedule(false);
 
   //DropItems
   const onDragEnd = (result) => {
@@ -115,13 +190,13 @@ const Schedule = () => {
   };
 
   //DELETE-BTN
-  const handleDeleteItem = (droppableId, itemId) => {
+  const handleDeleteItem = async (droppableId, itemId, itemDrop) => {
     let deletedCount = 0;
 
     const newDroppedItems = droppedItems.filter((item) => {
       if (
         item.droppableId === droppableId &&
-        item.id === itemId &&
+        item.id === itemDrop &&
         deletedCount === 0
       ) {
         deletedCount++;
@@ -130,18 +205,61 @@ const Schedule = () => {
       return true;
     });
 
-    const deletedItem = droppedItems.find(
-      (item) => item.droppableId === droppableId && item.id === itemId
+    const deletedItemDrop = droppedItems.find(
+      (item) => item.droppableId === droppableId && item.id === itemDrop
     );
-    const newItems = [...items, deletedItem];
 
-    setDroppedItems(newDroppedItems);
-    setItems(newItems);
+    const deletedItem = fetchDataSchedule.find(
+      (item) => item.droppableIdSchedule === droppableId && item.id === itemId
+    );
+
+    if (deletedItem) {
+      try {
+        const response = await axios.post(
+          "http://localhost:5500/api/delete-subject",
+          {
+            cs_id: deletedItem.cs_id,
+            major_id: deletedItem.major_id,
+          }
+        );
+
+        if (response.status === 200) {
+          fetchSchedule();
+          Swal.fire({
+            icon: "success",
+            title: "ลบข้อมูลสำเร็จแล้ว",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting item:", error);
+        Swal.fire({
+          icon: "error",
+          title: "เกิดข้อผิดพลาด",
+          text: "ไม่สามารถลบข้อมูลได้",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
+    } else if (deletedItemDrop) {
+      Swal.fire({
+        icon: "success",
+        title: "ลบข้อมูลสำเร็จแล้ว",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+
+      const newItems = [...items, deletedItemDrop];
+      setDroppedItems(newDroppedItems);
+      setItems(newItems);
+    }
   };
 
+  //BTN-DELETE-ALL
   const handleClearAll = () => {
     setDroppedItems([]);
-    setItems([]);
+    setItems(dataSubject);
   };
 
   //BTN-EDIT
@@ -149,27 +267,14 @@ const Schedule = () => {
     setIsEditing(!isEditing);
   };
 
-  //SELECT-DATE
-  const handleSaveSchedule = (
-    startDate,
-    endDate,
-    selectTerm,
-    selectSemester
-  ) => {
-    setStartDate(new Date(startDate));
-    setEndDate(new Date(endDate));
-    setSelectedTerm(selectTerm);
-    setSelectedSemester(selectSemester);
-  };
-
   //Alert Confirm
   const handleSaveConfirm = async () => {
     if (droppedItems.length === 0) {
       Swal.fire({
-        icon: "info",
-        title: "ไม่มีข้อมูลที่ต้องบันทึก!",
+        icon: "warning",
+        title: "ไม่มีข้อมูลที่ต้องบันทึก",
         showConfirmButton: false,
-        timer: 2000,
+        timer: 1500,
       });
       return;
     }
@@ -187,7 +292,6 @@ const Schedule = () => {
         cancelButton: "shadow-none",
       },
     }).then(async (result) => {
-      // ทำให้เป็น async function
       if (result.isConfirmed) {
         try {
           const majorId = droppedItems[0].major_id;
@@ -195,14 +299,13 @@ const Schedule = () => {
             cs_id: item.cs_id,
             cs_name_en: item.cs_name_en,
             cs_name_th: item.cs_name_th,
-            grade : item.grade,
+            grade: item.grade,
             major_id: item.major_id,
             amount: item.amount,
             date: item.date,
             droppableIdSchedule: item.droppableId,
           }));
 
-          // ใช้ฟังก์ชัน then() เพื่อใช้ await
           const response = await axios.post(
             "http://localhost:5500/api/update-subjects",
             {
@@ -211,23 +314,24 @@ const Schedule = () => {
             }
           );
 
-          // ตรวจสอบว่ามีการอัปเดตข้อมูลเรียบร้อยหรือไม่
           if (response.status === 200) {
             Swal.fire({
               icon: "success",
-              title: "บันทึกข้อมูลสำเร็จแล้ว!",
+              title: "บันทึกข้อมูลสำเร็จแล้ว",
               showConfirmButton: false,
-              timer: 2000,
+              timer: 1500,
             });
+            setDroppedItems([]);
+            fetchSchedule();
           }
         } catch (error) {
           console.error("Error saving dropped items:", error);
           Swal.fire({
             icon: "error",
-            title: "เกิดข้อผิดพลาด!",
+            title: "เกิดข้อผิดพลาด",
             text: "ไม่สามารถบันทึกข้อมูลได้",
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1500,
           });
         }
       }
@@ -235,8 +339,18 @@ const Schedule = () => {
   };
 
   const handleDeleteConfirm = () => {
+    if (droppedItems.length === 0 && fetchDataSchedule.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "ไม่มีข้อมูลที่ต้องบันทึก",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      return;
+    }
+
     Swal.fire({
-      title: "ต้องการลบข้อมูลใช่หรือไม่ ?",
+      title: "ต้องการลบทั้งหมดใช่หรือไม่ ?",
       icon: "warning",
       showCancelButton: true,
       cancelButtonText: "ยกเลิก",
@@ -250,7 +364,7 @@ const Schedule = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.fire({
-          title: "ลบข้อมูลเสร็จสิ้น!",
+          title: "ลบข้อมูลสำเร็จ",
           icon: "success",
           confirmButtonColor: "#03A96B",
           confirmButtonText: "ตกลง",
@@ -264,7 +378,7 @@ const Schedule = () => {
     });
   };
 
-  const handleDeleteConfirmSubject = (droppableId, itemId) => {
+  const handleDeleteConfirmSubject = (droppableId, itemId, itemDrop) => {
     Swal.fire({
       title: "ต้องการลบข้อมูลใช่หรือไม่ ?",
       icon: "warning",
@@ -279,21 +393,11 @@ const Schedule = () => {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        handleDeleteItem(droppableId, itemId);
-        Swal.fire({
-          title: "ลบข้อมูลเสร็จสิ้น!",
-          icon: "success",
-          confirmButtonColor: "#03A96B",
-          confirmButtonText: "ตกลง",
-          customClass: {
-            confirmButton: "shadow-none",
-          },
-        });
+        handleDeleteItem(droppableId, itemId, itemDrop);
       }
     });
   };
-
-  //Search
+  //Option
   const handleSelectFaculty = (e) => {
     setSelectedFaculty(e);
   };
@@ -345,36 +449,74 @@ const Schedule = () => {
     value: grade,
   }));
 
+  //Search
   const handleClickSearchMajor = () => {
-    if (selectedMajor && selectedGrade) {
-      const filteredData = items.filter((item) => {
-        return (
-          (!selectedMajor || item.major_id === selectedMajor.value) &&
-          (!selectedGrade || item.grade === selectedGrade.value)
-        );
+    if (!selectedFaculty || !selectedMajor || !selectedGrade) {
+      Swal.fire({
+        icon: "warning",
+        title: "กรุณากรอกข้อมูลเพื่อค้นหา",
+        showConfirmButton: false,
+        timer: 1500,
       });
-      setItems(filteredData);
-      setBackupItems(filteredData);
-      setIsDisabledSelect(true);
     } else {
-      return;
+      setLoading(true);
+      setTimeout(() => {
+        const filteredData = items.filter((item) => {
+          return (
+            (!selectedMajor || item.major_id === selectedMajor.value) &&
+            (!selectedGrade || item.grade === selectedGrade.value)
+          );
+        });
+
+        const filteredDataSchedule = fetchDataSchedule.filter((item) => {
+          return (
+            (!selectedMajor || item.major_id === selectedMajor.value) &&
+            (!selectedGrade || item.grade === selectedGrade.value)
+          );
+        });
+
+        setItems(filteredData);
+        setFetchDataSchedule(filteredDataSchedule);
+        setIsDisabledSelect(true);
+        setLoading(false);
+      }, 500);
     }
   };
 
-  const handleClickSearchSubject = () => {
-    const filteredData = items.filter((item) => {
-      return (
-        !input ||
-        item.cs_id.toLowerCase().includes(input.toLowerCase()) ||
-        item.cs_name_en.toLowerCase().includes(input.toLowerCase()) ||
-        item.cs_name_th.toLowerCase().includes(input.toLowerCase()) ||
-        item.major_id.toString().toLowerCase().includes(input.toLowerCase()) ||
-        item.lb_sec.toString().toLowerCase().includes(input.toLowerCase()) ||
-        item.lc_sec.toString().toLowerCase().includes(input.toLowerCase())
-      );
-    });
+  console.log(fetchDataSchedule)
 
-    setItems(filteredData);
+  const handleClickSearchSubject = () => {
+    if (!input) {
+      Swal.fire({
+        icon: "warning",
+        title: "กรุณากรอกข้อมูลเพื่อค้นหา",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } else {
+      setLoading(true);
+      setTimeout(() => {
+        const filteredData = items.filter((item) => {
+          return (
+            !input ||
+            item.cs_id.toLowerCase().includes(input.toLowerCase()) ||
+            item.cs_name_en.toLowerCase().includes(input.toLowerCase()) ||
+            item.cs_name_th.toLowerCase().includes(input.toLowerCase()) ||
+            item.major_id
+              .toString()
+              .toLowerCase()
+              .includes(input.toLowerCase()) ||
+            item.lb_sec
+              .toString()
+              .toLowerCase()
+              .includes(input.toLowerCase()) ||
+            item.lc_sec.toString().toLowerCase().includes(input.toLowerCase())
+          );
+        });
+        setItems(filteredData);
+        setLoading(false);
+      }, 500);
+    }
   };
 
   const handleClickResetMajor = () => {
@@ -382,18 +524,24 @@ const Schedule = () => {
     setSelectedMajor(null);
     setSelectedGrade(null);
     setIsDisabledSelect(false);
-    setBackupItems([]);
     setItems(
       dataSubject.filter(
         (item) =>
           !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
       )
     );
+    setFetchDataSchedule(dataSchedule);
   };
 
+  //เช็คค่า
   useEffect(() => {
     setSelectedMajor(null);
     setSelectedGrade(null);
+    const filteredItems = dataSubject.filter(
+      (item) =>
+        !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
+    );
+    setItems(filteredItems);
   }, [selectedFaculty]);
 
   useEffect(() => {
@@ -401,9 +549,10 @@ const Schedule = () => {
   }, [selectedMajor]);
 
   useEffect(() => {
-    if (backupitems.length > 0) {
-      const filteredItems = backupitems.filter(
+    if (selectedFaculty && selectedMajor && selectedGrade) {
+      const filteredItems = dataSubject.filter(
         (item) =>
+          item.major_id === selectedMajor?.value &&
           !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
       );
       setItems(filteredItems);
@@ -412,24 +561,15 @@ const Schedule = () => {
         (item) =>
           !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
       );
-      setSelectedFaculty(null);
-      setSelectedMajor(null);
-      setSelectedGrade(null);
       setItems(filteredItems);
     }
-  }, [input, dataSubject, droppedItems]);
+  }, [input]);
 
-  //PopupManageRoom
-  const handleShowManageRoom = (updatedDroppedItems) => {
-    setSelectDropped(updatedDroppedItems);
-    setShowManageRoom(true);
-  };
-  const handleHideManageRoom = () => {
-    setShowManageRoom(false);
-  };
-  //PopupSchedule
-  const handleShowSchedule = () => setShowSchedule(true);
-  const handleHideSchedule = () => setShowSchedule(false);
+  useEffect(() => {
+    setTimeout(() => {
+      setInitialLoading(false);
+    }, 800);
+  }, []);
 
   //TABLE
   const numRows = 4; // จำนวนวันที่ต้องการสร้าง
@@ -442,8 +582,10 @@ const Schedule = () => {
         for (let j = 0; j < numCols; j++) {
           const peClass = j === numCols - 1 ? "pe-3" : "";
           const psClass = j === 0 ? "ps-3" : "";
-          const date = new Date(startDate);
+          let date;
+
           if (startDate && endDate) {
+            date = new Date(startDate);
             date.setDate(startDate.getDate() + (j - 1));
           }
 
@@ -459,11 +601,13 @@ const Schedule = () => {
                   .slice(-2)}`
               : ""; // เพิ่มเงื่อนไขเพื่อตรวจสอบว่า startDate และ endDate ไม่ใช่ null ก่อนที่จะรูปแบบวันที่
           const content =
-            j !== 0 && startDate && endDate
-              ? formattedDate
-              : j === 0
-              ? "S09"
-              : ""; // เพิ่มเงื่อนไขเพื่อตรวจสอบว่า startDate และ endDate ไม่ใช่ null ก่อนที่จะกำหนดค่าของ content
+            j !== 0 && startDate && endDate ? (
+              formattedDate
+            ) : j === 0 && selectedMajor && isDisabledSelect ? (
+              selectedMajor.value
+            ) : (
+              <br />
+            );
           cols.push(
             <Col key={`col-${j}`} className={`p-0 ${psClass} ${peClass}`}>
               <Card>
@@ -522,7 +666,57 @@ const Schedule = () => {
                 {(provided) => (
                   <Card {...provided.droppableProps} ref={provided.innerRef}>
                     <Card.Body className="table-body-card">
-                      {/* รายการของไอเท็มที่ถูกลากมาวาง */}
+                      {fetchDataSchedule
+                        .filter(
+                          (item) => item.droppableIdSchedule === droppableId
+                        )
+                        .map((item, index) => (
+                          <Card key={item.cs_id} index={index}>
+                            <Card.Header
+                              className="p-1"
+                              style={{
+                                backgroundColor: "#00BE77",
+                                fontSize: "14px",
+                              }}
+                            >
+                              {item.cs_id}
+                            </Card.Header>
+                            {isEditing ? (
+                              <Button
+                                className="btn-icon"
+                                style={{ position: "absolute", right: "0" }}
+                                onClick={() =>
+                                  handleDeleteConfirmSubject(
+                                    droppableId,
+                                    item.id
+                                  )
+                                }
+                              >
+                                <FaCircleMinus className="text-danger fs-5" />
+                              </Button>
+                            ) : null}
+                            <Card.Body className="p-1">
+                              {/* <p>รหัสวิชา : {item.cs_id}</p> */}
+                              {/* <p>ชื่อวิชา : {item.cs_name_en}</p> */}
+                              {/* <p>สาขา : {`${item.major_id}`}</p> */}
+                              <Badge pill bg="warning" text="dark">
+                                ชื่อวิชา
+                              </Badge>
+                              <p>{item.cs_name_en}</p>
+                              {/* <Badge pill style={{ backgroundColor: '#f0906d'}}>{`${item.major_id}`}</Badge> */}
+                              <p
+                                style={{
+                                  background: "#f0906d",
+                                  padding: "2px",
+                                  width: "50%",
+                                  borderRadius: "20px",
+                                  color: "white",
+                                  textAlign: "center",
+                                }}
+                              >{`${item.major_id}`}</p>
+                            </Card.Body>
+                          </Card>
+                        ))}
                       {droppedItems
                         .filter((item) => item.droppableId === droppableId)
                         .map((item, index) => (
@@ -548,7 +742,6 @@ const Schedule = () => {
                             </Card.Body>
                           </Card>
                         ))}
-                      {/* Placeholder สำหรับขยายพื้นที่ใน droppable area */}
                       {provided.placeholder}
                     </Card.Body>
                   </Card>
@@ -572,238 +765,266 @@ const Schedule = () => {
   };
 
   return (
-    <div className="main-content-center">
-      <Row>
-        <Col sm={9} className="d-flex gap-3">
-          <Select
-            id="facultyName"
-            name="facultyName"
-            options={optionFaculty}
-            onChange={handleSelectFaculty}
-            value={selectedFaculty}
-            placeholder="คณะ"
-            isSearchable={false}
-            isDisabled={isDisabledSelect}
-            className="react-select-container w-100"
-            classNamePrefix="react-select"
-          />
-          <Select
-            id="majorName"
-            name="majorName"
-            options={optionMajor}
-            onChange={handleSelectMajor}
-            value={selectedMajor}
-            placeholder="สาขา"
-            isSearchable={false}
-            isDisabled={isDisabledSelect}
-            className="react-select-container w-100"
-            classNamePrefix="react-select"
-          />
-        </Col>
-        <Col className="d-flex gap-3">
-          <Select
-            id="gradeName"
-            name="gradeName"
-            options={optionGrade}
-            onChange={handleSelectGrade}
-            value={selectedGrade}
-            placeholder="ชั้นปี"
-            isSearchable={false}
-            isDisabled={isDisabledSelect}
-            className="react-select-container w-100"
-            classNamePrefix="react-select"
-          />
-          <Button
-            className="d-flex align-items-center gap-2"
-            variant="info"
-            onClick={() => handleClickSearchMajor()}
-          >
-            <FaMagnifyingGlass />
-            <p className="mb-0">ค้นหา</p>
-          </Button>
-          <Button
-            className="d-flex align-items-center gap-2"
-            variant="danger"
-            onClick={() => handleClickResetMajor()}
-          >
-            <FaArrowsRotate />
-            <p className="mb-0">รีเซ็ต</p>
-          </Button>
-        </Col>
-      </Row>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Row className="pt-3">
-          <Col md={9}>
-            <Card>
-              <Card.Body>
-                <Row className="pb-3">
-                  <Col className="d-flex align-items-center justify-content-center gap-3">
-                    <Card className="w-75">
-                      <Card.Body
-                        style={{
-                          background: "#212529",
-                          color: "white",
-                          padding: "5.4px 10.8px",
-                          fontSize: "16px",
-                          borderRadius: "0.25rem",
-                          textAlign: "center",
-                        }}
-                      >
-                        <p className="mb-0">
-                          {startDate &&
-                          endDate &&
-                          selectedTerm &&
-                          selectedSemester ? (
-                            `ตารางสอบ${selectedSemester.value} ภาค${
-                              selectedTerm.value
-                            } ${startDate.getDate()} ${startDate.toLocaleString(
-                              "th-TH",
-                              { month: "long" }
-                            )} - ${endDate.getDate()} ${endDate.toLocaleString(
-                              "th-TH",
-                              { month: "long" }
-                            )} ${endDate.getFullYear() + 543}`
-                          ) : (
-                            <br />
-                          )}
-                        </p>
-                      </Card.Body>
-                    </Card>
-                    <Button
-                      className="d-flex align-items-center justify-content-center gap-2 w-25"
-                      variant="success"
-                      onClick={() => handleShowSchedule()}
-                    >
-                      <FaPlus />
-                      <p className="mb-0">จัดวันสอบ</p>
-                    </Button>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col>
-                    {startDate && endDate && selectedTerm && selectedSemester
-                      ? renderRows()
-                      : ""}
-                  </Col>
-                </Row>
-                <Row>
-                  <Col className="d-flex justify-content-end pt-3 gap-3">
-                    <Button
-                      className="d-flex align-items-center justify-content-center gap-2"
-                      variant={isEditing ? "danger" : "secondary"}
-                      disabled={isEditing === false}
-                      onClick={() => {
-                        if (isEditing === true) {
-                          handleDeleteConfirm();
-                        }
-                      }}
-                    >
-                      <FaEraser />
-                      <p className="mb-0">ล้างทั้งหมด</p>
-                    </Button>
-                    <Button
-                      className="d-flex align-items-center justify-content-center gap-2"
-                      variant="dark"
-                      onClick={() => handleEditClick()}
-                    >
-                      <FaPenToSquare />
-                      <p className="mb-0">แก้ไข</p>
-                    </Button>
-                    <Button
-                      className="d-flex align-items-center justify-content-center gap-2"
-                      variant="success"
-                      onClick={() => handleSaveConfirm()}
-                    >
-                      <FaFloppyDisk />
-                      <p className="mb-0">บันทึก</p>
-                    </Button>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
+    <>
+      {initialLoading && (
+        <div className="overlay">
+          <div className="loader" />
+        </div>
+      )}
+      {loading && !initialLoading && <div className="loader" />}
+      <div className="main-content-center">
+        <Row>
+          <Col sm={9} className="d-flex gap-3">
+            <Select
+              id="facultyName"
+              name="facultyName"
+              options={optionFaculty}
+              onChange={handleSelectFaculty}
+              value={selectedFaculty}
+              placeholder="คณะ"
+              isSearchable={false}
+              isDisabled={isDisabledSelect}
+              className="react-select-container w-100"
+              classNamePrefix="react-select"
+            />
+            <Select
+              id="majorName"
+              name="majorName"
+              options={optionMajor}
+              onChange={handleSelectMajor}
+              value={selectedMajor}
+              placeholder="สาขา"
+              isSearchable={false}
+              isDisabled={isDisabledSelect}
+              className="react-select-container w-100"
+              classNamePrefix="react-select"
+            />
           </Col>
-          <Col>
-            <Card style={{ background: "#4A4F55" }}>
-              <Card.Body>
-                <Row className="pb-3">
-                  <Col className="d-flex gap-3">
-                    <Form.Control
-                      id="searchName"
-                      name="searchName"
-                      type="search"
-                      placeholder="ค้นหารหัสวิชา/ชื่อวิชา"
-                      className="custom-input"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                    />
-                    <Button
-                      className="d-flex align-items-center gap-2"
-                      variant="info"
-                      onClick={() => handleClickSearchSubject()}
-                    >
-                      <FaMagnifyingGlass />
-                      <p className="mb-0">ค้นหา</p>
-                    </Button>
-                  </Col>
-                </Row>
-                <Row>
-                  <Droppable droppableId="subject">
-                    {(provided) => (
-                      <div
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                        className="subject-card-grid"
-                      >
-                        {/* รายการของไอเท็มที่ถูกลากมาวาง */}
-                        {items.map((item, index) => (
-                          <Draggable
-                            key={item.cs_id}
-                            draggableId={item.cs_id}
-                            index={index}
-                          >
-                            {(provided) => (
-                              <Card
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                              >
-                                <Card.Body>
-                                  <p>รหัสวิชา : {item.cs_id}</p>
-                                  <p>ชื่อวิชา : {item.cs_name_en}</p>
-                                  <p>สาขา : {`${item.major_id}`}</p>
-                                  {item.lc_sec.length > 0 && (
-                                    <p>บรรยาย : {`${item.lc_sec}`}</p>
-                                  )}
-                                  {item.lb_sec.length > 0 && (
-                                    <p>ปฎิบัติ : {`${item.lb_sec}`}</p>
-                                  )}
-                                </Card.Body>
-                              </Card>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </Row>
-              </Card.Body>
-            </Card>
+          <Col className="d-flex gap-3">
+            <Select
+              id="gradeName"
+              name="gradeName"
+              options={optionGrade}
+              onChange={handleSelectGrade}
+              value={selectedGrade}
+              placeholder="ชั้นปี"
+              isSearchable={false}
+              isDisabled={isDisabledSelect}
+              className="react-select-container w-100"
+              classNamePrefix="react-select"
+            />
+            <Button
+              className="d-flex align-items-center gap-2"
+              variant="info"
+              onClick={() => handleClickSearchMajor()}
+            >
+              <FaMagnifyingGlass />
+              <p className="mb-0">ค้นหา</p>
+            </Button>
+            <Button
+              className="d-flex align-items-center gap-2"
+              variant="danger"
+              onClick={() => handleClickResetMajor()}
+            >
+              <FaArrowsRotate />
+              <p className="mb-0">รีเซ็ต</p>
+            </Button>
           </Col>
         </Row>
-      </DragDropContext>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Row className="pt-3">
+            <Col md={9}>
+              <Card>
+                <Card.Body>
+                  <Row className="pb-3">
+                    <Col className="d-flex align-items-center justify-content-center gap-3">
+                      <Card className="w-75">
+                        <Card.Body
+                          style={{
+                            background: "#212529",
+                            color: "white",
+                            padding: "5.4px 10.8px",
+                            fontSize: "16px",
+                            borderRadius: "0.25rem",
+                            textAlign: "center",
+                          }}
+                        >
+                          <p className="mb-0">
+                            {startDate &&
+                            endDate &&
+                            selectedTerm &&
+                            selectedSemester ? (
+                              `ตารางสอบ${selectedSemester} ภาค${selectedTerm} ${startDate.getDate()} ${startDate.toLocaleString(
+                                "th-TH",
+                                { month: "long" }
+                              )} - ${endDate.getDate()} ${endDate.toLocaleString(
+                                "th-TH",
+                                { month: "long" }
+                              )} ${endDate.getFullYear() + 543}`
+                            ) : (
+                              <br />
+                            )}
+                          </p>
+                        </Card.Body>
+                      </Card>
+                      <Button
+                        className="d-flex align-items-center justify-content-center gap-2 w-25"
+                        variant="success"
+                        onClick={() => handleShowSchedule()}
+                        disabled={startDate && endDate}
+                      >
+                        <FaPlus />
+                        <p className="mb-0">จัดวันสอบ</p>
+                      </Button>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col>{startDate && endDate ? renderRows() : ""}</Col>
+                  </Row>
+                  <Row>
+                    <Col className="d-flex justify-content-end pt-3 gap-3">
+                      <Button
+                        className="d-flex align-items-center justify-content-center gap-2"
+                        variant={isEditing ? "danger" : "secondary"}
+                        disabled={isEditing === false}
+                        onClick={() => {
+                          if (isEditing === true) {
+                            handleDeleteConfirm();
+                          }
+                        }}
+                      >
+                        <FaEraser />
+                        <p className="mb-0">ล้างทั้งหมด</p>
+                      </Button>
+                      <Button
+                        className="d-flex align-items-center justify-content-center gap-2"
+                        variant="dark"
+                        onClick={() => handleEditClick()}
+                      >
+                        <FaPenToSquare />
+                        <p className="mb-0">แก้ไข</p>
+                      </Button>
+                      <Button
+                        className="d-flex align-items-center justify-content-center gap-2"
+                        variant="success"
+                        onClick={() => handleSaveConfirm()}
+                      >
+                        <FaFloppyDisk />
+                        <p className="mb-0">บันทึก</p>
+                      </Button>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col>
+              <Card style={{ background: "#4A4F55" }}>
+                <Card.Body>
+                  <Row className="pb-3">
+                    <Col className="d-flex gap-3">
+                      <Form.Control
+                        id="searchName"
+                        name="searchName"
+                        type="search"
+                        placeholder="ค้นหารหัสวิชา/ชื่อวิชา"
+                        className="custom-input"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                      />
+                      <Button
+                        className="d-flex align-items-center gap-2"
+                        variant="info"
+                        onClick={() => handleClickSearchSubject()}
+                      >
+                        <FaMagnifyingGlass />
+                        <p className="mb-0">ค้นหา</p>
+                      </Button>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Droppable droppableId="subject">
+                      {(provided) => (
+                        <div
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
+                          className="subject-card-grid"
+                        >
+                          {items.map((item, index) => (
+                            <Draggable
+                              key={item.cs_id}
+                              draggableId={item.cs_id}
+                              index={index}
+                            >
+                              {(provided) => (
+                                <Card
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                >
+                                  <Card.Body className="p-2">
+                                    {/* <p>รหัสวิชา : {item.cs_id}</p> */}
+                                    {/* <p>ชื่อวิชา : {item.cs_name_en}</p> */}
+                                    {/* <p>สาขา : {`${item.major_id}`}</p> */}
+                                    <p
+                                      style={{
+                                        backgroundColor: "#449375",
+                                        borderRadius: "10px",
+                                        textAlign: "center",
+                                        color: "white",
+                                        fontSize: "14px",
+                                        display: "block",
+                                        width: "fit-content",
+                                        paddingLeft: "10px",
+                                        paddingRight: "10px",
+                                      }}
+                                    >
+                                      {item.cs_id}
+                                    </p>
+                                    <p
+                                      style={{ fontSize: "14px" }}
+                                      className="pt-2 pb-2"
+                                    >
+                                      {item.cs_name_en}
+                                    </p>
+                                    <p
+                                      style={{
+                                        backgroundColor: "#f0906d",
+                                        borderRadius: "20px",
+                                        textAlign: "center",
+                                        color: "white",
+                                        fontSize: "14px",
+                                        display: "block",
+                                        width: "fit-content",
+                                        paddingLeft: "10px",
+                                        paddingRight: "10px",
+                                      }}
+                                    >
+                                      {`${item.major_id}`}
+                                    </p>
+                                  </Card.Body>
+                                </Card>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </DragDropContext>
 
-      <PopupManageRoom
-        show={showManageRoom}
-        hide={handleHideManageRoom}
-        updatedDroppedItems={selectDropped}
-      />
-      <PopupManageSchedule
-        show={showSchedule}
-        hide={handleHideSchedule}
-        onSave={handleSaveSchedule}
-      />
-    </div>
+        <PopupManageRoom
+          show={showManageRoom}
+          hide={handleHideManageRoom}
+          updatedDroppedItems={selectDropped}
+        />
+        <PopupManageSchedule show={showSchedule} hide={handleHideSchedule} />
+      </div>
+    </>
   );
 };
 

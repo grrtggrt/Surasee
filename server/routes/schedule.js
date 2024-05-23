@@ -22,14 +22,70 @@ router.get('/subjects', async (req, res) => {
   }
 });
 
+router.post('/update-schedules', async (req, res) => {
+  const { semester, term } = req.body;
+
+  if (!semester || !term) {
+    return res.status(400).json({ error: 'Semester and term fields are required' });
+  }
+
+  try {
+    const result = await Schedule.updateMany(
+      {},
+      { $set: { 'schedule.semester': semester, 'schedule.term': term } },
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({ message: 'All schedules updated successfully', result });
+  } catch (error) {
+    console.error("Error updating schedules:", error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/delete-subject', async (req, res) => {
+  const { cs_id, major_id } = req.body;
+
+  if (!cs_id || !major_id) {
+    return res.status(400).json({ error: 'cs_id and major_id are required' });
+  }
+
+  try {
+    const schedule = await Schedule.findOne({ 'schedule.major_id': major_id });
+
+    if (!schedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+
+    const subjectIndex = schedule.subject.findIndex(subject => subject.cs_id === cs_id);
+
+    if (subjectIndex === -1) {
+      return res.status(404).json({ error: 'Subject not found in schedule' });
+    }
+
+    schedule.subject.splice(subjectIndex, 1);
+
+    await schedule.save();
+
+    res.status(200).json({ message: 'Subject deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting subject:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.post('/update-subjects', async (req, res) => {
   const { major_id, subjects } = req.body;
 
+  if (!subjects) {
+    return res.status(400).json({ error: 'Subjects field is required' });
+  }
+
   try {
     const updatedSchedule = await Schedule.findOneAndUpdate(
-      { major_id: major_id },
-      { $set: { subject: subjects } },
-      { new: true }
+      { 'schedule.major_id': major_id },
+      { $push: { 'subject': { $each: subjects } } },
+      { new: true, runValidators: true }
     );
 
     if (!updatedSchedule) {

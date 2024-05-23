@@ -3,7 +3,6 @@ const morgan = require("morgan")
 const cors = require("cors")
 const mongoose = require("mongoose")
 require("dotenv").config()
-const blogRoute = require('./routes/blog')
 const authRoute = require('./routes/auth')
 const subject = require('./routes/subject')
 const major = require('./routes/major')
@@ -26,8 +25,7 @@ app.use(cors())
 app.use(morgan("dev"))
 
 //route
-app.use('/api', blogRoute) // เปลี่ยนเส้นทางของ blogRoute
-app.use('/api', authRoute) // เปลี่ยนเส้นทางของ authRoute
+app.use('/api', authRoute)
 app.use('/api', subject)
 app.use('/api', major)
 app.use('/api', building)

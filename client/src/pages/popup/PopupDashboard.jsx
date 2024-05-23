@@ -1,8 +1,35 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Modal, Row, Col, Card } from "react-bootstrap";
+import axios from "axios";
 
 const PopupDashboard = (props) => {
   const { show, hide, viewDetail, dataSubject } = props;
+
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [selectedSemester, setSelectedSemester] = useState(null);
+
+  const fetchSelected = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/schedule");
+      if (
+        response.data &&
+        Array.isArray(response.data) &&
+        response.data.length > 0
+      ) {
+        const scheduleData = response.data[0].schedule;
+
+        if (typeof scheduleData === "object") {
+          const selectedSemester = scheduleData.semester
+            ? [scheduleData.semester]
+            : [];
+          setSelectedSemester(selectedSemester);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching subjects from schedule:", error);
+    }
+  }, []);
 
   const filteredSubjects = viewDetail
     ? dataSubject.filter(
@@ -12,7 +39,21 @@ const PopupDashboard = (props) => {
       )
     : [];
 
-  console.log(dataSubject);
+  useEffect(() => {
+    fetchSelected();
+  }, [fetchSelected]);
+
+  useEffect(() => {
+    const storedStartDate = localStorage.getItem("startDate");
+    const storedEndDate = localStorage.getItem("endDate");
+
+    if (storedStartDate) {
+      setStartDate(new Date(storedStartDate));
+    }
+    if (storedEndDate) {
+      setEndDate(new Date(storedEndDate));
+    }
+  }, []);
 
   return (
     <Modal show={show} onHide={hide} size="xl" centered>
@@ -26,7 +67,19 @@ const PopupDashboard = (props) => {
           <Row>
             <Col className="d-flex align-items-center gap-4">
               <p style={{ fontSize: "16px", color: "#03A96B" }}>
-                21 เมษายน 2567 - 29 เมษายน 2567
+                {startDate && endDate
+                  ? `${startDate.getDate()} ${startDate.toLocaleString(
+                      "th-TH",
+                      {
+                        month: "long",
+                      }
+                    )} - ${endDate.getDate()} ${endDate.toLocaleString(
+                      "th-TH",
+                      {
+                        month: "long",
+                      }
+                    )} ${endDate.getFullYear() + 543}`
+                  : ""}
               </p>
               <p
                 style={{
@@ -37,7 +90,7 @@ const PopupDashboard = (props) => {
                   borderRadius: "20px",
                 }}
               >
-                กลางภาค
+                {selectedSemester ? selectedSemester : ""}
               </p>
             </Col>
           </Row>
@@ -73,16 +126,20 @@ const PopupDashboard = (props) => {
             <Card key={id}>
               <Card.Body className="p-0">
                 <Row>
-                  <Col sm={2} className="p-0">
+                  <Col md={2} className="ps-0">
                     <Card
                       style={{
                         background:
                           item.room && item.room.length > 0
                             ? "#03A96B"
                             : "#dc3545",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
                       }}
                     >
-                      <Card.Body style={{ fontSize: "22px", color: "white" }}>
+                      <Card.Body style={{ fontSize: "20px", color: "white" }}>
                         <p>{item.date}</p>
                         <p style={{ fontSize: "16px" }}>{`${
                           item.room && item.room.length > 0
@@ -96,8 +153,8 @@ const PopupDashboard = (props) => {
                       </Card.Body>
                     </Card>
                   </Col>
-                  <Col sm={10}>
-                    <Row className="pt-4">
+                  <Col md={10}>
+                    <Row className="pt-3 pb-3">
                       <Col md={2} className="px-3">
                         <p style={{ fontSize: "16px", color: "#424242" }}>
                           {item.cs_id}
@@ -113,7 +170,7 @@ const PopupDashboard = (props) => {
                           </p>
                         )}
                       </Col>
-                      <Col md={6}>
+                      <Col md={5}>
                         <p style={{ fontSize: "16px", color: "#424242" }}>
                           {item.cs_name_en}
                         </p>
@@ -123,9 +180,11 @@ const PopupDashboard = (props) => {
                         <p style={{ fontSize: "16px", color: "#424242" }}>
                           {`${
                             item.room && item.room.length > 0
-                              ? [...new Set (item.room
-                                  .map((room) => room.build_name))]
-                                  .join(", ")
+                              ? [
+                                  ...new Set(
+                                    item.room.map((room) => room.build_name)
+                                  ),
+                                ].join(", ")
                               : "อาคาร ?"
                           }`}
                         </p>
