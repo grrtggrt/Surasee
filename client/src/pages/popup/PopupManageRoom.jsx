@@ -109,13 +109,37 @@ const PopupManageRoom = (props) => {
 
   //isDisabled
   useEffect(() => {
-    // เงื่อนไขที่ 1: ถ้ามีค่า droppedRoom ให้ isDisabled เป็น true
     if (droppedRoom && droppedRoom.length > 0) {
       setIsDisabled(true);
     } else {
       setIsDisabled(false);
     }
   }, [droppedRoom]);
+
+  const filteredDataTimeStart = dataTimeStart.filter((option) => {
+    const time = option.value.split(":");
+    const hour = parseInt(time[0], 10);
+    const minute = parseInt(time[1], 10);
+
+    const isMorningTimezone =
+      updatedDroppedItems &&
+      updatedDroppedItems.some((item) => item.timezone === "เช้า");
+    const isAfternoonTimezone =
+      updatedDroppedItems &&
+      updatedDroppedItems.some((item) => item.timezone === "กลางวัน");
+    const isEveningTimezone =
+      updatedDroppedItems &&
+      updatedDroppedItems.some((item) => item.timezone === "เย็น");
+
+    if (isMorningTimezone) {
+      return (hour >= 7 && hour < 10) || (hour === 10 && minute === 0);
+    } else if (isAfternoonTimezone) {
+      return (hour >= 11 && hour <= 14) || (hour === 14 && minute === 0);
+    } else if (isEveningTimezone) {
+      return (hour >= 15 && hour <= 18) || (hour === 18 && minute === 0);
+    }
+    return true;
+  });
 
   //ค้นหา
   const handleSelectStartTime = (selectedStartTime) => {
@@ -175,7 +199,10 @@ const PopupManageRoom = (props) => {
         inputAmount,
         inputSec,
         filterAmount,
-        droppableId: updatedDroppedItems[0].droppableId,
+        droppableId: dataRoom
+          .filter((room) => room.room_id === selectedRoom?.value)
+          .map((room) => `droppable-${room._id}`)
+          .join(", "),
       };
       setCards([...cards, newCard]);
       setAmountSubject(amountSubject - inputAmount);
@@ -239,6 +266,11 @@ const PopupManageRoom = (props) => {
             )
           )
           .filter((subject) =>
+            updatedDroppedItems.some(
+              (time) => time.timezone === subject.timezone
+            )
+          )
+          .filter((subject) =>
             subject.room.some(
               (r) => r.room_id === item.room_id && r.seat.includes(item.seat[0])
             )
@@ -249,11 +281,16 @@ const PopupManageRoom = (props) => {
             item.amount
           );
 
+        const hasDataSubject = dataSubject.some((subject) =>
+          subject.room.some((room) => room.room_id === item.room_id)
+        );
+
         // ตรวจสอบว่า amount ของห้องไม่เกิน Maxamount และห้องนั้นไม่ได้ถูกเลือกใน cards
         return (
           item.build_id === selectedBuilding.value &&
           !cards.some((card) => card.selectedRoom.value === item.room_id) &&
-          totalAmount < item.Maxamount
+          totalAmount < item.Maxamount &&
+          !hasDataSubject
         );
       })
     : [];
@@ -408,11 +445,7 @@ const PopupManageRoom = (props) => {
   const handleSave = async () => {
     const dataToSave = updatedDroppedItems
       .map((item) => {
-        const filteredCards = cards.filter(
-          (card) => card.droppableId === item.droppableId
-        );
-
-        return filteredCards.map((filteredCard) => ({
+        return cards.map((filteredCard) => ({
           build_name: filteredCard.selectedBuilding.label,
           room_id: filteredCard.selectedRoom.value,
           seat: filteredCard.selectedSeat.value,
@@ -421,6 +454,7 @@ const PopupManageRoom = (props) => {
           amount: filteredCard.inputAmount,
           section: filteredCard.inputSec,
           droppableIdRoom: filteredCard.droppableId,
+          timezone: item.timezone,
           major_id: item.major_id,
           cs_id: item.cs_id,
         }));
@@ -428,26 +462,26 @@ const PopupManageRoom = (props) => {
       .flat();
 
     try {
-      await axios.post(
+      const response = await axios.post(
         "http://localhost:5500/api/update-subjects-room",
         dataToSave
       );
-
-      props.fetchSubjects();
-
-      Swal.fire({
-        icon: "success",
-        title: "บันทึกข้อมูลสำเร็จ",
-        showConfirmButton: false,
-        timer: 2000,
-      });
+      if (response.status === 200) {
+        props.fetchSubjects();
+        Swal.fire({
+          icon: "success",
+          title: "บันทึกข้อมูลสำเร็จ",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
     } catch (error) {
       console.error("Error saving data:", error);
       Swal.fire({
         icon: "error",
         title: "เกิดข้อผิดพลาดในการบันทึกข้อมูล",
         showConfirmButton: false,
-        timer: 2000,
+        timer: 1500,
       });
     }
   };
@@ -542,7 +576,7 @@ const PopupManageRoom = (props) => {
                 <Select
                   id="timeStart"
                   name="timeStart"
-                  options={dataTimeStart}
+                  options={filteredDataTimeStart}
                   onChange={handleSelectStartTime}
                   value={selectedStartTime}
                   placeholder="กรุณาเลือก"

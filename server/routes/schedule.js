@@ -74,6 +74,46 @@ router.post('/delete-subject', async (req, res) => {
   }
 });
 
+router.post('/delete-room', async (req, res) => {
+  const { cs_id, major_id, seat, room_id } = req.body;
+
+  try {
+    const schedule = await Schedule.findOne({ 'schedule.major_id': major_id });
+
+    if (!schedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+
+    const subject = schedule.subject.find(sub => sub.cs_id === cs_id);
+
+    if (!subject) {
+      return res.status(404).json({ error: 'Subject not found in schedule' });
+    }
+
+    const roomIndex = subject.room.findIndex(room => room.room_id === room_id);
+
+    if (roomIndex === -1) {
+      return res.status(404).json({ error: 'Room not found in subject' });
+    }
+
+    if (subject.room[roomIndex].seat === seat) {
+      return res.status(400).json({ error: 'Seat does not match the provided room_id' });
+    }
+
+    subject.amount += subject.room[roomIndex].amount;
+
+    subject.room.splice(roomIndex, 1);
+
+    await schedule.save();
+
+    res.status(200).json({ message: 'Room deleted from subject successfully' });
+  } catch (error) {
+    console.error('Error deleting room from subject:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 router.post('/update-subjects', async (req, res) => {
   const { major_id, subjects } = req.body;
 
@@ -103,20 +143,27 @@ router.post('/update-subjects-room', async (req, res) => {
   const dataToSave = req.body;
 
   try {
+    console.log('Data received:', dataToSave); // เพิ่มตรงนี้เพื่อตรวจสอบข้อมูลที่ได้รับ
+
     for (const roomData of dataToSave) {
       if (!roomData || !roomData.room_id) {
+        console.log('Skipping invalid roomData:', roomData); // เพิ่มตรงนี้เพื่อตรวจสอบข้อมูลที่ไม่สมบูรณ์
         continue;
       }
 
-      const { major_id, cs_id, build_name, room_id, seat, timeStart, timeEnd, amount, section, droppableIdRoom } = roomData;
+      const { major_id, cs_id, build_name, room_id, seat, timeStart, timeEnd, amount, section, droppableIdRoom, timezone } = roomData;
+
+      console.log('Processing roomData:', roomData); // เพิ่มตรงนี้เพื่อตรวจสอบข้อมูลที่กำลังถูกประมวลผล
 
       const schedule = await Schedule.findOne({ 'schedule.major_id': major_id });
       if (!schedule) {
+        console.log(`Schedule with major_id ${major_id} not found`); // เพิ่มตรงนี้เพื่อตรวจสอบกรณีที่ไม่พบ Schedule
         return res.status(404).json({ error: `Schedule with major_id ${major_id} not found` });
       }
 
       const subject = schedule.subject.find(sub => sub.cs_id === cs_id);
       if (!subject) {
+        console.log(`Subject with cs_id ${cs_id} not found in schedule`); // เพิ่มตรงนี้เพื่อตรวจสอบกรณีที่ไม่พบ Subject
         return res.status(404).json({ error: `Subject with cs_id ${cs_id} not found in schedule` });
       }
 
@@ -128,11 +175,24 @@ router.post('/update-subjects-room', async (req, res) => {
         timeEnd,
         amount,
         section,
+        timezone,
         droppableIdRoom,
       };
-      subject.room.push(roomDetail);
+
+      const existingRoomIndex = subject.room.findIndex(room => room.room_id === room_id);
+      if (existingRoomIndex !== -1) {
+        console.log(`Updating existing room with room_id ${room_id}`); // เพิ่มตรงนี้เพื่อตรวจสอบกรณีที่อัปเดตรายละเอียดห้องที่มีอยู่แล้ว
+        subject.amount -= subject.room[existingRoomIndex].amount;
+        subject.room[existingRoomIndex] = roomDetail;
+      } else {
+        console.log(`Adding new room with room_id ${room_id}`); // เพิ่มตรงนี้เพื่อตรวจสอบกรณีที่เพิ่มรายละเอียดห้องใหม่
+        subject.room.push(roomDetail);
+      }
+
+      subject.amount -= (amount - (subject.room[existingRoomIndex]?.amount || 0));
 
       await schedule.save();
+      console.log('Schedule saved:', schedule); // เพิ่มตรงนี้เพื่อตรวจสอบการบันทึก Schedule
     }
 
     res.status(200).json({ message: 'Data saved successfully' });

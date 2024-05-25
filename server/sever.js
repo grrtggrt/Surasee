@@ -12,6 +12,8 @@ const schedule = require('./routes/schedule')
 
 const app = express()
 
+mongoose.set('strictQuery', false);
+
 //connet cloud database
 mongoose.connect(process.env.DATABASE,{
     useNewUrlParser:true,

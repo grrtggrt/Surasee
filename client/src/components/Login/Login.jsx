@@ -32,16 +32,18 @@ const Login = () => {
     axios
       .post("http://localhost:5500/api/login", { username, password })
       .then((response) => {
+        setLoading(true)
         setTimeout(() => {
           setLoading(false);
           navigateTo("/dashboard");
         }, 500);
       })
       .catch((err) => {
+        setLoading(true)
         setTimeout(() => {
           setLoading(false);
           setLoginStatus("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
-        }, 200);
+        }, 500);
       });
   };
 
@@ -106,6 +108,7 @@ const Login = () => {
                     id="password"
                     placeholder="รหัสผ่านบัญชีผู้ใช้งาน"
                     value={password}
+                    maxLength={16}
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>

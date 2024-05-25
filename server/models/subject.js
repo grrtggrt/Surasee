@@ -7,7 +7,6 @@ const SubjectSchema = new mongoose.Schema({
     cs_name_en: String,
     lc_sec: Array,
     lb_sec: Array,
-    status_test: String,
     grade: Number,
     amount: Number
 })

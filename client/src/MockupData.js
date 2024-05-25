@@ -70,8 +70,8 @@ const dataTimeStart = [
   },
   {
     id: "6",
-    label: "9:30",
-    value: "9:30",
+    label: "09:30",
+    value: "09:30",
   },
   {
     id: "7",

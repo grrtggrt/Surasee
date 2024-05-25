@@ -19,6 +19,7 @@ const SubjectSchema = new mongoose.Schema({
   major_id: String,
   amount: Number,
   date: String,
+  timezone: String,
   droppableIdSchedule: String,
   room: [RoomSchema],
 });

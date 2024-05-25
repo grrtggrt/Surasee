@@ -14,8 +14,6 @@ import axios from "axios";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 
-import { dataReport } from "../MockupData";
-
 //icon
 import {
   FaMagnifyingGlass,
@@ -27,7 +25,8 @@ import {
 import "../styles/Loader.scss";
 
 const Report = () => {
-  const [fetchData, setFetchData] = useState(dataReport);
+  const [fetchData, setFetchData] = useState([]);
+  const [dataSubject, setDataSubject] = useState([]);
   const [dataRoom, setDataRoom] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [input, setInput] = useState("");
@@ -44,9 +43,21 @@ const Report = () => {
     }
   }, []);
 
+  const fetchSchedule = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/subjects");
+      const subjects = response.data[0].subject;
+      setDataSubject(subjects);
+      setFetchData(subjects);
+    } catch (error) {
+      console.error("Error fetching subjects from schedule:", error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchRoom();
-  }, [fetchRoom]);
+    fetchSchedule();
+  }, [fetchRoom, fetchSchedule]);
 
   // นับ CurrentItems ที่แสดงใน Table
   const [currentPage, setCurrentPage] = useState(1);
@@ -99,16 +110,46 @@ const Report = () => {
         const filteredData = fetchData.filter((item) => {
           return (
             !input ||
-            item.id.toLowerCase().includes(input.toLowerCase()) ||
-            item.name_en.toLowerCase().includes(input.toLowerCase()) ||
-            item.sec.toString().toLowerCase().includes(input.toLowerCase()) ||
-            item.room_num.toLowerCase().includes(input.toLowerCase()) ||
+            item.cs_id.toLowerCase().includes(input.toLowerCase()) ||
+            item.cs_name_en.toLowerCase().includes(input.toLowerCase()) ||
+            item.cs_name_th.toLowerCase().includes(input.toLowerCase()) ||
+            item.major_id.toLowerCase().includes(input.toLowerCase()) ||
+            (item.room &&
+              item.room.length > 0 &&
+              item.room.some((sec) =>
+                sec.section
+                  .toString()
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              )) ||
+            item.grade.toString().toLowerCase().includes(input.toLowerCase()) ||
+            (item.room &&
+              item.room.length > 0 &&
+              item.room.some((room) =>
+                room.room_id.toLowerCase().includes(input.toLowerCase())
+              )) ||
             item.date.toLowerCase().includes(input.toLowerCase()) ||
-            item.start_time.toLowerCase().includes(input.toLowerCase()) ||
-            item.end_time.toLowerCase().includes(input.toLowerCase()) ||
-            item.amount.toString().toLowerCase().includes(input.toLowerCase())
+            (item.room &&
+              item.room.length > 0 &&
+              item.room.some((time) =>
+                time.timeStart.toLowerCase().includes(input.toLowerCase())
+              )) ||
+            (item.room &&
+              item.room.length > 0 &&
+              item.room.some((time) =>
+                time.timeEnd.toLowerCase().includes(input.toLowerCase())
+              )) ||
+            (item.room &&
+              item.room.length > 0 &&
+              item.room.some((amount) =>
+                amount.amount
+                  .toString()
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              ))
           );
         });
+
         setFetchData(filteredData);
         setCurrentPage(1);
         setLoading(false);
@@ -119,7 +160,7 @@ const Report = () => {
   const handleClickReset = () => {
     setLoading(true);
     setTimeout(() => {
-      setFetchData(dataReport);
+      setFetchData(dataSubject);
       setSelectedBuilding(null);
       setInput("");
       setLoading(false);
@@ -127,25 +168,61 @@ const Report = () => {
   };
 
   useEffect(() => {
+    setFetchData(dataSubject);
+    if (!input) {
+      return;
+    } else {
+      setSelectedBuilding(null);
+    }
+  }, [input]);
+
+  useEffect(() => {
     setTimeout(() => {
       setInitialLoading(false);
-      setFetchData(dataReport);
+      setFetchData(dataSubject);
     }, 800);
-  }, [dataReport]);
-
+  }, [dataSubject]);
 
   const exportToExcel = (data) => {
-    // แปลงข้อมูลในอาร์เรย์ให้มีโครงสร้างที่เหมาะสมก่อนส่งออก
     const modifiedData = data.map((item) => ({
-      id: item.id,
-      name_en: item.name_en,
-      sec: Array.isArray(item.sec) ? item.sec.join(", ") : item.sec,
-      room_num: item.room_num,
+      id: item.cs_id,
+      cs_name_en: item.cs_name_en,
+      cs_name_th: item.cs_name_th,
+      major_id: item.major_id,
+      section: Array.isArray(item.room)
+        ? [
+            ...new Set(item.room.map((sec) => sec.section).filter(Boolean)),
+          ].join(", ")
+        : "",
+      grade: item.grade,
+      room_id: Array.isArray(item.room)
+        ? item.room
+            .map((room) => {
+              const roomId = room.room_id ? room.room_id : "";
+              const seat = room.seat ? ` (${room.seat})` : "";
+              return roomId + seat;
+            })
+            .filter(Boolean)
+            .join(", ")
+        : item.room?.room_id || "",
       date:
         item.date instanceof Date ? item.date.toLocaleDateString() : item.date,
-      start_time: item.start_time,
-      end_time: item.end_time,
-      amount: Array.isArray(item.amount) ? item.amount.join(", ") : item.amount,
+      timeStart: Array.isArray(item.room)
+        ? [
+            ...new Set(item.room.map((room) => room.timeStart).filter(Boolean)),
+          ].join(", ")
+        : "",
+      timeEnd: Array.isArray(item.room)
+        ? [
+            ...new Set(item.room.map((room) => room.timeEnd).filter(Boolean)),
+          ].join(", ")
+        : "",
+      amount: Array.isArray(item.room)
+        ? item.room
+            .map((room) => room.amount)
+            .filter(Boolean)
+            .join(", ")
+        : item.room?.amount || "",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(modifiedData);
@@ -159,7 +236,7 @@ const Report = () => {
     const dataBlob = new Blob([excelBuffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
     });
-    saveAs(dataBlob, `report_${new Date().getDate()}.xlsx`);
+    saveAs(dataBlob, `report_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   //Alert Confirm
@@ -178,12 +255,12 @@ const Report = () => {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        exportToExcel(dataReport);
+        exportToExcel(dataSubject);
         Swal.fire({
           title: "ส่งออกข้อมูลสำเร็จ",
           icon: "success",
           showConfirmButton: false,
-          timer: 2000,
+          timer: 1500,
         });
       }
     });
@@ -196,14 +273,12 @@ const Report = () => {
           <div className="loader" />
         </div>
       )}
-      {loading && !initialLoading && (
-        <div className="loader" />
-      )}
+      {loading && !initialLoading && <div className="loader" />}
       <div className="main-content-center">
         <Row className="m-0">
           <Card>
             <Card.Body>
-              <Row className="d-flex justify-content-end gx-2 mb-3 p-2">
+              <Row className="d-flex justify-content-end gx-2 mb-3 mt-1">
                 <Col md={1}>
                   <Select
                     id="dateName"
@@ -277,8 +352,11 @@ const Report = () => {
                         }}
                       >
                         <th>รหัสวิชา</th>
-                        <th>ชื่อวิชาอังกฤษ</th>
+                        <th className="w-25">ชื่อวิชาอังกฤษ</th>
+                        <th className="w-25">ชื่อวิชาภาษาไทย</th>
+                        <th>สาขา</th>
                         <th>หมู่เรียน</th>
+                        <th>ชั้นปี</th>
                         <th>ห้องสอบ</th>
                         <th>วันที่</th>
                         <th>เวลา</th>
@@ -288,13 +366,53 @@ const Report = () => {
                     <tbody>
                       {displayData.map((item, id) => (
                         <tr key={id} style={{ textAlign: "center" }}>
-                          <td>{item.id}</td>
-                          <td style={{ textAlign: "start" }}>{item.name_en}</td>
-                          <td>{`${item.sec}`}</td>
-                          <td>{item.room_num}</td>
+                          <td>{item.cs_id}</td>
+                          <td style={{ textAlign: "start" }}>
+                            {item.cs_name_en}
+                          </td>
+                          <td style={{ textAlign: "start" }}>
+                            {item.cs_name_th}
+                          </td>
+                          <td>{item.major_id}</td>
+                          <td>{`${
+                            item.room && item.room.length > 0
+                              ? [
+                                  ...new Set(
+                                    item.room.map((sec) => sec.section)
+                                  ),
+                                ].join(", ")
+                              : "????"
+                          }`}</td>
+                          <td>{item.grade}</td>
+                          <td>{`${
+                            item.room && item.room.length > 0
+                              ? item.room
+                                  .map(
+                                    (room) => `${room.room_id}(${room.seat})`
+                                  )
+                                  .join(", ")
+                              : "????"
+                          }`}</td>
                           <td>{item.date.toString()}</td>
-                          <td>{`${item.start_time} - ${item.end_time}`}</td>
-                          <td>{`${item.amount}`}</td>
+                          <td>
+                            {`${
+                              item.room && item.room.length > 0
+                                ? [
+                                    ...new Set(
+                                      item.room.map(
+                                        (room) =>
+                                          `${room.timeStart} - ${room.timeEnd}`
+                                      )
+                                    ),
+                                  ].join(", ")
+                                : "????"
+                            }`}
+                          </td>
+                          <td>{`${
+                            item.room && item.room.length > 0
+                              ? item.room.map((room) => room.amount).join(", ")
+                              : "????"
+                          }`}</td>
                         </tr>
                       ))}
                       {displayData.length < itemsPerPage && (
@@ -302,6 +420,15 @@ const Report = () => {
                           {[...Array(itemsPerPage - displayData.length)].map(
                             (_, index) => (
                               <tr key={index}>
+                                <td>
+                                  <br />
+                                </td>
+                                <td>
+                                  <br />
+                                </td>
+                                <td>
+                                  <br />
+                                </td>
                                 <td>
                                   <br />
                                 </td>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Row, Col, Card, Form, Button } from "react-bootstrap";
+import { Row, Col, Card, Form, Button, Badge } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import {
   FaMagnifyingGlass,
   FaArrowsRotate,
   FaPenToSquare,
+  FaUserGroup,
 } from "react-icons/fa6";
 import Select from "react-select";
 import axios from "axios";
@@ -29,6 +30,7 @@ const ManageRoom = () => {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [selectedFloor, setSelectedFloor] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
   const [selectDropped, setSelectDropped] = useState(null);
   const [selectRoom, setSelectRoom] = useState(null);
   const [inputAmount, setInputAmount] = useState("");
@@ -42,7 +44,6 @@ const ManageRoom = () => {
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-
 
   //ดึงข้อมูล
   const fetchRoom = useCallback(async () => {
@@ -82,11 +83,12 @@ const ManageRoom = () => {
 
   useEffect(() => {
     const filteredSubjects = dataSubject
-      .filter((subject) => !subject.room || subject.room.length === 0)
-      .filter((date) => date.date === selectedDate?.value);
+      .filter((amount) => !amount || amount.amount !== 0)
+      .filter((date) => date.date === selectedDate?.value)
+      .filter((time) => time.timezone === selectedTime?.value);
 
     setFetchDataSubject(filteredSubjects);
-  }, [dataSubject, selectedDate]);
+  }, [dataSubject, selectedDate, selectedTime]);
 
   //Drop
   const onDragEnd = (result) => {
@@ -120,6 +122,7 @@ const ManageRoom = () => {
         .map((room) => {
           const relatedSubjects = dataSubject
             .filter((date) => date.date === selectedDate?.value)
+            .filter((time) => time.timezone === selectedTime?.value)
             .filter((subject) =>
               subject.room.some(
                 (r) =>
@@ -158,11 +161,20 @@ const ManageRoom = () => {
 
   //Modal
   const handleEditClick = () => {
-    setIsEditing(!isEditing);
+    if (!selectedDate) {
+      Swal.fire({
+        title: "กรุณากรอกวันที่เพื่อแก้ไข",
+        icon: "warning",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } else {
+      setIsEditing(!isEditing);
+    }
   };
 
-  const handleShowEditRoom = (droppedItems, droppedRoom) => {
-    setSelectDropped(droppedItems);
+  const handleShowEditRoom = (dataSubject, droppedRoom) => {
+    setSelectDropped(dataSubject);
     setSelectRoom(droppedRoom);
     setShowEditRoom(true);
     // ทำสิ่งที่ต้องการกับ items ที่ถูกส่งเข้ามา
@@ -172,6 +184,8 @@ const ManageRoom = () => {
     setShowEditRoom(false);
     await fetchSubjects(); // รอให้ข้อมูลถูกบันทึกเสร็จสมบูรณ์ก่อนที่จะเรียกใช้
     setDroppedItems([]);
+    setSelectDropped([]);
+    setSelectRoom([]);
   };
 
   const handleShowManageRoom = (updatedDroppedItems, droppedRoom) => {
@@ -184,6 +198,8 @@ const ManageRoom = () => {
     setShowManageRoom(false);
     await fetchSubjects(); // รอให้ข้อมูลถูกบันทึกเสร็จสมบูรณ์ก่อนที่จะเรียกใช้
     setDroppedItems([]);
+    setSelectDropped([]);
+    setSelectRoom([]);
   };
 
   //Search
@@ -191,6 +207,14 @@ const ManageRoom = () => {
     setLoading(true);
     setTimeout(() => {
       setSelectedDate(e);
+      setLoading(false);
+    }, 500);
+  };
+
+  const handleSelectTime = (e) => {
+    setLoading(true);
+    setTimeout(() => {
+      setSelectedTime(e);
       setLoading(false);
     }, 500);
   };
@@ -220,6 +244,18 @@ const ManageRoom = () => {
     return {
       label: date,
       value: date,
+    };
+  });
+
+  //เวลา
+  const filtertime = [
+    ...new Set(dataSubject.map((item) => item.timezone)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
+
+  const optiontime = filtertime.map((time) => {
+    return {
+      label: time,
+      value: time,
     };
   });
 
@@ -337,8 +373,9 @@ const ManageRoom = () => {
     setLoading(true);
     setTimeout(() => {
       const filteredItems = dataSubject
-        .filter((subject) => !subject.room || subject.room.length === 0)
-        .filter((date) => date.date === selectedDate?.value);
+        .filter((amount) => !amount || amount.amount !== 0)
+        .filter((date) => date.date === selectedDate?.value)
+        .filter((time) => time.timezone === selectedTime?.value);
 
       setFetchDataSubject(filteredItems);
       setSelectedMajor(null);
@@ -372,8 +409,9 @@ const ManageRoom = () => {
 
   useEffect(() => {
     const filteredItems = dataSubject
-      .filter((subject) => !subject.room || subject.room.length === 0)
-      .filter((date) => date.date === selectedDate?.value);
+      .filter((amount) => !amount || amount.amount !== 0)
+      .filter((date) => date.date === selectedDate?.value)
+      .filter((time) => time.timezone === selectedTime?.value);
 
     setFetchDataSubject(filteredItems);
     if (!inputSubject) {
@@ -386,8 +424,9 @@ const ManageRoom = () => {
 
   useEffect(() => {
     const filteredItems = dataSubject
-      .filter((subject) => !subject.room || subject.room.length === 0)
-      .filter((date) => date.date === selectedDate?.value);
+      .filter((amount) => !amount || amount.amount !== 0)
+      .filter((date) => date.date === selectedDate?.value)
+      .filter((time) => time.timezone === selectedTime?.value);
 
     setFetchDataSubject(filteredItems);
     if (selectedMajor !== null || selectedGrade !== null) {
@@ -403,14 +442,12 @@ const ManageRoom = () => {
 
   return (
     <>
-    {initialLoading && (
+      {initialLoading && (
         <div className="overlay">
           <div className="loader" />
         </div>
       )}
-      {loading && !initialLoading && (
-        <div className="loader" />
-      )}
+      {loading && !initialLoading && <div className="loader" />}
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="main-content-center">
           <Row className="d-flex gap-3">
@@ -418,7 +455,7 @@ const ManageRoom = () => {
               <Col className="d-flex align-items-end">
                 <h5>รายวิชา</h5>
               </Col>
-              <Col className="d-flex justify-content-end p-0">
+              <Col className="d-flex justify-content-end p-0 gap-3">
                 <Card className="pe-3">
                   <Card.Body className="d-flex gap-3 p-2">
                     <Col
@@ -434,6 +471,29 @@ const ManageRoom = () => {
                         options={optionDate}
                         onChange={handleSelectDate}
                         value={selectedDate}
+                        placeholder="กรุณาเลือก"
+                        isSearchable={false}
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                      />
+                    </Col>
+                  </Card.Body>
+                </Card>
+                <Card className="pe-3">
+                  <Card.Body className="d-flex gap-3 p-2">
+                    <Col
+                      md={4}
+                      className="d-flex justify-content-center align-items-center"
+                    >
+                      <p>เวลาสอบ</p>
+                    </Col>
+                    <Col md={8}>
+                      <Select
+                        id="dateName"
+                        name="dateName"
+                        options={optiontime}
+                        onChange={handleSelectTime}
+                        value={selectedTime}
                         placeholder="กรุณาเลือก"
                         isSearchable={false}
                         className="react-select-container"
@@ -530,10 +590,55 @@ const ManageRoom = () => {
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                 >
-                                  <Card.Body>
-                                    <p>รหัสวิชา : {item.cs_id}</p>
-                                    <p>ชื่อวิชา : {item.cs_name_en}</p>
-                                    <p>สาขา : {`${item.major_id}`}</p>
+                                  <Card.Body className="p-3">
+                                    <Row>
+                                      <Col className="d-flex justify-content-start">
+                                        <p className="fw-bold pb-1">
+                                          {item.cs_id}
+                                        </p>
+                                      </Col>
+                                      <Col
+                                        md={3}
+                                        className="d-flex justify-content-end align-items-center pb-2"
+                                      >
+                                        <p
+                                          style={{
+                                            backgroundColor: "#5ec1d4",
+                                            borderRadius: "20px",
+                                            textAlign: "center",
+                                            color: "white",
+                                            fontSize: "12px",
+                                            display: "block",
+                                            width: "fit-content",
+                                            padding: "1px 7px 1px 7px",
+                                          }}
+                                          className="d-flex align-items-center gap-1"
+                                        >
+                                          <FaUserGroup />
+                                          {item.amount}
+                                        </p>
+                                      </Col>
+                                    </Row>
+
+                                    <hr style={{ margin: "2px 0" }} />
+                                    <p className="pb-1 pt-1">
+                                      {item.cs_name_en}
+                                    </p>
+                                    <p
+                                      style={{
+                                        backgroundColor: "#F0906D",
+                                        borderRadius: "20px",
+                                        textAlign: "center",
+                                        color: "white",
+                                        fontSize: "12px",
+                                        display: "block",
+                                        width: "fit-content",
+                                        minWidth: "50px",
+                                        padding: "2px 8px 2px 8px",
+                                      }}
+                                    >
+                                      {`${item.major_id}`}
+                                    </p>
                                   </Card.Body>
                                 </Card>
                               )}
@@ -635,6 +740,9 @@ const ManageRoom = () => {
                         .map((item, index) => {
                           const totalAmount = dataSubject
                             .filter((date) => date.date === selectedDate?.value)
+                            .filter(
+                              (time) => time.timezone === selectedTime?.value
+                            )
                             .filter((subject) =>
                               subject.room.some(
                                 (r) =>
@@ -651,7 +759,19 @@ const ManageRoom = () => {
                               item.amount
                             );
 
-                          const isDropDisabled = totalAmount >= item.Maxamount;
+                          const isDropDisabled =
+                            totalAmount >= item.Maxamount ||
+                            dataSubject.some(
+                              (subject) =>
+                                subject.date === selectedDate?.value &&
+                                subject.timezone === selectedTime?.value &&
+                                subject.room.some(
+                                  (room) =>
+                                    room.room_id === item.room_id &&
+                                    room.droppableIdRoom ===
+                                      `droppable-${item._id}`
+                                )
+                            );
 
                           return (
                             <Droppable
@@ -663,30 +783,58 @@ const ManageRoom = () => {
                                 <Card
                                   {...provided.droppableProps}
                                   ref={provided.innerRef}
+                                  className="mt-3"
                                 >
                                   <Card.Header
-                                    className="d-flex justify-content-center gap-3"
+                                    className="d-flex justify-content-center p-2"
                                     style={{
                                       background: "#03A96B",
                                       color: "white",
                                     }}
                                   >
+                                    <div className="d-flex align-items-center gap-2">
+                                      <p>{item.room_id}</p>
+                                      <p>|</p>
+                                      <p
+                                        className={`${
+                                          totalAmount >= item.Maxamount
+                                            ? "text-danger"
+                                            : ""
+                                        }`}
+                                      >{`${totalAmount} / ${item.Maxamount}${item.seat}`}</p>
+                                    </div>
                                     {isEditing ? (
                                       <Button
                                         className="btn-icon"
                                         style={{
                                           position: "absolute",
-                                          right: "0",
-                                          top: "0",
-                                          color: "white",
+                                          top: "-9px",
+                                          right: "-7px",
+                                          zIndex: 1,
                                         }}
                                         onClick={() =>
                                           handleShowEditRoom(
-                                            droppedItems.filter(
-                                              (droppedItems) =>
-                                                droppedItems.droppableId ===
-                                                droppableId[index]
-                                            ),
+                                            dataSubject
+                                              .filter(
+                                                (date) =>
+                                                  date.date ===
+                                                  selectedDate?.value
+                                              )
+                                              .filter(
+                                                (time) =>
+                                                  time.timezone ===
+                                                  selectedTime?.value
+                                              )
+                                              .filter((subject) =>
+                                                subject.room.some(
+                                                  (r) =>
+                                                    r.room_id ===
+                                                      item.room_id &&
+                                                    r.seat.includes(
+                                                      item.seat[0]
+                                                    )
+                                                )
+                                              ),
                                             fetchDataRoom.filter(
                                               (droppedRoom) =>
                                                 `droppable-${droppedRoom._id}` ===
@@ -695,26 +843,28 @@ const ManageRoom = () => {
                                           )
                                         }
                                       >
-                                        <div className="badge rounded-pill bg-warning text-light">
+                                        <div
+                                          className="rounded-3 bg-warning"
+                                          style={{
+                                            paddingLeft: "5px",
+                                            paddingRight: "4px",
+                                            paddingBottom: "2px",
+                                          }}
+                                        >
                                           <FaPenToSquare className="fs-6" />
                                         </div>
                                       </Button>
                                     ) : null}
-                                    <p>{item.room_id}</p>
-                                    <p>|</p>
-                                    <p
-                                      className={`${
-                                        totalAmount >= item.Maxamount
-                                          ? "text-danger"
-                                          : ""
-                                      }`}
-                                    >{`${totalAmount} / ${item.Maxamount}${item.seat}`}</p>
                                   </Card.Header>
                                   <Card.Body className="room-body-card">
                                     {dataSubject
                                       .filter(
                                         (date) =>
                                           date.date === selectedDate?.value
+                                      )
+                                      .filter(
+                                        (time) =>
+                                          time.timezone === selectedTime?.value
                                       )
                                       .filter((subject) =>
                                         subject.room.some(
@@ -725,14 +875,38 @@ const ManageRoom = () => {
                                       )
                                       .map((subject, index) => (
                                         <Card key={subject.cs_id} index={index}>
-                                          <Card.Body>
-                                            <p>รหัสวิชา : {subject.cs_id}</p>
-                                            <p>
-                                              ชื่อวิชา : {subject.cs_name_en}
+                                          <div
+                                            style={{
+                                              background: "#5ec1d4",
+                                              padding: "4px",
+                                              borderRadius: "3px",
+                                              color: "white",
+                                              textAlign: "center",
+                                            }}
+                                          >
+                                            {subject.cs_id}
+                                          </div>
+                                          <Card.Body className="p-2">
+                                            {/* <p>รหัสวิชา : {subject.cs_id}</p>
+                                            <p>ชื่อวิชา : {subject.cs_name_en}</p>
+                                            <p>สาขา : {`${subject.major_id}`}</p> */}
+                                            <p className="pt-1 pb-2">
+                                              {subject.cs_name_en}
                                             </p>
-                                            <p>
-                                              สาขา : {`${subject.major_id}`}
-                                            </p>
+                                            <p
+                                              style={{
+                                                backgroundColor: "#F0906D",
+                                                borderRadius: "20px",
+                                                textAlign: "center",
+                                                color: "white",
+                                                fontSize: "12px",
+                                                display: "block",
+                                                width: "fit-content",
+                                                minWidth: "50px",
+                                                padding: "2px 8px 2px 8px",
+                                              }}
+                                              className="mb-2"
+                                            >{`${subject.major_id}`}</p>
                                           </Card.Body>
                                         </Card>
                                       ))}
@@ -752,8 +926,10 @@ const ManageRoom = () => {
           <PopupEditRoom
             show={showEditRoom}
             hide={handleHideEditRoom}
-            droppedItems={selectDropped}
+            dataSubject={selectDropped}
             droppedRoom={selectRoom}
+            selectedDate={selectedDate}
+            fetchSubjects={fetchSubjects}
           />
           <PopupManageRoom
             show={showManageRoom}

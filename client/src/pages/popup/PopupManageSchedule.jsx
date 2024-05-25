@@ -4,7 +4,7 @@ import { FaBan, FaFloppyDisk } from "react-icons/fa6";
 import Select from "react-select";
 import Swal from "sweetalert2";
 import DatePicker from "react-datepicker";
-import axios from 'axios';
+import axios from "axios";
 
 // styles
 import "react-datepicker/dist/react-datepicker.css";
@@ -95,10 +95,13 @@ const PopupManageSchedule = (props) => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.post("http://localhost:5500/api/update-schedules", {
-            semester: selectSemester.value,
-            term: selectTerm.value,
-          });
+          const response = await axios.post(
+            "http://localhost:5500/api/update-schedules",
+            {
+              semester: selectSemester.value,
+              term: selectTerm.value,
+            }
+          );
 
           if (response.status === 200) {
             Swal.fire({
@@ -107,7 +110,7 @@ const PopupManageSchedule = (props) => {
               showConfirmButton: false,
               timer: 1500,
             });
-            props.onSave(startDate, endDate, selectTerm, selectSemester);
+            hide();
           } else {
             Swal.fire({
               icon: "error",

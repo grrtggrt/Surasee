@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Modal, Row, Col, Card } from "react-bootstrap";
+import { FaCircleInfo } from "react-icons/fa6";
 import axios from "axios";
 
 const PopupDashboard = (props) => {
@@ -81,17 +82,19 @@ const PopupDashboard = (props) => {
                     )} ${endDate.getFullYear() + 543}`
                   : ""}
               </p>
-              <p
-                style={{
-                  fontSize: "16px",
-                  color: "#fff",
-                  background: "#03A96B",
-                  padding: ".2rem .8rem",
-                  borderRadius: "20px",
-                }}
-              >
-                {selectedSemester ? selectedSemester : ""}
-              </p>
+              {selectedSemester && selectedSemester.length > 0 ? (
+                <p
+                  style={{
+                    fontSize: "16px",
+                    color: "#fff",
+                    background: "#03A96B",
+                    padding: ".2rem .8rem",
+                    borderRadius: "20px",
+                  }}
+                >
+                  {selectedSemester}
+                </p>
+              ) : null}
             </Col>
           </Row>
         </Modal.Title>
@@ -121,96 +124,110 @@ const PopupDashboard = (props) => {
             <p>วิชา</p>
           </Col>
         </Row>
-        <Row className="g-3 p-3">
-          {filteredSubjects.map((item, id) => (
-            <Card key={id}>
-              <Card.Body className="p-0">
-                <Row>
-                  <Col md={2} className="ps-0">
-                    <Card
-                      style={{
-                        background:
-                          item.room && item.room.length > 0
-                            ? "#03A96B"
-                            : "#dc3545",
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Card.Body style={{ fontSize: "20px", color: "white" }}>
-                        <p>{item.date}</p>
-                        <p style={{ fontSize: "16px" }}>{`${
-                          item.room && item.room.length > 0
-                            ? item.room[0].timeStart
-                            : "00:00"
-                        } - ${
-                          item.room && item.room.length > 0
-                            ? item.room[0].timeEnd
-                            : "00:00"
-                        }`}</p>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                  <Col md={10}>
-                    <Row className="pt-3 pb-3">
-                      <Col md={2} className="px-3">
-                        <p style={{ fontSize: "16px", color: "#424242" }}>
-                          {item.cs_id}
-                        </p>
-                        {(item.lc_sec || item.lb_sec) && (
-                          <p style={{ color: "#5B5B5B" }}>
-                            หมู่{" "}
-                            {`${item.lc_sec || ""}${
-                              item.lc_sec.length && item.lb_sec.length
-                                ? ","
-                                : ""
-                            }${item.lb_sec || ""}`}
+        {filteredSubjects.length === 0 ? (
+          <div
+            className="d-flex justify-content-center align-items-center"
+            style={{ height: "260px" }}
+          >
+            <FaCircleInfo className="fs-4 me-2 text-muted" />
+            <p className="fs-5 text-muted">ไม่มีข้อมูลรายวิชาที่สอบ</p>
+          </div>
+        ) : (
+          <Row className="g-3 p-3">
+            {filteredSubjects.map((item, id) => (
+              <Card key={id}>
+                <Card.Body className="p-0">
+                  <Row>
+                    <Col md={2} className="ps-0">
+                      <Card
+                        style={{
+                          background:
+                            item.room && item.room.length > 0
+                              ? "#03A96B"
+                              : "#dc3545",
+                          height: "100%",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Card.Body style={{ fontSize: "20px", color: "white" }}>
+                          <p>{item.date}</p>
+                          <p style={{ fontSize: "16px" }}>{`${
+                            item.room && item.room.length > 0
+                              ? item.room[0].timeStart
+                              : "00:00"
+                          } - ${
+                            item.room && item.room.length > 0
+                              ? item.room[0].timeEnd
+                              : "00:00"
+                          }`}</p>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                    <Col md={10}>
+                      <Row className="pt-3 pb-3">
+                        <Col md={2} className="px-3">
+                          <p style={{ fontSize: "16px", color: "#424242" }}>
+                            {item.cs_id}
                           </p>
-                        )}
-                      </Col>
-                      <Col md={5}>
-                        <p style={{ fontSize: "16px", color: "#424242" }}>
-                          {item.cs_name_en}
-                        </p>
-                        <p style={{ color: "#5B5B5B" }}>{item.cs_name_th}</p>
-                      </Col>
-                      <Col>
-                        <p style={{ fontSize: "16px", color: "#424242" }}>
-                          {`${
-                            item.room && item.room.length > 0
-                              ? [
-                                  ...new Set(
-                                    item.room.map((room) => room.build_name)
-                                  ),
-                                ].join(", ")
-                              : "อาคาร ?"
-                          }`}
-                        </p>
-                        <p style={{ color: "#5B5B5B" }}>
-                          {`${
-                            item.room && item.room.length > 0
-                              ? item.room
-                                  .map((room) => `${room.room_id} ${room.seat}`)
-                                  .join(", ")
-                              : "????"
-                          } ( ${
-                            item.room &&
-                            item.room.length > 0 &&
-                            item.room[0].amount
-                              ? item.room.map((room) => room.amount).join(", ")
-                              : "?"
-                          } ที่นั่ง )`}
-                        </p>
-                      </Col>
-                    </Row>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          ))}
-        </Row>
+                          {(item.lc_sec || item.lb_sec) && (
+                            <p style={{ color: "#5B5B5B" }}>
+                              หมู่{" "}
+                              {`${item.lc_sec || ""}${
+                                item.lc_sec.length && item.lb_sec.length
+                                  ? ","
+                                  : ""
+                              }${item.lb_sec || ""}`}
+                            </p>
+                          )}
+                        </Col>
+                        <Col md={5}>
+                          <p style={{ fontSize: "16px", color: "#424242" }}>
+                            {item.cs_name_en}
+                          </p>
+                          <p style={{ color: "#5B5B5B" }}>{item.cs_name_th}</p>
+                        </Col>
+                        <Col>
+                          <p style={{ fontSize: "16px", color: "#424242" }}>
+                            {`${
+                              item.room && item.room.length > 0
+                                ? [
+                                    ...new Set(
+                                      item.room.map((room) => room.build_name)
+                                    ),
+                                  ].join(", ")
+                                : "อาคาร ?"
+                            }`}
+                          </p>
+                          <p style={{ color: "#5B5B5B" }}>
+                            {`${
+                              item.room && item.room.length > 0
+                                ? item.room
+                                    .map(
+                                      (room) => `${room.room_id} ${room.seat}`
+                                    )
+                                    .join(", ")
+                                : "????"
+                            } ( ${
+                              item.room &&
+                              item.room.length > 0 &&
+                              item.room[0].amount
+                                ? item.room
+                                    .map((room) => room.amount)
+                                    .join(", ")
+                                : "?"
+                            } ที่นั่ง )`}
+                          </p>
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            ))}
+          </Row>
+        )}
       </Modal.Body>
     </Modal>
   );

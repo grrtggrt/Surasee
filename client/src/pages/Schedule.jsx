@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, Row, Col, Form, Button, Badge } from "react-bootstrap";
+import { Card, Row, Col, Form, Button } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Swal from "sweetalert2";
 import Select from "react-select";
@@ -17,7 +17,6 @@ import {
 } from "react-icons/fa6";
 
 //POPUP
-import PopupManageRoom from "./popup/PopupManageRoom";
 import PopupManageSchedule from "./popup/PopupManageSchedule";
 
 //STYLE
@@ -25,7 +24,6 @@ import "../styles/Loader.scss";
 import "./Schedule.scss";
 
 const Schedule = () => {
-  const [showManageRoom, setShowManageRoom] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [isDisabledSelect, setIsDisabledSelect] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -43,7 +41,6 @@ const Schedule = () => {
   const [items, setItems] = useState([]);
   const [fetchDataSchedule, setFetchDataSchedule] = useState([]);
   const [droppedItems, setDroppedItems] = useState([]);
-  const [selectDropped, setSelectDropped] = useState(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -135,14 +132,21 @@ const Schedule = () => {
     }
   }, []);
 
-  //PopupManageRoom
-  const handleShowManageRoom = (updatedDroppedItems) => {
-    setSelectDropped(updatedDroppedItems);
-    setShowManageRoom(true);
-  };
-  const handleHideManageRoom = () => {
-    setShowManageRoom(false);
-  };
+  useEffect(() => {
+    if (!showSchedule) {
+      const storedStartDate = localStorage.getItem("startDate");
+      const storedEndDate = localStorage.getItem("endDate");
+
+      if (storedStartDate) {
+        setStartDate(new Date(storedStartDate));
+      }
+      if (storedEndDate) {
+        setEndDate(new Date(storedEndDate));
+      }
+    }
+    fetchSelected();
+  }, [showSchedule]);
+
   //PopupSchedule
   const handleShowSchedule = () => setShowSchedule(true);
   const handleHideSchedule = () => setShowSchedule(false);
@@ -170,33 +174,88 @@ const Schedule = () => {
             .slice(-2)}`
         : "";
 
+      let timezone = "";
+      const rowIndex = parseInt(destination.droppableId.split("-")[1], 10);
+      if (rowIndex === 1) {
+        timezone = "เช้า";
+      } else if (rowIndex === 2) {
+        timezone = "กลางวัน";
+      } else if (rowIndex === 3) {
+        timezone = "เย็น";
+      }
+
+      const majorIdExists =
+        droppedItems
+          .filter((item) => item.droppableId === destination.droppableId)
+          .some((item) => item.major_id === draggedItem.major_id) ||
+        fetchDataSchedule
+          .filter(
+            (item) => item.droppableIdSchedule === destination.droppableId
+          )
+          .some((item) => item.major_id === draggedItem.major_id);
+
+      if (majorIdExists) return;
+
+      if (
+        droppedItems.some(
+          (item) =>
+            (item.date === formattedDate && item.timezone === "เช้า") ||
+            fetchDataSchedule.some(
+              (item) => item.date === formattedDate && item.timezone === "เช้า"
+            )
+        )
+      ) {
+        if (timezone === "กลางวัน") {
+          return;
+        }
+      } else if (
+        droppedItems.some(
+          (item) =>
+            (item.date === formattedDate && item.timezone === "กลางวัน") ||
+            fetchDataSchedule.some(
+              (item) =>
+                item.date === formattedDate && item.timezone === "กลางวัน"
+            )
+        )
+      ) {
+        return;
+      } else if (
+        droppedItems.some(
+          (item) =>
+            (item.date === formattedDate && item.timezone === "เย็น") ||
+            fetchDataSchedule.some(
+              (item) => item.date === formattedDate && item.timezone === "เย็น"
+            )
+        )
+      ) {
+        if (timezone === "กลางวัน") {
+          return;
+        }
+      }
+
       const newDroppedItems = [
         ...droppedItems,
         {
           ...draggedItem,
           droppableId: destination.droppableId,
           date: formattedDate,
+          timezone: timezone,
         },
       ];
 
       setItems(newItems);
       setDroppedItems(newDroppedItems);
-
-      const updatedDroppedItems = newDroppedItems.filter(
-        (item) => item.droppableId === destination.droppableId
-      );
-      handleShowManageRoom(updatedDroppedItems);
     }
   };
 
   //DELETE-BTN
-  const handleDeleteItem = async (droppableId, itemId, itemDrop) => {
+  const handleDeleteItem = async (droppableId, itemId) => {
     let deletedCount = 0;
 
     const newDroppedItems = droppedItems.filter((item) => {
       if (
         item.droppableId === droppableId &&
-        item.id === itemDrop &&
+        item.cs_id === itemId &&
         deletedCount === 0
       ) {
         deletedCount++;
@@ -204,13 +263,13 @@ const Schedule = () => {
       }
       return true;
     });
-
     const deletedItemDrop = droppedItems.find(
-      (item) => item.droppableId === droppableId && item.id === itemDrop
+      (item) => item.droppableId === droppableId && item.cs_id === itemId
     );
 
     const deletedItem = fetchDataSchedule.find(
-      (item) => item.droppableIdSchedule === droppableId && item.id === itemId
+      (item) =>
+        item.droppableIdSchedule === droppableId && item.cs_id === itemId
     );
 
     if (deletedItem) {
@@ -222,22 +281,23 @@ const Schedule = () => {
             major_id: deletedItem.major_id,
           }
         );
-
+        console.log("Delete item response:", response.data);
         if (response.status === 200) {
-          fetchSchedule();
           Swal.fire({
             icon: "success",
             title: "ลบข้อมูลสำเร็จแล้ว",
             showConfirmButton: false,
             timer: 1500,
+          }).then(() => {
+            fetchSubjects();
+            fetchSchedule();
           });
         }
       } catch (error) {
         console.error("Error deleting item:", error);
         Swal.fire({
           icon: "error",
-          title: "เกิดข้อผิดพลาด",
-          text: "ไม่สามารถลบข้อมูลได้",
+          title: "เกิดข้อผิดพลาดในการลบข้อมูล",
           showConfirmButton: false,
           timer: 1500,
         });
@@ -266,6 +326,8 @@ const Schedule = () => {
   const handleEditClick = () => {
     setIsEditing(!isEditing);
   };
+
+  console.log(droppedItems);
 
   //Alert Confirm
   const handleSaveConfirm = async () => {
@@ -303,6 +365,7 @@ const Schedule = () => {
             major_id: item.major_id,
             amount: item.amount,
             date: item.date,
+            timezone: item.timezone,
             droppableIdSchedule: item.droppableId,
           }));
 
@@ -378,7 +441,7 @@ const Schedule = () => {
     });
   };
 
-  const handleDeleteConfirmSubject = (droppableId, itemId, itemDrop) => {
+  const handleDeleteConfirmSubject = (droppableId, itemId) => {
     Swal.fire({
       title: "ต้องการลบข้อมูลใช่หรือไม่ ?",
       icon: "warning",
@@ -393,7 +456,7 @@ const Schedule = () => {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        handleDeleteItem(droppableId, itemId, itemDrop);
+        handleDeleteItem(droppableId, itemId);
       }
     });
   };
@@ -482,8 +545,6 @@ const Schedule = () => {
       }, 500);
     }
   };
-
-  console.log(fetchDataSchedule)
 
   const handleClickSearchSubject = () => {
     if (!input) {
@@ -671,24 +732,36 @@ const Schedule = () => {
                           (item) => item.droppableIdSchedule === droppableId
                         )
                         .map((item, index) => (
-                          <Card key={item.cs_id} index={index}>
-                            <Card.Header
-                              className="p-1"
+                          <Card
+                            key={item.cs_id}
+                            index={index}
+                            style={{ height: "max-content" }}
+                          >
+                            <div
                               style={{
-                                backgroundColor: "#00BE77",
-                                fontSize: "14px",
+                                background: "#5ec1d4",
+                                padding: "4px",
+                                borderRadius: "3px",
+                                color: "white",
+                                textAlign: "center",
+                                fontSize: "12px",
                               }}
                             >
                               {item.cs_id}
-                            </Card.Header>
+                            </div>
                             {isEditing ? (
                               <Button
                                 className="btn-icon"
-                                style={{ position: "absolute", right: "0" }}
+                                style={{
+                                  position: "absolute",
+                                  top: "-12px",
+                                  right: "-8px",
+                                  zIndex: 1,
+                                }}
                                 onClick={() =>
                                   handleDeleteConfirmSubject(
                                     droppableId,
-                                    item.id
+                                    item.cs_id
                                   )
                                 }
                               >
@@ -696,49 +769,119 @@ const Schedule = () => {
                               </Button>
                             ) : null}
                             <Card.Body className="p-1">
-                              {/* <p>รหัสวิชา : {item.cs_id}</p> */}
-                              {/* <p>ชื่อวิชา : {item.cs_name_en}</p> */}
-                              {/* <p>สาขา : {`${item.major_id}`}</p> */}
-                              <Badge pill bg="warning" text="dark">
-                                ชื่อวิชา
-                              </Badge>
-                              <p>{item.cs_name_en}</p>
-                              {/* <Badge pill style={{ backgroundColor: '#f0906d'}}>{`${item.major_id}`}</Badge> */}
+                              <p
+                                className="pt-1 pb-2"
+                                style={{ fontSize: "12px" }}
+                              >
+                                {item.cs_name_en}
+                              </p>
                               <p
                                 style={{
-                                  background: "#f0906d",
-                                  padding: "2px",
-                                  width: "50%",
+                                  backgroundColor: "#F0906D",
                                   borderRadius: "20px",
-                                  color: "white",
                                   textAlign: "center",
+                                  color: "white",
+                                  fontSize: "12px",
+                                  display: "block",
+                                  width: "fit-content",
+                                  padding: "2px 8px 2px 8px",
                                 }}
+                                className="mb-2"
                               >{`${item.major_id}`}</p>
+                              <p
+                                style={{
+                                  backgroundColor: "#03A96B",
+                                  borderRadius: "20px",
+                                  textAlign: "center",
+                                  color: "white",
+                                  fontSize: "12px",
+                                  display: "block",
+                                  width: "fit-content",
+                                  padding: "1px 7px 1px 7px",
+                                }}
+                                className="d-flex align-items-center gap-1"
+                              >
+                                {`ปี ${item.grade}`}
+                              </p>
                             </Card.Body>
                           </Card>
                         ))}
                       {droppedItems
                         .filter((item) => item.droppableId === droppableId)
                         .map((item, index) => (
-                          <Card key={item.cs_id} index={index}>
+                          <Card
+                            key={item.cs_id}
+                            index={index}
+                            style={{ height: "max-content" }}
+                          >
+                            <div
+                              style={{
+                                background: "#03A96B",
+                                padding: "4px",
+                                borderRadius: "3px",
+                                color: "white",
+                                textAlign: "center",
+                                fontSize: "12px",
+                              }}
+                            >
+                              {item.cs_id}
+                            </div>
                             {isEditing ? (
                               <Button
                                 className="btn-icon"
-                                style={{ position: "absolute", right: "0" }}
+                                style={{
+                                  position: "absolute",
+                                  top: "-12px",
+                                  right: "-8px",
+                                  zIndex: 1,
+                                }}
                                 onClick={() =>
                                   handleDeleteConfirmSubject(
                                     droppableId,
-                                    item.id
+                                    item.cs_id
                                   )
                                 }
                               >
                                 <FaCircleMinus className="text-danger fs-5" />
                               </Button>
                             ) : null}
-                            <Card.Body>
-                              <p>รหัสวิชา : {item.cs_id}</p>
-                              <p>ชื่อวิชา : {item.cs_name_en}</p>
-                              <p>สาขา : {`${item.major_id}`}</p>
+                            <Card.Body className="p-1">
+                              <p
+                                className="pt-1 pb-2"
+                                style={{ fontSize: "12px" }}
+                              >
+                                {item.cs_name_en}
+                              </p>
+                              <p
+                                style={{
+                                  backgroundColor: "#F0906D",
+                                  borderRadius: "20px",
+                                  textAlign: "center",
+                                  color: "white",
+                                  fontSize: "12px",
+                                  display: "block",
+                                  width: "fit-content",
+                                  padding: "2px 8px 2px 8px",
+                                }}
+                                className="mb-2"
+                              >
+                                {`${item.major_id}`}
+                              </p>
+                              <p
+                                style={{
+                                  backgroundColor: "#5ec1d4",
+                                  borderRadius: "20px",
+                                  textAlign: "center",
+                                  color: "white",
+                                  fontSize: "12px",
+                                  display: "block",
+                                  width: "fit-content",
+                                  padding: "1px 7px 1px 7px",
+                                }}
+                                className="d-flex align-items-center gap-1"
+                              >
+                                {`ปี ${item.grade}`}
+                              </p>
                             </Card.Body>
                           </Card>
                         ))}
@@ -773,7 +916,7 @@ const Schedule = () => {
       )}
       {loading && !initialLoading && <div className="loader" />}
       <div className="main-content-center">
-        <Row>
+        <Row style={{ position: "relative", zIndex: "2" }}>
           <Col sm={9} className="d-flex gap-3">
             <Select
               id="facultyName"
@@ -962,44 +1105,51 @@ const Schedule = () => {
                                   {...provided.dragHandleProps}
                                 >
                                   <Card.Body className="p-2">
-                                    {/* <p>รหัสวิชา : {item.cs_id}</p> */}
-                                    {/* <p>ชื่อวิชา : {item.cs_name_en}</p> */}
-                                    {/* <p>สาขา : {`${item.major_id}`}</p> */}
-                                    <p
-                                      style={{
-                                        backgroundColor: "#449375",
-                                        borderRadius: "10px",
-                                        textAlign: "center",
-                                        color: "white",
-                                        fontSize: "14px",
-                                        display: "block",
-                                        width: "fit-content",
-                                        paddingLeft: "10px",
-                                        paddingRight: "10px",
-                                      }}
-                                    >
-                                      {item.cs_id}
-                                    </p>
-                                    <p
-                                      style={{ fontSize: "14px" }}
-                                      className="pt-2 pb-2"
-                                    >
+                                    <Row>
+                                      <Col className="d-flex justify-content-start">
+                                        <p className="fw-bold pb-1">
+                                          {item.cs_id}
+                                        </p>
+                                      </Col>
+                                      <Col
+                                        md={4}
+                                        className="d-flex justify-content-end align-items-center pb-2"
+                                      >
+                                        <p
+                                          style={{
+                                            backgroundColor: "#5ec1d4",
+                                            borderRadius: "20px",
+                                            textAlign: "center",
+                                            color: "white",
+                                            fontSize: "12px",
+                                            display: "block",
+                                            width: "fit-content",
+                                            padding: "1px 7px 1px 7px",
+                                          }}
+                                          className="d-flex align-items-center gap-1"
+                                        >
+                                          {`ปี${item.grade}`}
+                                        </p>
+                                      </Col>
+                                    </Row>
+                                    <hr style={{ margin: "2px 0" }} />
+                                    <p className="pb-1 pt-1">
                                       {item.cs_name_en}
                                     </p>
                                     <p
                                       style={{
-                                        backgroundColor: "#f0906d",
+                                        backgroundColor: "#E5987C",
                                         borderRadius: "20px",
                                         textAlign: "center",
                                         color: "white",
-                                        fontSize: "14px",
+                                        fontSize: "12px",
                                         display: "block",
                                         width: "fit-content",
-                                        paddingLeft: "10px",
-                                        paddingRight: "10px",
+                                        padding: "2px 8px 2px 8px",
+                                        margin: "2px 0",
                                       }}
                                     >
-                                      {`${item.major_id}`}
+                                      {item.major_id}
                                     </p>
                                   </Card.Body>
                                 </Card>
@@ -1016,12 +1166,6 @@ const Schedule = () => {
             </Col>
           </Row>
         </DragDropContext>
-
-        <PopupManageRoom
-          show={showManageRoom}
-          hide={handleHideManageRoom}
-          updatedDroppedItems={selectDropped}
-        />
         <PopupManageSchedule show={showSchedule} hide={handleHideSchedule} />
       </div>
     </>
