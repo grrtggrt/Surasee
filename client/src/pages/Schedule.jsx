@@ -101,24 +101,27 @@ const Schedule = () => {
   }, []);
 
   useEffect(() => {
-    fetchSubjects();
-    fetchMajor();
-    fetchSchedule();
-    fetchSelected();
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchSubjects(),
+        fetchMajor(),
+        fetchSchedule(),
+        fetchSelected(),
+      ]);
+      setLoading(false);
+    };
+    fetchData();
   }, [fetchSubjects, fetchMajor, fetchSchedule, fetchSelected]);
 
   useEffect(() => {
-    const csIds = dataSchedule.map((item) => item.cs_id);
-    const filteredSubjects = dataSubject.filter(
-      (subject) => !csIds.includes(subject.cs_id)
-    );
-    setDataSubject(filteredSubjects);
-    setItems(filteredSubjects);
+      const csIds = dataSchedule.map((item) => item.cs_id);
+      const filteredSubjects = dataSubject.filter(
+        (subject) => !csIds.includes(subject.cs_id)
+      );
+      setDataSubject(filteredSubjects);
+      setItems(filteredSubjects);
   }, [dataSchedule]);
-
-  useEffect(() => {
-    setSelectedFaculty(null);
-  }, []);
 
   useEffect(() => {
     const storedStartDate = localStorage.getItem("startDate");
@@ -199,10 +202,15 @@ const Schedule = () => {
       if (
         droppedItems.some(
           (item) =>
-            (item.date === formattedDate && item.timezone === "เช้า") ||
-            fetchDataSchedule.some(
-              (item) => item.date === formattedDate && item.timezone === "เช้า"
-            )
+            item.date === formattedDate &&
+            item.timezone === "เช้า" &&
+            item.major_id === draggedItem.major_id
+        ) ||
+        fetchDataSchedule.some(
+          (item) =>
+            item.date === formattedDate &&
+            item.timezone === "เช้า" &&
+            item.major_id === draggedItem.major_id
         )
       ) {
         if (timezone === "กลางวัน") {
@@ -211,21 +219,30 @@ const Schedule = () => {
       } else if (
         droppedItems.some(
           (item) =>
-            (item.date === formattedDate && item.timezone === "กลางวัน") ||
-            fetchDataSchedule.some(
-              (item) =>
-                item.date === formattedDate && item.timezone === "กลางวัน"
-            )
+            item.date === formattedDate &&
+            item.timezone === "กลางวัน" &&
+            item.major_id === draggedItem.major_id
+        ) ||
+        fetchDataSchedule.some(
+          (item) =>
+            item.date === formattedDate &&
+            item.timezone === "กลางวัน" &&
+            item.major_id === draggedItem.major_id
         )
       ) {
         return;
       } else if (
         droppedItems.some(
           (item) =>
-            (item.date === formattedDate && item.timezone === "เย็น") ||
-            fetchDataSchedule.some(
-              (item) => item.date === formattedDate && item.timezone === "เย็น"
-            )
+            item.date === formattedDate &&
+            item.timezone === "เย็น" &&
+            item.major_id === draggedItem.major_id
+        ) ||
+        fetchDataSchedule.some(
+          (item) =>
+            item.date === formattedDate &&
+            item.timezone === "เย็น" &&
+            item.major_id === draggedItem.major_id
         )
       ) {
         if (timezone === "กลางวัน") {
@@ -326,8 +343,6 @@ const Schedule = () => {
   const handleEditClick = () => {
     setIsEditing(!isEditing);
   };
-
-  console.log(droppedItems);
 
   //Alert Confirm
   const handleSaveConfirm = async () => {
@@ -739,7 +754,7 @@ const Schedule = () => {
                           >
                             <div
                               style={{
-                                background: "#5ec1d4",
+                                background: "#03A96B",
                                 padding: "4px",
                                 borderRadius: "3px",
                                 color: "white",
@@ -790,10 +805,10 @@ const Schedule = () => {
                               >{`${item.major_id}`}</p>
                               <p
                                 style={{
-                                  backgroundColor: "#03A96B",
+                                  border: "1px solid #5ec1d4",
                                   borderRadius: "20px",
                                   textAlign: "center",
-                                  color: "white",
+                                  color: "#5ec1d4",
                                   fontSize: "12px",
                                   display: "block",
                                   width: "fit-content",
@@ -816,7 +831,7 @@ const Schedule = () => {
                           >
                             <div
                               style={{
-                                background: "#03A96B",
+                                background: "#dc3545",
                                 padding: "4px",
                                 borderRadius: "3px",
                                 color: "white",
@@ -869,10 +884,10 @@ const Schedule = () => {
                               </p>
                               <p
                                 style={{
-                                  backgroundColor: "#5ec1d4",
+                                  border: "1px solid #5ec1d4",
                                   borderRadius: "20px",
                                   textAlign: "center",
-                                  color: "white",
+                                  color: "#5ec1d4",
                                   fontSize: "12px",
                                   display: "block",
                                   width: "fit-content",
@@ -1111,16 +1126,15 @@ const Schedule = () => {
                                           {item.cs_id}
                                         </p>
                                       </Col>
-                                      <Col
-                                        md={4}
-                                        className="d-flex justify-content-end align-items-center pb-2"
-                                      >
+                                    </Row>
+                                    <Row className="mb-2">
+                                      <Col>
                                         <p
                                           style={{
-                                            backgroundColor: "#5ec1d4",
+                                            border: "1px solid #5ec1d4",
                                             borderRadius: "20px",
                                             textAlign: "center",
-                                            color: "white",
+                                            color: "#5ec1d4",
                                             fontSize: "12px",
                                             display: "block",
                                             width: "fit-content",

@@ -8,7 +8,7 @@ import {
   CloseButton,
   Card,
 } from "react-bootstrap";
-import { FaCircleMinus, FaCircleInfo } from "react-icons/fa6";
+import { FaTrashCan, FaCircleInfo } from "react-icons/fa6";
 import Swal from "sweetalert2";
 import axios from "axios";
 
@@ -168,7 +168,7 @@ const PopupEditRoom = (props) => {
                           )
                         }
                       >
-                        <FaCircleMinus className="text-danger fs-5" />
+                        <FaTrashCan  className="text-light fs-5" />
                       </Button>
                     </Col>
                     <Col>

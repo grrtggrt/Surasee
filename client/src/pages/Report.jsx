@@ -29,6 +29,7 @@ const Report = () => {
   const [dataSubject, setDataSubject] = useState([]);
   const [dataRoom, setDataRoom] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [selectedDate, setSelectDate] = useState(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -55,8 +56,12 @@ const Report = () => {
   }, []);
 
   useEffect(() => {
-    fetchRoom();
-    fetchSchedule();
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([fetchRoom(), fetchSchedule()]);
+      setLoading(false);
+    };
+    fetchData();
   }, [fetchRoom, fetchSchedule]);
 
   // นับ CurrentItems ที่แสดงใน Table
@@ -79,9 +84,24 @@ const Report = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   //ค้นหา
+  const handleSelectDate = (e) => {
+    setSelectDate(e);
+  };
+
   const handleSelectBuilding = (e) => {
     setSelectedBuilding(e);
   };
+
+  const filterDate = [...new Set(dataSubject.map((item) => item.date))].sort(
+    (a, b) => parseInt(a) - parseInt(b)
+  );
+
+  const optionDate = filterDate.map((date) => {
+    return {
+      label: date,
+      value: date,
+    };
+  });
 
   //ตึก
   const filterBuilding = [
@@ -162,6 +182,7 @@ const Report = () => {
     setTimeout(() => {
       setFetchData(dataSubject);
       setSelectedBuilding(null);
+      setSelectDate(null);
       setInput("");
       setLoading(false);
     }, 600);
@@ -283,8 +304,9 @@ const Report = () => {
                   <Select
                     id="dateName"
                     name="dateName"
-                    // options={dataMajorOption}
-                    // onChange={handleOptionChange}
+                    options={optionDate}
+                    onChange={handleSelectDate}
+                    value={selectedDate}
                     placeholder="วันที่"
                     isSearchable={false}
                     className="react-select-container"

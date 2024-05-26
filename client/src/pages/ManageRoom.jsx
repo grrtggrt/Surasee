@@ -76,9 +76,12 @@ const ManageRoom = () => {
   }, []);
 
   useEffect(() => {
-    fetchRoom();
-    fetchSubjects();
-    fetchMajor();
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([fetchRoom(), fetchSubjects(), fetchMajor()]);
+      setLoading(false);
+    };
+    fetchData();
   }, [fetchRoom, fetchSubjects, fetchMajor]);
 
   useEffect(() => {
@@ -161,7 +164,7 @@ const ManageRoom = () => {
 
   //Modal
   const handleEditClick = () => {
-    if (!selectedDate) {
+    if (!selectedDate || !selectedTime) {
       Swal.fire({
         title: "กรุณากรอกวันที่เพื่อแก้ไข",
         icon: "warning",

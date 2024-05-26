@@ -39,7 +39,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-
   //ดึงข้อมูล
   const fetchSubjects = useCallback(async () => {
     try {
@@ -71,9 +70,16 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchSubjects();
-    fetchScheduleSubject();
-    fetchMajor();
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchSubjects(),
+        fetchScheduleSubject(),
+        fetchMajor(),
+      ]);
+      setLoading(false);
+    };
+    fetchData();
   }, [fetchSubjects, fetchMajor, fetchScheduleSubject]);
 
   //ค้นหา
@@ -170,7 +176,6 @@ const Dashboard = () => {
     }
   }, [selectedFaculty, selectedGrade]);
 
-  
   useEffect(() => {
     setTimeout(() => {
       setInitialLoading(false);
@@ -233,9 +238,7 @@ const Dashboard = () => {
           <div className="loader" />
         </div>
       )}
-      {loading && !initialLoading && (
-        <div className="loader" />
-      )}
+      {loading && !initialLoading && <div className="loader" />}
       <div className="main-content-center">
         <Row>
           <Col>

@@ -67,7 +67,7 @@ const PopupManageRoom = (props) => {
   useEffect(() => {
     fetchRoom();
     fetchSubjects();
-  }, [fetchRoom, fetchSubjects]);
+  }, [fetchRoom, fetchSubjects, show]);
 
   useEffect(() => {
     setSelectedBuilding(null);
@@ -84,6 +84,7 @@ const PopupManageRoom = (props) => {
         : ""
     );
   }, [show]);
+
 
   useEffect(() => {
     if (droppedRoom && droppedRoom.length > 0) {
