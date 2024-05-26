@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Row, Col, Button, Form, CloseButton } from "react-bootstrap";
 import { FaFloppyDisk, FaBan } from "react-icons/fa6";
 import Swal from "sweetalert2";
+import axios from "axios";
+import { getToken } from "../../../services/authorize";
 
 // assets
 import Profile from "../../assets/profile.png";
@@ -10,24 +12,35 @@ import Profile from "../../assets/profile.png";
 import "../../styles/Modal.scss";
 
 const PopupUserSetting = (props) => {
-  const { show, hide } = props;
-
+  const { show, hide, onSaveProfileImage, userData } = props;
   const [selectedImage, setSelectedImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [name, setName] = useState(null);
+  const [surname, setSurname] = useState(null);
 
-  //Edit Profile
+  useEffect(() => {
+    setPreviewImage(userData.profileImage ? userData.profileImage : Profile);
+    setName(userData.name ? userData.name : "");
+    setSurname(userData.surname ? userData.surname : "");
+    setSelectedImage(null);
+  }, [show]);
+
   const handleProfileImageChange = (event) => {
-    setSelectedImage(URL.createObjectURL(event.target.files[0]));
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result.split(",")[1]); // เก็บเฉพาะ base64 ส่วน
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleImageDelete = () => {
     setSelectedImage(null);
+    setPreviewImage(Profile);
   };
 
-  const handleHide = () => {
-    hide();
-  };
-
-  //Alert Confirm
   const handleSaveConfirm = () => {
     Swal.fire({
       title: "ต้องการบันทึกข้อมูลใช่หรือไม่",
@@ -49,9 +62,58 @@ const PopupUserSetting = (props) => {
           showConfirmButton: false,
           timer: 1000,
         });
-        handleHide();
+        updateUserProfile();
       }
     });
+  };
+
+  const updateUserProfile = async () => {
+    const token = getToken();
+    const data = {
+      name,
+      surname,
+      profileImage: selectedImage,
+    };
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5500/api/update-user",
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      Swal.fire({
+        title: "บันทึกเสร็จสิ้น!",
+        icon: "success",
+        confirmButtonColor: "#03A96B",
+        confirmButtonText: "ตกลง",
+        customClass: {
+          confirmButton: "shadow-none",
+        },
+      });
+
+      if (response.data.profileImage) {
+        onSaveProfileImage(response.data.profileImage); // อัพเดทรูปภาพใน contentTop
+      }
+
+      hide();
+    } catch (error) {
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: error.response.data.message,
+        icon: "error",
+        confirmButtonColor: "#03A96B",
+        confirmButtonText: "ตกลง",
+        customClass: {
+          confirmButton: "shadow-none",
+        },
+      });
+    }
   };
 
   const handleDeleteConfirm = () => {
@@ -101,7 +163,11 @@ const PopupUserSetting = (props) => {
             className="d-flex justify-content-center align-items-center"
           >
             <img
-              src={selectedImage ? selectedImage : Profile}
+              src={
+                selectedImage
+                  ? `data:image/jpeg;base64,${selectedImage}`
+                  : previewImage
+              }
               alt="Profile"
               style={{ width: "100px", height: "100px", borderRadius: "50%" }}
             />
@@ -123,7 +189,7 @@ const PopupUserSetting = (props) => {
                 <input
                   id="profileImageInput"
                   type="file"
-                  accept="image/"
+                  accept="image/*"
                   style={{ display: "none" }}
                   onChange={handleProfileImageChange}
                 />
@@ -143,7 +209,14 @@ const PopupUserSetting = (props) => {
             <Col>
               <p>ชื่อ :</p>
               <Form>
-                <Form.Control className="custom-input" type="text" disabled />
+                <Form.Control
+                  className="custom-input"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  readOnly
+                  disabled
+                />
               </Form>
             </Col>
           </Row>
@@ -151,7 +224,14 @@ const PopupUserSetting = (props) => {
             <Col>
               <p>นามสกุล :</p>
               <Form>
-                <Form.Control className="custom-input" type="text" disabled />
+                <Form.Control
+                  className="custom-input"
+                  type="text"
+                  value={surname}
+                  onChange={(e) => setSurname(e.target.value)}
+                  readOnly
+                  disabled
+                />
               </Form>
             </Col>
           </Row>

@@ -85,7 +85,6 @@ const PopupManageRoom = (props) => {
     );
   }, [show]);
 
-
   useEffect(() => {
     if (droppedRoom && droppedRoom.length > 0) {
       const building = droppedRoom[0];

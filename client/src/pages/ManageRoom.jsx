@@ -81,7 +81,7 @@ const ManageRoom = () => {
       await Promise.all([fetchRoom(), fetchSubjects(), fetchMajor()]);
       setLoading(false);
     };
-    fetchData();
+    fetchData()
   }, [fetchRoom, fetchSubjects, fetchMajor]);
 
   useEffect(() => {

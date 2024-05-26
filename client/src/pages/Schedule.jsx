@@ -115,12 +115,12 @@ const Schedule = () => {
   }, [fetchSubjects, fetchMajor, fetchSchedule, fetchSelected]);
 
   useEffect(() => {
-      const csIds = dataSchedule.map((item) => item.cs_id);
-      const filteredSubjects = dataSubject.filter(
-        (subject) => !csIds.includes(subject.cs_id)
-      );
-      setDataSubject(filteredSubjects);
-      setItems(filteredSubjects);
+    const csIds = dataSchedule.map((item) => item.cs_id);
+    const filteredSubjects = dataSubject.filter(
+      (subject) => !csIds.includes(subject.cs_id)
+    );
+    setDataSubject(filteredSubjects);
+    setItems(filteredSubjects);
   }, [dataSchedule]);
 
   useEffect(() => {
@@ -259,7 +259,6 @@ const Schedule = () => {
           timezone: timezone,
         },
       ];
-
       setItems(newItems);
       setDroppedItems(newDroppedItems);
     }
@@ -831,7 +830,7 @@ const Schedule = () => {
                           >
                             <div
                               style={{
-                                background: "#dc3545",
+                                background: "#5ec1d4",
                                 padding: "4px",
                                 borderRadius: "3px",
                                 color: "white",

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./Login.scss";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { authenticate } from "../../../services/authorize";
 
 import { FaUser, FaLock, FaArrowRightLong } from "react-icons/fa6";
 
@@ -29,22 +30,22 @@ const Login = () => {
 
     setLoading(true);
 
-    axios
-      .post("http://localhost:5500/api/login", { username, password })
-      .then((response) => {
-        setLoading(true)
-        setTimeout(() => {
-          setLoading(false);
-          navigateTo("/dashboard");
-        }, 500);
-      })
-      .catch((err) => {
-        setLoading(true)
-        setTimeout(() => {
-          setLoading(false);
-          setLoginStatus("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
-        }, 500);
+    axios.post("http://localhost:5500/api/login", { username, password })
+    .then(response => {
+      console.log("Login successful, response:", response);
+      authenticate(response, () => {
+        console.log("Navigating to /dashboard"); // เพิ่ม log เพื่อตรวจสอบการทำงานของ navigate
+        navigateTo("/dashboard");
       });
+    }).catch(err => {
+      if (err.response) {
+        console.log("Login failed, server responded with status:", err.response.status);
+        console.log("Error data:", err.response.data);
+      } else {
+        console.log("Login failed, error:", err.message);
+      }
+      setLoginStatus("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
+    });
   };
 
   useEffect(() => {

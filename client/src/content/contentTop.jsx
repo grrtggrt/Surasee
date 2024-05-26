@@ -1,9 +1,11 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./contentTop.scss";
 import { SidebarContext } from "../context/sidebarContext";
 import { NavDropdown } from "react-bootstrap";
 import { FaBars, FaPowerOff, FaGear, FaUserPen, FaLock } from "react-icons/fa6";
+import { logout, getToken } from "../../services/authorize";
+import axios from "axios";
 
 import Profile from "../assets/profile.png";
 import PopupUserSetting from "../pages/popup/PopupUserSetting";
@@ -13,19 +15,64 @@ import "../styles/Nav.scss";
 
 const content = () => {
   const navigateTo = useNavigate();
-  
+
   const { toggleSidebar } = useContext(SidebarContext);
   const [showPopupUserSetting, setShowPopupUserSetting] = useState(false);
   const [showPopupResetPassword, setShowPopupResetPassword] = useState(false);
+  const [userInfo, setUserInfo] = useState({
+    name: "",
+    surname: "",
+    profileImage: "",
+  });
   const [loading, setLoading] = useState(false);
 
+  //Popup
   const handleShowPopupUserSetting = () => setShowPopupUserSetting(true);
   const handleHidePopupUserSetting = () => setShowPopupUserSetting(false);
   const handleShowPopupResetPassword = () => setShowPopupResetPassword(true);
   const handleHidePopupResetPassword = () => setShowPopupResetPassword(false);
 
+  const fetchUserInfo = useCallback(async () => {
+    try {
+      const token = getToken();
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.get(
+        "http://localhost:5500/api/user",
+        config
+      );
+      setUserInfo({
+        ...response.data,
+        profileImage: response.data.profileImage
+          ? `data:image/jpeg;base64,${response.data.profileImage}`
+          : Profile,
+      });
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchUserInfo();
+    };
+    fetchData();
+  }, [fetchUserInfo, showPopupUserSetting, showPopupResetPassword]);
+
+  const handleSaveProfileImage = (image) => {
+    setUserInfo((prevState) => ({
+      ...prevState,
+      profileImage: `data:image/jpeg;base64,${image}`,
+    }));
+  };
+
   const handleLogout = () => {
-    navigateTo("/");
+    logout(() => {
+      navigateTo("/");
+    });
   };
 
   return (
@@ -40,8 +87,10 @@ const content = () => {
 
         <div className="content-top-btns">
           <div className="profile">
-            <img src={Profile} alt="Profile" />
-            <h2>นายสุรสีห์ ไวยวุฒิโท</h2>
+            <img src={userInfo.profileImage} alt="Profile" />
+            <h2>
+              {userInfo.name} {userInfo.surname}
+            </h2>
           </div>
           <NavDropdown
             title={<FaGear className="setting-btn" />}
@@ -57,12 +106,14 @@ const content = () => {
             </NavDropdown.Item>
           </NavDropdown>
 
-          <Link to="/">
+          <Link to="/" onClick={handleLogout}>
             <FaPowerOff className="logout-btn" />
           </Link>
           <PopupUserSetting
             show={showPopupUserSetting}
             hide={handleHidePopupUserSetting}
+            onSaveProfileImage={handleSaveProfileImage}
+            userData={userInfo}
           />
           <PopupResetPassword
             show={showPopupResetPassword}
