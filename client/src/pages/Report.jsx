@@ -117,7 +117,7 @@ const Report = () => {
   });
 
   const handleClickSearch = () => {
-    if (!selectedBuilding && !input) {
+    if (!selectedBuilding && !input && !selectedDate) {
       Swal.fire({
         title: "กรุณากรอกข้อมูลเพื่อค้นหา",
         icon: "warning",
@@ -129,44 +129,57 @@ const Report = () => {
       setTimeout(() => {
         const filteredData = fetchData.filter((item) => {
           return (
-            !input ||
-            item.cs_id.toLowerCase().includes(input.toLowerCase()) ||
-            item.cs_name_en.toLowerCase().includes(input.toLowerCase()) ||
-            item.cs_name_th.toLowerCase().includes(input.toLowerCase()) ||
-            item.major_id.toLowerCase().includes(input.toLowerCase()) ||
-            (item.room &&
-              item.room.length > 0 &&
-              item.room.some((sec) =>
-                sec.section
-                  .toString()
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              )) ||
-            item.grade.toString().toLowerCase().includes(input.toLowerCase()) ||
-            (item.room &&
-              item.room.length > 0 &&
+            (!input ||
+              item.cs_id.toLowerCase().includes(input.toLowerCase()) ||
+              item.cs_name_en.toLowerCase().includes(input.toLowerCase()) ||
+              item.cs_name_th.toLowerCase().includes(input.toLowerCase()) ||
+              item.major_id.toLowerCase().includes(input.toLowerCase()) ||
+              (item.room &&
+                item.room.length > 0 &&
+                item.room.some((sec) =>
+                  sec.section
+                    .toString()
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                )) ||
+              item.grade
+                .toString()
+                .toLowerCase()
+                .includes(input.toLowerCase()) ||
+              (item.room &&
+                item.room.length > 0 &&
+                item.room.some((room) =>
+                  room.room_id.toLowerCase().includes(input.toLowerCase())
+                )) ||
+              item.date.toLowerCase().includes(input.toLowerCase()) ||
+              (item.room &&
+                item.room.length > 0 &&
+                item.room.some((time) =>
+                  time.timeStart.toLowerCase().includes(input.toLowerCase())
+                )) ||
+              (item.room &&
+                item.room.length > 0 &&
+                item.room.some((time) =>
+                  time.timeEnd.toLowerCase().includes(input.toLowerCase())
+                )) ||
+              (item.room &&
+                item.room.length > 0 &&
+                item.room.some((amount) =>
+                  amount.amount
+                    .toString()
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                ))) &&
+            (!selectedBuilding ||
               item.room.some((room) =>
-                room.room_id.toLowerCase().includes(input.toLowerCase())
-              )) ||
-            item.date.toLowerCase().includes(input.toLowerCase()) ||
-            (item.room &&
-              item.room.length > 0 &&
-              item.room.some((time) =>
-                time.timeStart.toLowerCase().includes(input.toLowerCase())
-              )) ||
-            (item.room &&
-              item.room.length > 0 &&
-              item.room.some((time) =>
-                time.timeEnd.toLowerCase().includes(input.toLowerCase())
-              )) ||
-            (item.room &&
-              item.room.length > 0 &&
-              item.room.some((amount) =>
-                amount.amount
-                  .toString()
+                room.build_name
                   .toLowerCase()
-                  .includes(input.toLowerCase())
-              ))
+                  .includes(selectedBuilding.label.toLowerCase())
+              )) &&
+            (!selectedDate ||
+              item.date
+                .toLowerCase()
+                .includes(selectedDate?.value.toLowerCase()))
           );
         });
 
@@ -176,6 +189,10 @@ const Report = () => {
       }, 600);
     }
   };
+
+  console.log(
+    fetchData.map((item) => item.room.map((item) => item.build_name))
+  );
 
   const handleClickReset = () => {
     setLoading(true);
@@ -276,7 +293,7 @@ const Report = () => {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        exportToExcel(dataSubject);
+        exportToExcel(fetchData);
         Swal.fire({
           title: "ส่งออกข้อมูลสำเร็จ",
           icon: "success",

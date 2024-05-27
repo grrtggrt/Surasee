@@ -285,7 +285,6 @@ const PopupManageRoom = (props) => {
           subject.room.some((room) => room.room_id === item.room_id)
         );
 
-        // ตรวจสอบว่า amount ของห้องไม่เกิน Maxamount และห้องนั้นไม่ได้ถูกเลือกใน cards
         return (
           item.build_id === selectedBuilding.value &&
           !cards.some((card) => card.selectedRoom.value === item.room_id) &&

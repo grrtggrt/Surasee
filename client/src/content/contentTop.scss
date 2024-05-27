@@ -3,7 +3,7 @@
   justify-content: space-between;
   align-items: center;
   background-color: #03a96b;
-  padding: 16px;
+  padding: 10px;
 
   .content-top-left {
     display: flex;
@@ -28,13 +28,14 @@
 
     .profile {
       display: flex;
-      align-items: end;
+      align-items: center;
       justify-content: end;
       margin-right: 0.8rem;
 
       img {
-        width: 25px;
+        width: 30px;
         margin-right: 1rem;
+        border-radius: 50%;
       }
 
       h2 {

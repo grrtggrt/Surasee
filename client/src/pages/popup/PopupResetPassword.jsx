@@ -48,7 +48,7 @@ const PopupResetPassword = (props) => {
         }
       );
       Swal.fire({
-        title: "เปลี่ยนรหัสผ่านเสร็จสิ้น!",
+        title: "เปลี่ยนรหัสผ่านสำเร็จ",
         icon: "success",
         confirmButtonColor: "#03A96B",
         confirmButtonText: "ตกลง",
@@ -126,9 +126,7 @@ const PopupResetPassword = (props) => {
         </Row>
         <Row className="d-flex justify-content-center gap-2">
           <Row>
-            <Col>
               <span className={statusHolder}>{messageError}</span>
-            </Col>
           </Row>
           <Row>
             <Col>

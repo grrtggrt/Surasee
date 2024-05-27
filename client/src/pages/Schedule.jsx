@@ -115,12 +115,26 @@ const Schedule = () => {
   }, [fetchSubjects, fetchMajor, fetchSchedule, fetchSelected]);
 
   useEffect(() => {
-    const csIds = dataSchedule.map((item) => item.cs_id);
-    const filteredSubjects = dataSubject.filter(
-      (subject) => !csIds.includes(subject.cs_id)
-    );
-    setDataSubject(filteredSubjects);
-    setItems(filteredSubjects);
+    const fetchData = async () => {
+  
+      setLoading(true);
+  
+      try {
+        const csIds = dataSchedule.map((item) => item.cs_id);
+        const filteredSubjects = dataSubject.filter(
+          (subject) => !csIds.includes(subject.cs_id)
+        );
+  
+        setDataSubject(filteredSubjects);
+        setItems(filteredSubjects);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchData();
   }, [dataSchedule]);
 
   useEffect(() => {
@@ -595,17 +609,23 @@ const Schedule = () => {
   };
 
   const handleClickResetMajor = () => {
-    setSelectedFaculty(null);
-    setSelectedMajor(null);
-    setSelectedGrade(null);
-    setIsDisabledSelect(false);
-    setItems(
-      dataSubject.filter(
-        (item) =>
-          !droppedItems.find((droppedItem) => droppedItem.cs_id === item.cs_id)
-      )
-    );
-    setFetchDataSchedule(dataSchedule);
+    setLoading(true);
+    setTimeout(() => {
+      setSelectedFaculty(null);
+      setSelectedMajor(null);
+      setSelectedGrade(null);
+      setIsDisabledSelect(false);
+      setItems(
+        dataSubject.filter(
+          (item) =>
+            !droppedItems.find(
+              (droppedItem) => droppedItem.cs_id === item.cs_id
+            )
+        )
+      );
+      setFetchDataSchedule(dataSchedule);
+      setLoading(false);
+    }, 600);
   };
 
   //เช็คค่า

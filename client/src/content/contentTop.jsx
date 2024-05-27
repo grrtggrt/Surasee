@@ -3,11 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import "./contentTop.scss";
 import { SidebarContext } from "../context/sidebarContext";
 import { NavDropdown } from "react-bootstrap";
-import { FaBars, FaPowerOff, FaGear, FaUserPen, FaLock } from "react-icons/fa6";
+import { FaBars, FaPowerOff, FaGear, FaUserPen, FaLock, FaCircleUser } from "react-icons/fa6";
 import { logout, getToken } from "../../services/authorize";
 import axios from "axios";
 
-import Profile from "../assets/profile.png";
+// import Profile from "../assets/profile.png";
 import PopupUserSetting from "../pages/popup/PopupUserSetting";
 import PopupResetPassword from "../pages/popup/PopupResetPassword";
 
@@ -24,7 +24,6 @@ const content = () => {
     surname: "",
     profileImage: "",
   });
-  const [loading, setLoading] = useState(false);
 
   //Popup
   const handleShowPopupUserSetting = () => setShowPopupUserSetting(true);
@@ -48,7 +47,7 @@ const content = () => {
         ...response.data,
         profileImage: response.data.profileImage
           ? `data:image/jpeg;base64,${response.data.profileImage}`
-          : Profile,
+          : null,
       });
     } catch (error) {
       console.error("Error fetching user info:", error);
@@ -77,17 +76,19 @@ const content = () => {
 
   return (
     <>
-      {loading && <div className="loader" />}
       <div className="main-content-top">
         <div className="content-top-left">
           <span className="sidebar-toggler" onClick={() => toggleSidebar()}>
-            <FaBars />
+            <FaBars/>
           </span>
         </div>
 
         <div className="content-top-btns">
           <div className="profile">
-            <img src={userInfo.profileImage} alt="Profile" />
+            {userInfo.profileImage === null ? 
+              <FaCircleUser className="me-2" color="#F6F6F6" style={{ width: "28px", height: "28px"}}/> : 
+             <img src={userInfo.profileImage}  className="me-2" style={{ width: "30px", height: "30px", }} />
+            }
             <h2>
               {userInfo.name} {userInfo.surname}
             </h2>

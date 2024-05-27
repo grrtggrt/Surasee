@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Row, Col, Card, Form, Button, Badge } from "react-bootstrap";
+import { Row, Col, Card, Form, Button } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import {
   FaMagnifyingGlass,
@@ -81,7 +81,7 @@ const ManageRoom = () => {
       await Promise.all([fetchRoom(), fetchSubjects(), fetchMajor()]);
       setLoading(false);
     };
-    fetchData()
+    fetchData();
   }, [fetchRoom, fetchSubjects, fetchMajor]);
 
   useEffect(() => {
@@ -158,6 +158,7 @@ const ManageRoom = () => {
   };
 
   const droppableId = [];
+  
   for (let i = 0; i < fetchDataRoom.length; i++) {
     droppableId.push(`droppable-${fetchDataRoom[i]._id}`);
   }
@@ -642,6 +643,21 @@ const ManageRoom = () => {
                                     >
                                       {`${item.major_id}`}
                                     </p>
+                                    <p
+                                      style={{
+                                        border: "1px solid #5ec1d4",
+                                        borderRadius: "20px",
+                                        textAlign: "center",
+                                        color: "#5ec1d4",
+                                        fontSize: "12px",
+                                        display: "block",
+                                        width: "fit-content",
+                                        padding: "1px 7px 1px 7px",
+                                      }}
+                                      className="d-flex align-items-center mt-2"
+                                    >
+                                      {`ปี ${item.grade}`}
+                                    </p>
                                   </Card.Body>
                                 </Card>
                               )}
@@ -890,9 +906,6 @@ const ManageRoom = () => {
                                             {subject.cs_id}
                                           </div>
                                           <Card.Body className="p-2">
-                                            {/* <p>รหัสวิชา : {subject.cs_id}</p>
-                                            <p>ชื่อวิชา : {subject.cs_name_en}</p>
-                                            <p>สาขา : {`${subject.major_id}`}</p> */}
                                             <p className="pt-1 pb-2">
                                               {subject.cs_name_en}
                                             </p>
@@ -910,6 +923,21 @@ const ManageRoom = () => {
                                               }}
                                               className="mb-2"
                                             >{`${subject.major_id}`}</p>
+                                            <p
+                                              style={{
+                                                border: "1px solid #5ec1d4",
+                                                borderRadius: "20px",
+                                                textAlign: "center",
+                                                color: "#5ec1d4",
+                                                fontSize: "12px",
+                                                display: "block",
+                                                width: "fit-content",
+                                                padding: "1px 7px 1px 7px",
+                                              }}
+                                              className="d-flex align-items-center gap-1"
+                                            >
+                                              {`ปี ${subject.grade}`}
+                                            </p>
                                           </Card.Body>
                                         </Card>
                                       ))}

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Row, Col, Button, Form, CloseButton } from "react-bootstrap";
-import { FaFloppyDisk, FaBan } from "react-icons/fa6";
+import { FaFloppyDisk, FaBan, FaCircleUser } from "react-icons/fa6";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { getToken } from "../../../services/authorize";
 
 // assets
-import Profile from "../../assets/profile.png";
+// import Profile from "../../assets/profile.png";
 
 // styles
 import "../../styles/Modal.scss";
@@ -19,7 +19,8 @@ const PopupUserSetting = (props) => {
   const [surname, setSurname] = useState(null);
 
   useEffect(() => {
-    setPreviewImage(userData.profileImage ? userData.profileImage : Profile);
+    // setPreviewImage(userData.profileImage ? userData.profileImage : null);
+    setPreviewImage(userData.profileImage);
     setName(userData.name ? userData.name : "");
     setSurname(userData.surname ? userData.surname : "");
     setSelectedImage(null);
@@ -38,7 +39,7 @@ const PopupUserSetting = (props) => {
 
   const handleImageDelete = () => {
     setSelectedImage(null);
-    setPreviewImage(Profile);
+    setPreviewImage(null);
   };
 
   const handleSaveConfirm = () => {
@@ -162,15 +163,22 @@ const PopupUserSetting = (props) => {
             md={4}
             className="d-flex justify-content-center align-items-center"
           >
-            <img
-              src={
-                selectedImage
-                  ? `data:image/jpeg;base64,${selectedImage}`
-                  : previewImage
-              }
-              alt="Profile"
-              style={{ width: "100px", height: "100px", borderRadius: "50%" }}
-            />
+            {!previewImage && !selectedImage ? (
+              <FaCircleUser
+                color="#D9D9D9"
+                style={{ width: "100px", height: "100px", borderRadius: "50%" }}
+              />
+            ) : (
+              <img
+                src={
+                  selectedImage
+                    ? `data:image/jpeg;base64,${selectedImage}`
+                    : previewImage
+                }
+                // alt="Profile"
+                style={{ width: "100px", height: "100px", borderRadius: "50%" }}
+              />
+            )}
           </Col>
           <Col md={8} className="d-flex flex-column align-self-center">
             <Row>
