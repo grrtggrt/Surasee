@@ -158,6 +158,11 @@ const dataTimeStart = [
     label: "18:00",
     value: "18:00",
   },
+  {
+    id: "24",
+    label: "18:30",
+    value: "18:30",
+  },
 ];
 
 const dataTimeEnd = [
@@ -275,6 +280,11 @@ const dataTimeEnd = [
     id: "23",
     label: "20:00",
     value: "20:00",
+  },
+  {
+    id: "24",
+    label: "20:30",
+    value: "20:30",
   },
 ];
 

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FaCloudArrowUp,
   FaMagnifyingGlass,
@@ -19,6 +19,7 @@ import {
 } from "react-bootstrap";
 import Select from "react-select";
 import axios from "axios";
+import Swal from "sweetalert2";
 //styles
 import "./ImportData.scss";
 import "../styles/Loader.scss";
@@ -26,11 +27,13 @@ import "../styles/Loader.scss";
 import PopupImportData from "../pages/popup/PopupImportData";
 
 const ImportData = () => {
-  const inputRef = useRef();
   const [showPopupImportData, setShowPopupImportData] = useState(false);
   const [dataSubject, setDataSubject] = useState([]);
   const [dataMajor, setDataMajor] = useState([]);
   const [dataRoom, setDataRoom] = useState([]);
+  const [fetchDataSubject, setFetchDataSubject] = useState([]);
+  const [fetchDataMajor, setFetchDataMajor] = useState([]);
+  const [fetchDataRoom, setFetchDataRoom] = useState([]);
   const [selectedMajorSubject, setSelectedMajorSubject] = useState(null);
   const [selectedGradeSubject, setSelectedGradeSubject] = useState(null);
   const [selectedFaculty, setSelectedFaculty] = useState(null);
@@ -40,7 +43,7 @@ const ImportData = () => {
   const [selectedFloor, setSelectedFloor] = useState(null);
   const [inputSubject, setInputSubject] = useState("");
   const [inputMajor, setInputMajor] = useState("");
-  const [inputRoom, setInputRoom] = useState(0);
+  const [inputRoom, setInputRoom] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -48,6 +51,7 @@ const ImportData = () => {
     try {
       const response = await axios.get("http://localhost:5500/api/subject");
       setDataSubject(response.data);
+      setFetchDataSubject(response.data);
     } catch (error) {
       console.error("Error fetching subjects:", error);
     }
@@ -57,6 +61,7 @@ const ImportData = () => {
     try {
       const response = await axios.get("http://localhost:5500/api/major");
       setDataMajor(response.data);
+      setFetchDataMajor(response.data);
     } catch (error) {
       console.error("Error fetching subjects:", error);
     }
@@ -66,6 +71,7 @@ const ImportData = () => {
     try {
       const response = await axios.get("http://localhost:5500/api/building");
       setDataRoom(response.data);
+      setFetchDataRoom(response.data);
     } catch (error) {
       console.error("Error fetching room:", error);
     }
@@ -85,22 +91,37 @@ const ImportData = () => {
   const handleHidePopupImportData = () => setShowPopupImportData(false);
 
   const handleResetDataSubject = () => {
-    setSelectedMajorSubject(null);
-    setSelectedGradeSubject(null);
-    setInputSubject("");
+    setLoading(true);
+    setTimeout(() => {
+      setSelectedMajorSubject(null);
+      setSelectedGradeSubject(null);
+      setInputSubject("");
+      setFetchDataSubject(dataSubject);
+      setLoading(false);
+    }, 600);
   };
 
   const handleResetDataMajor = () => {
-    setSelectedFaculty(null);
-    setSelectedMajor(null);
-    setSelectedGrade(null);
-    setInputMajor("");
+    setLoading(true);
+    setTimeout(() => {
+      setSelectedFaculty(null);
+      setSelectedMajor(null);
+      setSelectedGrade(null);
+      setInputMajor("");
+      setFetchDataMajor(dataMajor);
+      setLoading(false);
+    }, 600);
   };
 
   const handleResetDataRoom = () => {
-    setSelectedBuilding(null);
-    setSelectedFloor(null);
-    setInputRoom(0);
+    setLoading(true);
+    setTimeout(() => {
+      setSelectedBuilding(null);
+      setSelectedFloor(null);
+      setInputRoom(0);
+      setFetchDataRoom(dataRoom);
+      setLoading(false);
+    }, 600);
   };
 
   const handleSelectMajorSubject = (e) => {
@@ -132,15 +153,71 @@ const ImportData = () => {
   };
 
   useEffect(() => {
-    setSelectedMajorSubject(null);
-    setSelectedGradeSubject(null);
+    setFetchDataSubject(dataSubject);
+    if (!inputSubject) {
+      return;
+    } else {
+      setSelectedMajorSubject(null);
+      setSelectedGradeSubject(null);
+    }
   }, [inputSubject]);
 
   useEffect(() => {
-    setSelectedFaculty(null);
+    setFetchDataSubject(dataSubject);
+    if (selectedMajorSubject !== null || selectedGradeSubject !== null) {
+      setInputSubject("");
+    }
+  }, [selectedMajorSubject, selectedGradeSubject]);
+
+  useEffect(() => {
+    setSelectedGradeSubject(null);
+  }, [selectedMajorSubject]);
+
+  useEffect(() => {
+    setFetchDataMajor(dataMajor);
+    if (!inputMajor) {
+      return;
+    } else {
+      setSelectedFaculty(null);
+      setSelectedMajor(null);
+      setSelectedGrade(null);
+    }
+  }, [inputMajor]);
+
+  useEffect(() => {
+    setFetchDataMajor(dataMajor);
+    if (
+      selectedFaculty !== null ||
+      selectedMajor !== null ||
+      selectedGrade !== null
+    ) {
+      setInputMajor("");
+    }
+  }, [selectedFaculty, selectedMajor, selectedGrade]);
+
+  useEffect(() => {
     setSelectedMajor(null);
     setSelectedGrade(null);
-  }, [inputMajor]);
+  }, [selectedFaculty]);
+
+  useEffect(() => {
+    setSelectedGrade(null);
+  }, [selectedMajor]);
+
+  useEffect(() => {
+    setFetchDataRoom(dataRoom);
+  }, [inputRoom]);
+
+  useEffect(() => {
+    setFetchDataRoom(dataRoom);
+    if (selectedBuilding !== null || selectedFloor !== null) {
+      setInputRoom("");
+    }
+  }, [selectedBuilding, selectedFloor]);
+
+  useEffect(() => {
+    setSelectedFloor(null);
+  }, [selectedBuilding]);
 
   const filterMajorSubject = [
     ...new Set(dataSubject.map((item) => item.major_id)),
@@ -153,8 +230,12 @@ const ImportData = () => {
     };
   });
 
+  const filteredMajorSubject = selectedMajorSubject
+    ? dataSubject.filter((item) => item.major_id === selectedMajorSubject.value)
+    : [];
+
   const filterGradeSubject = [
-    ...new Set(dataSubject.map((item) => item.grade)),
+    ...new Set(filteredMajorSubject.map((item) => item.grade)),
   ].sort((a, b) => parseInt(a) - parseInt(b));
 
   const optionGradeSubject = filterGradeSubject.map((grade) => {
@@ -164,38 +245,40 @@ const ImportData = () => {
     };
   });
 
-  const filterFaculty = [
-    ...new Set(dataMajor.map((item) => item.fac_name)),
+  const filterFaculty = [...new Set(dataMajor.map((item) => item.fac_id))];
+  const optionFaculty = filterFaculty.map((facultyId) => {
+    const faculty = dataMajor.find((item) => item.fac_id === facultyId);
+    return {
+      label: faculty.fac_name,
+      value: facultyId,
+    };
+  });
+
+  const filteredMajor = selectedFaculty
+    ? dataMajor.filter((item) => item.fac_id === selectedFaculty.value)
+    : [];
+
+  const filterMajor = [
+    ...new Set(filteredMajor.map((item) => item.major_id)),
   ].sort((a, b) => parseInt(a) - parseInt(b));
 
-  const optionFaculty = filterFaculty.map((faculty) => {
-    return {
-      label: faculty,
-      value: faculty,
-    };
-  });
+  const optionMajor = filterMajor.map((major) => ({
+    label: major,
+    value: major,
+  }));
 
-  const filterMajor = [...new Set(dataMajor.map((item) => item.major_id))].sort(
-    (a, b) => parseInt(a) - parseInt(b)
-  );
-
-  const optionMajor = filterMajor.map((major) => {
-    return {
-      label: major,
-      value: major,
-    };
-  });
+  const filteredGrade = selectedMajor
+    ? dataMajor.filter((item) => item.major_id === selectedMajor.value)
+    : [];
 
   const filterGrade = [
-    ...new Set(dataMajor.map((item) => item.major_grade)),
+    ...new Set(filteredGrade.map((item) => item.major_grade)),
   ].sort((a, b) => parseInt(a) - parseInt(b));
 
-  const optionGrade = filterGrade.map((grade) => {
-    return {
-      label: grade,
-      value: grade,
-    };
-  });
+  const optionGrade = filterGrade.map((grade) => ({
+    label: grade,
+    value: grade,
+  }));
 
   const filterBuilding = [
     ...new Set(dataRoom.map((item) => item.build_id)),
@@ -209,13 +292,157 @@ const ImportData = () => {
     };
   });
 
-  const filterfloor = [...new Set(dataRoom.map((item) => item.floor))].sort(
-    (a, b) => parseInt(a) - parseInt(b)
-  );
+  const filteredFloor = selectedBuilding
+    ? dataRoom.filter((item) => item.build_id === selectedBuilding.value)
+    : [];
+
+  const filterfloor = [
+    ...new Set(filteredFloor.map((item) => item.floor)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
   const optionfloor = filterfloor.map((floor) => ({
     label: floor,
     value: floor,
   }));
+
+  const handleClickSearchSubject = () => {
+    if (!selectedMajorSubject && !selectedGradeSubject && !inputSubject) {
+      Swal.fire({
+        title: "กรุณากรอกข้อมูลเพื่อค้นหา",
+        icon: "warning",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } else {
+      setLoading(true);
+      setTimeout(() => {
+        const filteredData = fetchDataSubject.filter((item) => {
+          return (
+            (!selectedMajorSubject ||
+              item.major_id
+                .toLowerCase()
+                .includes(selectedMajorSubject?.value.toLowerCase())) &&
+            (!selectedGradeSubject ||
+              item.grade
+                .toString()
+                .toLowerCase()
+                .includes(
+                  selectedGradeSubject?.value.toString().toLowerCase()
+                )) &&
+            (!inputSubject ||
+              item.major_id
+                .toLowerCase()
+                .includes(inputSubject.toLowerCase()) ||
+              item.cs_id.toLowerCase().includes(inputSubject.toLowerCase()) ||
+              item.cs_name_th
+                .toLowerCase()
+                .includes(inputSubject.toLowerCase()) ||
+              item.cs_name_en
+                .toLowerCase()
+                .includes(inputSubject.toLowerCase()) ||
+              item.lc_sec
+                .toString()
+                .toLowerCase()
+                .includes(inputSubject.toLowerCase()) ||
+              item.lb_sec
+                .toString()
+                .toLowerCase()
+                .includes(inputSubject.toLowerCase()) ||
+              item.grade
+                .toString()
+                .toLowerCase()
+                .includes(inputSubject.toLowerCase()) ||
+              item.amount
+                .toString()
+                .toLowerCase()
+                .includes(inputSubject.toLowerCase()))
+          );
+        });
+
+        setFetchDataSubject(filteredData);
+        setCurrentPageSubject(1);
+        setLoading(false);
+      }, 600);
+    }
+  };
+
+  const handleClickSearchMajor = () => {
+    if (!selectedFaculty && !selectedMajor && !selectedGrade && !inputMajor) {
+      Swal.fire({
+        title: "กรุณากรอกข้อมูลเพื่อค้นหา",
+        icon: "warning",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } else {
+      setLoading(true);
+      setTimeout(() => {
+        const filteredData = fetchDataMajor.filter((item) => {
+          return (
+            (!selectedFaculty ||
+              item.fac_id
+                .toLowerCase()
+                .includes(selectedFaculty?.value.toLowerCase())) &&
+            (!selectedMajor ||
+              item.major_id
+                .toLowerCase()
+                .includes(selectedMajor?.value.toLowerCase())) &&
+            (!selectedGrade ||
+              item.major_grade
+                .toString()
+                .toLowerCase()
+                .includes(selectedGrade?.value.toString().toLowerCase())) &&
+            (!inputMajor ||
+              item.major_id.toLowerCase().includes(inputMajor.toLowerCase()) ||
+              item.fac_id.toLowerCase().includes(inputMajor.toLowerCase()) ||
+              item.major_name_th
+                .toLowerCase()
+                .includes(inputMajor.toLowerCase()) ||
+              item.major_name_en
+                .toLowerCase()
+                .includes(inputMajor.toLowerCase()) ||
+              item.fac_name.toLowerCase().includes(inputMajor.toLowerCase()) ||
+              item.major_status
+                .toLowerCase()
+                .includes(inputMajor.toLowerCase()) ||
+              item.major_grade
+                .toString()
+                .toLowerCase()
+                .includes(inputMajor.toLowerCase()))
+          );
+        });
+
+        setFetchDataMajor(filteredData);
+        setCurrentPageMajor(1);
+        setLoading(false);
+      }, 600);
+    }
+  };
+
+  const handleClickSearchRoom = () => {
+    if (!selectedBuilding && !selectedFloor && !inputRoom) {
+      Swal.fire({
+        title: "กรุณากรอกข้อมูลเพื่อค้นหา",
+        icon: "warning",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } else {
+      setLoading(true);
+      setTimeout(() => {
+        const filteredData = fetchDataRoom.filter((item) => {
+          return (
+            (!selectedBuilding || item.build_id === selectedBuilding.value) &&
+            (!selectedFloor || item.floor === selectedFloor.value) &&
+            (!inputRoom || parseFloat(inputRoom) < parseFloat(item.Maxamount))
+          );
+        });
+
+        setFetchDataRoom(filteredData);
+        setCurrentPageRoom(1);
+        setLoading(false);
+      }, 600);
+    }
+  };
 
   // นับ CurrentItems ที่แสดงใน Table
   const itemsPerPage = 6;
@@ -225,7 +452,9 @@ const ImportData = () => {
   const indexOfLastItemSubject = currentPageSubject * itemsPerPage;
   const indexOfFirstItemSubject = indexOfLastItemSubject - itemsPerPage;
 
-  const sortedDataSubject = dataSubject.sort((a, b) => b.amount - a.amount);
+  const sortedDataSubject = fetchDataSubject.sort(
+    (a, b) => b.amount - a.amount
+  );
 
   const displayDataSubject = sortedDataSubject.slice(
     indexOfFirstItemSubject,
@@ -235,13 +464,13 @@ const ImportData = () => {
   let startPageSubject = 1;
   let endPageSubject = Math.min(
     startPageSubject + maxPageButtons - 1,
-    Math.ceil(dataSubject.length / itemsPerPage)
+    Math.ceil(fetchDataSubject.length / itemsPerPage)
   );
   if (currentPageSubject > Math.floor(maxPageButtons / 2)) {
     startPageSubject = currentPageSubject - Math.floor(maxPageButtons / 2);
     endPageSubject = Math.min(
       startPageSubject + maxPageButtons - 1,
-      Math.ceil(dataSubject.length / itemsPerPage)
+      Math.ceil(fetchDataSubject.length / itemsPerPage)
     );
   }
   for (let i = startPageSubject; i <= endPageSubject; i++) {
@@ -253,7 +482,7 @@ const ImportData = () => {
   const indexOfLastItemRoom = currentPageRoom * itemsPerPage;
   const indexOfFirstItemRoom = indexOfLastItemRoom - itemsPerPage;
 
-  const sortedDataRoom = dataRoom.sort((a, b) => a.build_id - b.build_id);
+  const sortedDataRoom = fetchDataRoom.sort((a, b) => a.build_id - b.build_id);
 
   const displayDataRoom = sortedDataRoom.slice(
     indexOfFirstItemRoom,
@@ -263,13 +492,13 @@ const ImportData = () => {
   let startPageRoom = 1;
   let endPageRoom = Math.min(
     startPageRoom + maxPageButtons - 1,
-    Math.ceil(dataRoom.length / itemsPerPage)
+    Math.ceil(fetchDataRoom.length / itemsPerPage)
   );
   if (currentPageRoom > Math.floor(maxPageButtons / 2)) {
     startPageRoom = currentPageRoom - Math.floor(maxPageButtons / 2);
     endPageRoom = Math.min(
       startPageRoom + maxPageButtons - 1,
-      Math.ceil(dataRoom.length / itemsPerPage)
+      Math.ceil(fetchDataRoom.length / itemsPerPage)
     );
   }
   for (let i = startPageRoom; i <= endPageRoom; i++) {
@@ -281,7 +510,7 @@ const ImportData = () => {
   const indexOfLastItemMajor = currentPageMajor * itemsPerPage;
   const indexOfFirstItemMajor = indexOfLastItemMajor - itemsPerPage;
 
-  const sortedDataMajor = dataMajor
+  const sortedDataMajor = fetchDataMajor
     .filter((item) => item.major_grade >= 1 && item.major_grade <= 4)
     .sort((a, b) => a.major_grade - b.major_grade);
 
@@ -293,13 +522,13 @@ const ImportData = () => {
   let startPageMajor = 1;
   let endPageMajor = Math.min(
     startPageMajor + maxPageButtons - 1,
-    Math.ceil(dataMajor.length / itemsPerPage)
+    Math.ceil(fetchDataMajor.length / itemsPerPage)
   );
   if (currentPageMajor > Math.floor(maxPageButtons / 2)) {
     startPageMajor = currentPageMajor - Math.floor(maxPageButtons / 2);
     endPageMajor = Math.min(
       startPageMajor + maxPageButtons - 1,
-      Math.ceil(dataMajor.length / itemsPerPage)
+      Math.ceil(fetchDataMajor.length / itemsPerPage)
     );
   }
   for (let i = startPageMajor; i <= endPageMajor; i++) {
@@ -323,78 +552,26 @@ const ImportData = () => {
       {loading && !initialLoading && <div className="loader" />}
       <div className="main-content-center">
         <Row>
-          <Col className="d-flex justify-content-end">
+          <Col className="d-flex justify-content-end gap-3">
             <Button
               className="d-flex align-items-center gap-2"
               variant="success"
-              onClick={handleShowPopupImportData}
+              onClick= {() => handleShowPopupImportData()}
             >
               <FaCloudArrowUp />
               <p className="mb-0">Upload</p>
             </Button>
+            <Button
+              className="d-flex align-items-center gap-2"
+              variant="danger"
+              onClick={() => {}}
+            >
+              <FaTrashCan />
+              <p className="mb-0">Delete</p>
+            </Button>
           </Col>
         </Row>
         <Row className="pt-3">
-          {/* <Col className="d-flex flex-column justify-content-center align-items-center">
-            <input
-              ref={inputRef}
-              type="file"
-              onChange={handleFileChange}
-              style={{ display: "none" }}
-            />
-            {!selectedFile && (
-              <button className="file-btn" onClick={onChooseFile}>
-                <span>
-                  <FaCloudArrowUp />
-                </span>
-                Upload File
-              </button>
-            )}
-
-            {selectedFile && (
-              <>
-                <div className="file-card">
-                  <span>
-                    <FaRegFileLines />
-                  </span>
-                  <div className="file-info">
-                    <div style={{ flex: 1 }}>
-                      <h6>{selectedFile.name}</h6>
-                      <div className="progress-bg">
-                        <div
-                          className="progress"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {uploadStatus === "select" ? (
-                      <button onClick={clearFileInput}>
-                        <span>
-                          <FaX />
-                        </span>
-                      </button>
-                    ) : (
-                      <div className="check-circle">
-                        {uploadStatus === "uploading" ? (
-                          `${progress}%`
-                        ) : uploadStatus === "done" ? (
-                          <span>
-                            <FaCheck />
-                          </span>
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <button className="upload-btn" onClick={handleUpload}>
-                  {uploadStatus === "select" || uploadStatus === "uploading"
-                    ? "Upload"
-                    : "Done"}
-                </button>
-              </>
-            )}
-          </Col> */}
           <Col>
             <Card>
               <Card.Header style={{ background: "#4A4F55" }}>
@@ -465,7 +642,7 @@ const ImportData = () => {
                     <Button
                       className="d-flex align-items-center gap-2"
                       variant="info"
-                      onClick={() => {}}
+                      onClick={() => handleClickSearchSubject()}
                     >
                       <FaMagnifyingGlass />
                       <p className="mb-0">ค้นหา</p>
@@ -583,7 +760,7 @@ const ImportData = () => {
                 <Pagination className="d-flex justify-content-end align-items-center gap-3 pt-3 pe-3">
                   <p style={{ color: "#4a4f55" }}>
                     Page {currentPageSubject} of{" "}
-                    {Math.ceil(dataSubject.length / itemsPerPage)}
+                    {Math.ceil(fetchDataSubject.length / itemsPerPage)}
                   </p>
                   {currentPageSubject > 1 && (
                     <Button
@@ -603,7 +780,7 @@ const ImportData = () => {
                     </Pagination.Item>
                   ))}
                   {currentPageSubject <
-                    Math.ceil(dataSubject.length / itemsPerPage) && (
+                    Math.ceil(fetchDataSubject.length / itemsPerPage) && (
                     <Button
                       variant="success"
                       onClick={() => paginateSubject(currentPageSubject + 1)}
@@ -703,7 +880,7 @@ const ImportData = () => {
                     <Button
                       className="d-flex align-items-center gap-2"
                       variant="info"
-                      onClick={() => {}}
+                      onClick={() => handleClickSearchMajor()}
                     >
                       <FaMagnifyingGlass />
                       <p className="mb-0">ค้นหา</p>
@@ -794,9 +971,6 @@ const ImportData = () => {
                               <td>
                                 <br />
                               </td>
-                              <td>
-                                <br />
-                              </td>
                             </tr>
                           )
                         )}
@@ -807,7 +981,7 @@ const ImportData = () => {
                 <Pagination className="d-flex justify-content-end align-items-center gap-3 pt-3 pe-3">
                   <p style={{ color: "#4a4f55" }}>
                     Page {currentPageMajor} of{" "}
-                    {Math.ceil(dataMajor.length / itemsPerPage)}
+                    {Math.ceil(fetchDataMajor.length / itemsPerPage)}
                   </p>
                   {currentPageMajor > 1 && (
                     <Button
@@ -827,7 +1001,7 @@ const ImportData = () => {
                     </Pagination.Item>
                   ))}
                   {currentPageMajor <
-                    Math.ceil(dataMajor.length / itemsPerPage) && (
+                    Math.ceil(fetchDataMajor.length / itemsPerPage) && (
                     <Button
                       variant="success"
                       onClick={() => paginateMajor(currentPageMajor + 1)}
@@ -920,7 +1094,7 @@ const ImportData = () => {
                     <Button
                       className="d-flex align-items-center gap-2"
                       variant="info"
-                      onClick={() => {}}
+                      onClick={() => handleClickSearchRoom()}
                     >
                       <FaMagnifyingGlass />
                       <p className="mb-0">ค้นหา</p>
@@ -1006,7 +1180,7 @@ const ImportData = () => {
                 <Pagination className="d-flex justify-content-end align-items-center gap-3 pt-3 pe-3">
                   <p style={{ color: "#4a4f55" }}>
                     Page {currentPageRoom} of{" "}
-                    {Math.ceil(dataRoom.length / itemsPerPage)}
+                    {Math.ceil(fetchDataRoom.length / itemsPerPage)}
                   </p>
                   {currentPageRoom > 1 && (
                     <Button
@@ -1026,7 +1200,7 @@ const ImportData = () => {
                     </Pagination.Item>
                   ))}
                   {currentPageRoom <
-                    Math.ceil(dataRoom.length / itemsPerPage) && (
+                    Math.ceil(fetchDataRoom.length / itemsPerPage) && (
                     <Button
                       variant="success"
                       onClick={() => paginateRoom(currentPageRoom + 1)}
@@ -1040,7 +1214,6 @@ const ImportData = () => {
           </Col>
         </Row>
       </div>
-
       <PopupImportData
         show={showPopupImportData}
         hide={handleHidePopupImportData}

@@ -14,6 +14,7 @@ import {
   FaPenToSquare,
   FaEraser,
   FaCircleMinus,
+  FaTrashCan,
 } from "react-icons/fa6";
 
 //POPUP
@@ -41,15 +42,17 @@ const Schedule = () => {
   const [items, setItems] = useState([]);
   const [fetchDataSchedule, setFetchDataSchedule] = useState([]);
   const [droppedItems, setDroppedItems] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isDeleted, setIsDeleted] = useState(false);
+  const [isDataFetched, setIsDataFetched] = useState(false);
 
   //ดึงข้อมูล
   const fetchSubjects = useCallback(async () => {
     try {
       const response = await axios.get("http://localhost:5500/api/subject");
-      const subject = response.data;
-      setDataSubject(subject);
+      setDataSubject(response.data);
     } catch (error) {
       console.error("Error fetching subjects:", error);
     }
@@ -109,60 +112,47 @@ const Schedule = () => {
         fetchSchedule(),
         fetchSelected(),
       ]);
+      setIsDataFetched(true);
       setLoading(false);
     };
     fetchData();
   }, [fetchSubjects, fetchMajor, fetchSchedule, fetchSelected]);
 
   useEffect(() => {
-    const fetchData = async () => {
-  
-      setLoading(true);
-  
-      try {
-        const csIds = dataSchedule.map((item) => item.cs_id);
-        const filteredSubjects = dataSubject.filter(
-          (subject) => !csIds.includes(subject.cs_id)
-        );
-  
-        setDataSubject(filteredSubjects);
-        setItems(filteredSubjects);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    fetchData();
-  }, [dataSchedule]);
+    const timeoutId = setTimeout(() => {
+      const csIds = dataSchedule.map((item) => item.cs_id);
+      const filteredSubjects = dataSubject.filter(
+        (subject) => !csIds.includes(subject.cs_id)
+      );
+      setDataSubject(filteredSubjects); // Assuming this state needs to be updated.
+      setItems(filteredSubjects);
+      setLoading(false);
+    }, 600);
+
+    return () => clearTimeout(timeoutId);
+  }, [isDataFetched, dataSchedule]);
 
   useEffect(() => {
-    const storedStartDate = localStorage.getItem("startDate");
-    const storedEndDate = localStorage.getItem("endDate");
-
-    if (storedStartDate) {
-      setStartDate(new Date(storedStartDate));
-    }
-    if (storedEndDate) {
-      setEndDate(new Date(storedEndDate));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!showSchedule) {
+    if (!showSchedule || isDeleted) {
       const storedStartDate = localStorage.getItem("startDate");
       const storedEndDate = localStorage.getItem("endDate");
 
       if (storedStartDate) {
         setStartDate(new Date(storedStartDate));
+      } else {
+        setStartDate(null);
       }
+
       if (storedEndDate) {
         setEndDate(new Date(storedEndDate));
+      } else {
+        setEndDate(null);
       }
+
+      setIsDeleted(false);
     }
     fetchSelected();
-  }, [showSchedule]);
+  }, [showSchedule, isDeleted]);
 
   //PopupSchedule
   const handleShowSchedule = () => setShowSchedule(true);
@@ -204,12 +194,20 @@ const Schedule = () => {
       const majorIdExists =
         droppedItems
           .filter((item) => item.droppableId === destination.droppableId)
-          .some((item) => item.major_id === draggedItem.major_id) ||
+          .some(
+            (item) =>
+              item.major_id === draggedItem.major_id &&
+              item.grade === draggedItem.grade
+          ) ||
         fetchDataSchedule
           .filter(
             (item) => item.droppableIdSchedule === destination.droppableId
           )
-          .some((item) => item.major_id === draggedItem.major_id);
+          .some(
+            (item) =>
+              item.major_id === draggedItem.major_id &&
+              item.grade === draggedItem.grade
+          );
 
       if (majorIdExists) return;
 
@@ -218,13 +216,15 @@ const Schedule = () => {
           (item) =>
             item.date === formattedDate &&
             item.timezone === "เช้า" &&
-            item.major_id === draggedItem.major_id
+            item.major_id === draggedItem.major_id &&
+            item.grade === draggedItem.grade
         ) ||
         fetchDataSchedule.some(
           (item) =>
             item.date === formattedDate &&
             item.timezone === "เช้า" &&
-            item.major_id === draggedItem.major_id
+            item.major_id === draggedItem.major_id &&
+            item.grade === draggedItem.grade
         )
       ) {
         if (timezone === "กลางวัน") {
@@ -235,13 +235,15 @@ const Schedule = () => {
           (item) =>
             item.date === formattedDate &&
             item.timezone === "กลางวัน" &&
-            item.major_id === draggedItem.major_id
+            item.major_id === draggedItem.major_id &&
+            item.grade === draggedItem.grade
         ) ||
         fetchDataSchedule.some(
           (item) =>
             item.date === formattedDate &&
             item.timezone === "กลางวัน" &&
-            item.major_id === draggedItem.major_id
+            item.major_id === draggedItem.major_id &&
+            item.grade === draggedItem.grade
         )
       ) {
         return;
@@ -250,13 +252,15 @@ const Schedule = () => {
           (item) =>
             item.date === formattedDate &&
             item.timezone === "เย็น" &&
-            item.major_id === draggedItem.major_id
+            item.major_id === draggedItem.major_id &&
+            item.grade === draggedItem.grade
         ) ||
         fetchDataSchedule.some(
           (item) =>
             item.date === formattedDate &&
             item.timezone === "เย็น" &&
-            item.major_id === draggedItem.major_id
+            item.major_id === draggedItem.major_id &&
+            item.grade === draggedItem.grade
         )
       ) {
         if (timezone === "กลางวัน") {
@@ -488,6 +492,37 @@ const Schedule = () => {
       }
     });
   };
+
+  const handleDeleteDate = () => {
+    Swal.fire({
+      title: "ต้องการลบวันสอบใช่หรือไม่ ?",
+      icon: "warning",
+      showCancelButton: true,
+      cancelButtonText: "ยกเลิก",
+      confirmButtonText: "ตกลง",
+      confirmButtonColor: "#03A96B",
+      cancelButtonColor: "#dc3545",
+      customClass: {
+        confirmButton: "shadow-none",
+        cancelButton: "shadow-none",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("startDate");
+        localStorage.removeItem("endDate");
+
+        setIsDeleted(true);
+
+        Swal.fire({
+          title: "ลบวันสอบเรียบร้อย",
+          icon: "success",
+          confirmButtonText: "ตกลง",
+          confirmButtonColor: "#03A96B",
+        });
+      }
+    });
+  };
+
   //Option
   const handleSelectFaculty = (e) => {
     setSelectedFaculty(e);
@@ -666,9 +701,18 @@ const Schedule = () => {
     }, 800);
   }, []);
 
+  const calculateNumCols = (startDate, endDate) => {
+    if (startDate && endDate) {
+      const differenceInTime = endDate.getTime() - startDate.getTime();
+      const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+      return differenceInDays + 2;
+    }
+    return 10;
+  };
+
   //TABLE
   const numRows = 4; // จำนวนวันที่ต้องการสร้าง
-  const numCols = 10; // จำนวนคอลัมน์ในแต่ละแถว
+  const numCols = calculateNumCols(startDate, endDate); // จำนวนคอลัมน์ในแต่ละแถว
   const renderRows = () => {
     const rows = [];
     for (let i = 0; i < numRows; i++) {
@@ -941,6 +985,26 @@ const Schedule = () => {
     return rows;
   };
 
+  const customStyleBackground = (numberOfMajor) => {
+    if (numberOfMajor > 0) {
+      const colorMap = {
+        1: "#03A96B",
+        2: "#D3E9E1",
+        3: "#A4E5EE",
+        4: "#A4B4EE",
+        5: "#6685F4",
+        6: "#415083",
+        7: "#6D51A8",
+        8: "#B25ABA",
+        9: "#7B3D41",
+        10: "#B66D4D",
+      };
+      return colorMap[numberOfMajor];
+    } else {
+      return "#FFFFFF";
+    }
+  };
+
   return (
     <>
       {initialLoading && (
@@ -1044,15 +1108,26 @@ const Schedule = () => {
                           </p>
                         </Card.Body>
                       </Card>
-                      <Button
-                        className="d-flex align-items-center justify-content-center gap-2 w-25"
-                        variant="success"
-                        onClick={() => handleShowSchedule()}
-                        disabled={startDate && endDate}
-                      >
-                        <FaPlus />
-                        <p className="mb-0">จัดวันสอบ</p>
-                      </Button>
+                      {!startDate && !endDate ? (
+                        <Button
+                          className="d-flex align-items-center justify-content-center gap-2 w-25"
+                          variant="success"
+                          onClick={() => handleShowSchedule()}
+                        >
+                          <FaPlus />
+                          <p className="mb-0">จัดวันสอบ</p>
+                        </Button>
+                      ) : (
+                        <Button
+                          className="d-flex align-items-center justify-content-center gap-2 w-25"
+                          variant="danger"
+                          onClick={() => handleDeleteDate()}
+                          disabled={fetchDataSchedule.length > 0}
+                        >
+                          <FaTrashCan />
+                          <p className="mb-0">ลบวันสอบ</p>
+                        </Button>
+                      )}
                     </Col>
                   </Row>
                   <Row>
@@ -1126,69 +1201,89 @@ const Schedule = () => {
                           ref={provided.innerRef}
                           className="subject-card-grid"
                         >
-                          {items.map((item, index) => (
-                            <Draggable
-                              key={item.cs_id}
-                              draggableId={item.cs_id}
-                              index={index}
-                            >
-                              {(provided) => (
-                                <Card
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                >
-                                  <Card.Body className="p-2">
-                                    <Row>
-                                      <Col className="d-flex justify-content-start">
-                                        <p className="fw-bold pb-1">
-                                          {item.cs_id}
-                                        </p>
-                                      </Col>
-                                    </Row>
-                                    <Row className="mb-2">
-                                      <Col>
-                                        <p
-                                          style={{
-                                            border: "1px solid #5ec1d4",
-                                            borderRadius: "20px",
-                                            textAlign: "center",
-                                            color: "#5ec1d4",
-                                            fontSize: "12px",
-                                            display: "block",
-                                            width: "fit-content",
-                                            padding: "1px 7px 1px 7px",
-                                          }}
-                                          className="d-flex align-items-center gap-1"
-                                        >
-                                          {`ปี${item.grade}`}
-                                        </p>
-                                      </Col>
-                                    </Row>
-                                    <hr style={{ margin: "2px 0" }} />
-                                    <p className="pb-1 pt-1">
-                                      {item.cs_name_en}
-                                    </p>
-                                    <p
-                                      style={{
-                                        backgroundColor: "#E5987C",
-                                        borderRadius: "20px",
-                                        textAlign: "center",
-                                        color: "white",
-                                        fontSize: "12px",
-                                        display: "block",
-                                        width: "fit-content",
-                                        padding: "2px 8px 2px 8px",
-                                        margin: "2px 0",
-                                      }}
-                                    >
-                                      {item.major_id}
-                                    </p>
-                                  </Card.Body>
-                                </Card>
-                              )}
-                            </Draggable>
-                          ))}
+                          {items
+                            .sort(
+                              (a, b) => b.major_id.length - a.major_id.length
+                            )
+                            .map((item, index) => (
+                              <Draggable
+                                key={item.cs_id}
+                                draggableId={item.cs_id}
+                                index={index}
+                              >
+                                {(provided) => (
+                                  <Card
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                  >
+                                    <Card.Body className="p-2">
+                                      <Row>
+                                        <Col className="d-flex justify-content-start">
+                                          <p className="fw-bold pb-1">
+                                            {item.cs_id}
+                                          </p>
+                                          <div
+                                            style={{
+                                              backgroundColor:
+                                                customStyleBackground(
+                                                  item.major_id.length
+                                                ),
+                                              height: "15px",
+                                              width: "10%",
+                                              position: "absolute",
+                                              top: "35px",
+                                              bottom: "0",
+                                              right: "-1px",
+                                              borderTopLeftRadius: "5px",
+                                              borderBottomLeftRadius: "5px",
+                                            }}
+                                          ></div>
+                                        </Col>
+                                      </Row>
+                                      <Row className="mb-2">
+                                        <Col>
+                                          <p
+                                            style={{
+                                              border: "1px solid #5ec1d4",
+                                              borderRadius: "20px",
+                                              textAlign: "center",
+                                              color: "#5ec1d4",
+                                              fontSize: "12px",
+                                              display: "block",
+                                              width: "fit-content",
+                                              padding: "1px 7px 1px 7px",
+                                            }}
+                                            className="d-flex align-items-center gap-1"
+                                          >
+                                            {`ปี${item.grade}`}
+                                          </p>
+                                        </Col>
+                                      </Row>
+                                      <hr style={{ margin: "2px 0" }} />
+                                      <p className="pb-1 pt-1">
+                                        {item.cs_name_en}
+                                      </p>
+                                      <p
+                                        style={{
+                                          backgroundColor: "#E5987C",
+                                          borderRadius: "20px",
+                                          textAlign: "center",
+                                          color: "white",
+                                          fontSize: "12px",
+                                          display: "block",
+                                          width: "fit-content",
+                                          padding: "2px 8px 2px 8px",
+                                          margin: "2px 0",
+                                        }}
+                                      >
+                                        {item.major_id}
+                                      </p>
+                                    </Card.Body>
+                                  </Card>
+                                )}
+                              </Draggable>
+                            ))}
                           {provided.placeholder}
                         </div>
                       )}

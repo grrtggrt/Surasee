@@ -30,6 +30,9 @@ const Report = () => {
   const [dataRoom, setDataRoom] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [selectedDate, setSelectDate] = useState(null);
+  const [selectedRoom, setSelectRoom] = useState(null);
+  const [selectedMajor, setSelectMajor] = useState(null);
+  const [selectedGrade, setSelectGrade] = useState(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -92,6 +95,19 @@ const Report = () => {
     setSelectedBuilding(e);
   };
 
+  const handleSelectRoom = (e) => {
+    setSelectRoom(e);
+  };
+
+  const handleSelectMajor = (e) => {
+    setSelectMajor(e);
+  };
+
+  const handleSelectGrade = (e) => {
+    setSelectGrade(e);
+  };
+
+  //วัน
   const filterDate = [...new Set(dataSubject.map((item) => item.date))].sort(
     (a, b) => parseInt(a) - parseInt(b)
   );
@@ -105,19 +121,72 @@ const Report = () => {
 
   //ตึก
   const filterBuilding = [
-    ...new Set(dataRoom.map((item) => item.build_id)),
+    ...new Set(
+      dataSubject.flatMap((item) => item.room.map((room) => room.build_name))
+    ),
   ].sort((a, b) => parseInt(a) - parseInt(b));
 
-  const optionBuilding = filterBuilding.map((buildingId) => {
-    const building = dataRoom.find((item) => item.build_id === buildingId);
+  const optionBuilding = filterBuilding.map((build) => {
     return {
-      label: building.build_name,
-      value: buildingId,
+      label: build,
+      value: build,
+    };
+  });
+
+  const filteredRoom = selectedBuilding
+    ? dataSubject
+        .filter((item) =>
+          item.room.some((room) => room.build_name === selectedBuilding.value)
+        )
+        .flatMap((item) => item.room || [])
+        .filter((room) => room.build_name === selectedBuilding.value)
+    : [];
+
+  const FilteredRoom = Array.from(
+    new Map(filteredRoom.map((room) => [room.room_id, room])).values()
+  );
+
+  const filterRoom = FilteredRoom.map((room) => room.room_id).sort(
+    (a, b) => parseInt(a) - parseInt(b)
+  );
+
+  const optionRoom = filterRoom.map((room) => {
+    return {
+      label: room,
+      value: room,
+    };
+  });
+
+  const filterMajor = [
+    ...new Set(dataSubject.map((item) => item.major_id)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
+
+  const optionMajor = filterMajor.map((major) => {
+    return {
+      label: major,
+      value: major,
+    };
+  });
+
+  const filterGrade = [...new Set(dataSubject.map((item) => item.grade))].sort(
+    (a, b) => parseInt(a) - parseInt(b)
+  );
+
+  const optionGrade = filterGrade.map((grade) => {
+    return {
+      label: grade,
+      value: grade,
     };
   });
 
   const handleClickSearch = () => {
-    if (!selectedBuilding && !input && !selectedDate) {
+    if (
+      !selectedBuilding &&
+      !input &&
+      !selectedDate &&
+      !selectedMajor &&
+      !selectedGrade
+    ) {
       Swal.fire({
         title: "กรุณากรอกข้อมูลเพื่อค้นหา",
         icon: "warning",
@@ -135,7 +204,6 @@ const Report = () => {
               item.cs_name_th.toLowerCase().includes(input.toLowerCase()) ||
               item.major_id.toLowerCase().includes(input.toLowerCase()) ||
               (item.room &&
-                item.room.length > 0 &&
                 item.room.some((sec) =>
                   sec.section
                     .toString()
@@ -147,23 +215,19 @@ const Report = () => {
                 .toLowerCase()
                 .includes(input.toLowerCase()) ||
               (item.room &&
-                item.room.length > 0 &&
                 item.room.some((room) =>
                   room.room_id.toLowerCase().includes(input.toLowerCase())
                 )) ||
               item.date.toLowerCase().includes(input.toLowerCase()) ||
               (item.room &&
-                item.room.length > 0 &&
                 item.room.some((time) =>
                   time.timeStart.toLowerCase().includes(input.toLowerCase())
                 )) ||
               (item.room &&
-                item.room.length > 0 &&
                 item.room.some((time) =>
                   time.timeEnd.toLowerCase().includes(input.toLowerCase())
                 )) ||
               (item.room &&
-                item.room.length > 0 &&
                 item.room.some((amount) =>
                   amount.amount
                     .toString()
@@ -171,15 +235,36 @@ const Report = () => {
                     .includes(input.toLowerCase())
                 ))) &&
             (!selectedBuilding ||
-              item.room.some((room) =>
-                room.build_name
-                  .toLowerCase()
-                  .includes(selectedBuilding.label.toLowerCase())
-              )) &&
+              (item.room &&
+                item.room.some(
+                  (room) =>
+                    room.build_name &&
+                    room.build_name
+                      .toLowerCase()
+                      .includes(selectedBuilding.label.toLowerCase())
+                ))) &&
             (!selectedDate ||
               item.date
                 .toLowerCase()
-                .includes(selectedDate?.value.toLowerCase()))
+                .includes(selectedDate.value.toLowerCase())) &&
+            (!selectedRoom ||
+              (item.room &&
+                item.room.some(
+                  (room) =>
+                    room.room_id &&
+                    room.room_id
+                      .toLowerCase()
+                      .includes(selectedRoom.value.toLowerCase())
+                ))) &&
+            (!selectedMajor ||
+              item.major_id
+                .toLowerCase()
+                .includes(selectedMajor.value.toLowerCase())) &&
+            (!selectedGrade ||
+              item.grade
+                .toString()
+                .toLowerCase()
+                .includes(selectedGrade.value.toString().toLowerCase()))
           );
         });
 
@@ -190,16 +275,15 @@ const Report = () => {
     }
   };
 
-  console.log(
-    fetchData.map((item) => item.room.map((item) => item.build_name))
-  );
-
   const handleClickReset = () => {
     setLoading(true);
     setTimeout(() => {
       setFetchData(dataSubject);
       setSelectedBuilding(null);
       setSelectDate(null);
+      setSelectRoom(null);
+      setSelectMajor(null);
+      setSelectGrade(null);
       setInput("");
       setLoading(false);
     }, 600);
@@ -211,8 +295,35 @@ const Report = () => {
       return;
     } else {
       setSelectedBuilding(null);
+      setSelectDate(null);
+      setSelectRoom(null);
+      setSelectMajor(null);
+      setSelectGrade(null);
     }
   }, [input]);
+
+  useEffect(() => {
+    setFetchData(dataSubject);
+    if (
+      selectedBuilding !== null ||
+      selectedDate !== null ||
+      selectedRoom !== null ||
+      selectedMajor !== null ||
+      selectedGrade !== null
+    ) {
+      setInput("");
+    }
+  }, [
+    selectedBuilding,
+    selectedDate,
+    selectedRoom,
+    selectedMajor,
+    selectedGrade,
+  ]);
+
+  useEffect(() => {
+    setSelectRoom(null);
+  }, [selectedBuilding]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -338,6 +449,45 @@ const Report = () => {
                     onChange={handleSelectBuilding}
                     value={selectedBuilding}
                     placeholder="อาคาร"
+                    isSearchable={false}
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                  />
+                </Col>
+                <Col md={1}>
+                  <Select
+                    id="roomName"
+                    name="roomName"
+                    options={optionRoom}
+                    onChange={handleSelectRoom}
+                    value={selectedRoom}
+                    placeholder="ห้อง"
+                    isSearchable={false}
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                  />
+                </Col>
+                <Col md={1}>
+                  <Select
+                    id="majorName"
+                    name="majorName"
+                    options={optionMajor}
+                    onChange={handleSelectMajor}
+                    value={selectedMajor}
+                    placeholder="สาขา"
+                    isSearchable={false}
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                  />
+                </Col>
+                <Col md={1}>
+                  <Select
+                    id="gradeName"
+                    name="gradeName"
+                    options={optionGrade}
+                    onChange={handleSelectGrade}
+                    value={selectedGrade}
+                    placeholder="ชั้นปี"
                     isSearchable={false}
                     className="react-select-container"
                     classNamePrefix="react-select"

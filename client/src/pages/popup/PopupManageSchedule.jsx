@@ -23,8 +23,14 @@ const PopupManageSchedule = (props) => {
   const [selectTerm, SetSelectTerm] = useState(null);
   const [selectSemester, SetSelectSemester] = useState(null);
 
+  useEffect(() => {
+    setDateRange([null, null]);
+    SetSelectTerm(null);
+    SetSelectSemester(null);
+  }, [show]);
+
   const maxDate = startDate
-    ? new Date(startDate.getTime() + 8 * 24 * 60 * 60 * 1000)
+    ? new Date(startDate.getTime() + 11 * 24 * 60 * 60 * 1000)
     : null;
 
   const handleTermSelect = (e) => {
@@ -35,21 +41,12 @@ const PopupManageSchedule = (props) => {
     SetSelectSemester(e);
   };
 
-  useEffect(() => {
-    const savedStartDate = localStorage.getItem("startDate");
-    const savedEndDate = localStorage.getItem("endDate");
-
-    if (savedStartDate && savedEndDate) {
-      setDateRange([new Date(savedStartDate), new Date(savedEndDate)]);
-    }
-  }, []);
-
-  useEffect(() => {
+  const saveDateRangeToLocalStorage = () => {
     if (startDate && endDate) {
       localStorage.setItem("startDate", startDate.toISOString());
       localStorage.setItem("endDate", endDate.toISOString());
     }
-  }, [startDate, endDate]);
+  };
 
   //Alert Confirm
   const handleSaveConfirm = async () => {
@@ -104,6 +101,7 @@ const PopupManageSchedule = (props) => {
           );
 
           if (response.status === 200) {
+            saveDateRangeToLocalStorage();
             Swal.fire({
               icon: "success",
               title: "บันทึกข้อมูลสำเร็จ",

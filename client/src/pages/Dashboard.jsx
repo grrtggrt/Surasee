@@ -92,17 +92,26 @@ const Dashboard = () => {
   };
 
   //คณะ
-  const filterFaculty = [...new Set(dataMajor.map((item) => item.fac_name))];
-  const optionFaculty = filterFaculty.map((faculty) => ({
-    label: faculty,
-    value: faculty,
-  }));
+  const filterFaculty = [...new Set(dataMajor.map((item) => item.fac_id))];
+  const optionFaculty = filterFaculty.map((facultyId) => {
+    const faculty = dataMajor.find((item) => item.fac_id === facultyId);
+    return {
+      label: faculty.fac_name,
+      value: facultyId,
+    };
+  });
+
+  const filteredFaculty = selectedFaculty
+    ? dataMajor.filter((item) => item.fac_id === selectedFaculty.value)
+    : [];
 
   //ชั้นปี
-  const filterGrade = [...new Set(dataMajor.map((item) => item.major_grade))];
+  const filterGrade = [
+    ...new Set(filteredFaculty.map((item) => item.major_grade)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
   const optionsGrade = filterGrade.map((grade) => ({
-    label: grade.toString(),
-    value: grade.toString(),
+    label: grade,
+    value: grade,
   }));
 
   //นับจำนวนสาขา
@@ -122,22 +131,19 @@ const Dashboard = () => {
         const filteredData = fetchData.filter((item) => {
           return (
             (!selectedFaculty ||
-              item.fac_name
+              item.fac_id
                 .toLowerCase()
-                .includes(selectedFaculty.value.toLowerCase())) &&
+                .includes(selectedFaculty?.value.toLowerCase())) &&
             (!selectedGrade ||
               item.major_grade
                 .toString()
                 .toLowerCase()
-                .includes(selectedGrade.value.toLowerCase())) &&
+                .includes(selectedGrade?.value.toString().toLowerCase())) &&
             (!input ||
               item.fac_name.toLowerCase().includes(input.toLowerCase()) ||
               item.major_id.toLowerCase().includes(input.toLowerCase()) ||
               item.major_name_th.toLowerCase().includes(input.toLowerCase()) ||
-              item.major_grade
-                .toString()
-                .toLowerCase()
-                .includes(input.toLowerCase()))
+              item.major_grade.toString().toLowerCase().includes(input.toLowerCase()))
           );
         });
 
@@ -175,6 +181,10 @@ const Dashboard = () => {
       setInput("");
     }
   }, [selectedFaculty, selectedGrade]);
+
+  useEffect(() => {
+    setSelectedGrade(null);
+  },[selectedFaculty])
 
   useEffect(() => {
     setTimeout(() => {

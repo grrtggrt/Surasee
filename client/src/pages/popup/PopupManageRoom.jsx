@@ -134,9 +134,9 @@ const PopupManageRoom = (props) => {
     if (isMorningTimezone) {
       return (hour >= 7 && hour < 10) || (hour === 10 && minute === 0);
     } else if (isAfternoonTimezone) {
-      return (hour >= 11 && hour <= 14) || (hour === 14 && minute === 0);
+      return (hour >= 12 && hour <= 12) || (hour === 13 && minute === 0);
     } else if (isEveningTimezone) {
-      return (hour >= 15 && hour <= 18) || (hour === 18 && minute === 0);
+      return (hour >= 16 && hour <= 18) || (hour === 15 && minute === 30);
     }
     return true;
   });
@@ -144,15 +144,39 @@ const PopupManageRoom = (props) => {
   //ค้นหา
   const handleSelectStartTime = (selectedStartTime) => {
     if (selectedStartTime) {
-      const startTime = parseInt(selectedStartTime.id);
+      const [startHour, startMinute] = selectedStartTime.value
+        .split(":")
+        .map(Number);
+      const startTimeInMinutes = startHour * 60 + startMinute;
       const endTimeOptions = [];
 
-      for (let i = 0; i < dataTimeEnd.length; i++) {
-        const endTime = parseInt(dataTimeEnd[i].id);
-        if (endTime >= startTime && endTime - startTime <= 2) {
-          endTimeOptions.push(dataTimeEnd[i]);
+      const isMorningTimezone = updatedDroppedItems?.some(
+        (item) => item.timezone === "เช้า"
+      );
+      const isAfternoonTimezone = updatedDroppedItems?.some(
+        (item) => item.timezone === "กลางวัน"
+      );
+      const isEveningTimezone = updatedDroppedItems?.some(
+        (item) => item.timezone === "เย็น"
+      );
+
+      dataTimeEnd.forEach((timeEnd) => {
+        const [endHour, endMinute] = timeEnd.value.split(":").map(Number);
+        const endTimeInMinutes = endHour * 60 + endMinute;
+
+        const timeDifference = endTimeInMinutes - startTimeInMinutes;
+
+        if (timeDifference >= 120 && timeDifference <= 240) {
+          if (isMorningTimezone && endTimeInMinutes <= 12 * 60) {
+            endTimeOptions.push(timeEnd);
+          } else if (isAfternoonTimezone && endTimeInMinutes <= 15 * 60) {
+            endTimeOptions.push(timeEnd);
+          } else if (isEveningTimezone && endTimeInMinutes <= 21 * 60) {
+            endTimeOptions.push(timeEnd);
+          }
         }
-      }
+      });
+
       setSelectedStartTime(selectedStartTime);
       setSelectedOptionEndTime(endTimeOptions);
     }

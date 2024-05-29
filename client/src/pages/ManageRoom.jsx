@@ -158,7 +158,7 @@ const ManageRoom = () => {
   };
 
   const droppableId = [];
-  
+
   for (let i = 0; i < fetchDataRoom.length; i++) {
     droppableId.push(`droppable-${fetchDataRoom[i]._id}`);
   }
@@ -252,9 +252,11 @@ const ManageRoom = () => {
   });
 
   //เวลา
+  const order = ["เช้า", "กลางวัน", "เย็น"];
+
   const filtertime = [
     ...new Set(dataSubject.map((item) => item.timezone)),
-  ].sort((a, b) => parseInt(a) - parseInt(b));
+  ].sort((a, b) => order.indexOf(a) - order.indexOf(b));
 
   const optiontime = filtertime.map((time) => {
     return {
@@ -276,10 +278,14 @@ const ManageRoom = () => {
     };
   });
 
+  const filteredBuilding = selectedBuilding
+    ? dataRoom.filter((item) => item.build_id === selectedBuilding.value)
+    : [];
+
   //ชั้น
-  const filterfloor = [...new Set(dataRoom.map((item) => item.floor))].sort(
-    (a, b) => parseInt(a) - parseInt(b)
-  );
+  const filterfloor = [
+    ...new Set(filteredBuilding.map((item) => item.floor)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
   const optionsfloor = filterfloor.map((floor) => ({
     label: floor,
     value: floor,
@@ -294,9 +300,13 @@ const ManageRoom = () => {
     value: major,
   }));
 
+  const filteredMajor = selectedMajor
+    ? dataMajor.filter((item) => item.major_id === selectedMajor.value)
+    : [];
+
   //ชั้นปี
   const filterGrade = [
-    ...new Set(dataMajor.map((item) => item.major_grade)),
+    ...new Set(filteredMajor.map((item) => item.major_grade)),
   ].sort((a, b) => parseInt(a) - parseInt(b));
 
   const optionGrade = filterGrade.map((grade) => ({
@@ -412,6 +422,10 @@ const ManageRoom = () => {
   }, [selectedBuilding, selectedFloor]);
 
   useEffect(() => {
+    setSelectedFloor(null);
+  }, [selectedBuilding]);
+
+  useEffect(() => {
     const filteredItems = dataSubject
       .filter((amount) => !amount || amount.amount !== 0)
       .filter((date) => date.date === selectedDate?.value)
@@ -439,6 +453,10 @@ const ManageRoom = () => {
   }, [selectedMajor, selectedGrade]);
 
   useEffect(() => {
+    setSelectedGrade(null);
+  }, [selectedMajor]);
+
+  useEffect(() => {
     setTimeout(() => {
       setInitialLoading(false);
     }, 800);
@@ -461,14 +479,9 @@ const ManageRoom = () => {
               </Col>
               <Col className="d-flex justify-content-end p-0 gap-3">
                 <Card className="pe-3">
-                  <Card.Body className="d-flex gap-3 p-2">
-                    <Col
-                      md={4}
-                      className="d-flex justify-content-center align-items-center"
-                    >
+                  <Card.Body className="d-flex align-items-center gap-3 p-2">
+                    <Col className="d-flex align-items-center gap-3 ps-3">
                       <p>วันที่สอบ</p>
-                    </Col>
-                    <Col md={8}>
                       <Select
                         id="dateName"
                         name="dateName"
@@ -484,14 +497,9 @@ const ManageRoom = () => {
                   </Card.Body>
                 </Card>
                 <Card className="pe-3">
-                  <Card.Body className="d-flex gap-3 p-2">
-                    <Col
-                      md={4}
-                      className="d-flex justify-content-center align-items-center"
-                    >
+                  <Card.Body className="d-flex align-items-center gap-3 p-2">
+                    <Col className="d-flex align-items-center gap-3 ps-3">
                       <p>เวลาสอบ</p>
-                    </Col>
-                    <Col md={8}>
                       <Select
                         id="dateName"
                         name="dateName"
