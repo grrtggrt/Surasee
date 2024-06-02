@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Modal,
-  Row,
-  Col,
-  Form,
-  Button,
-  CloseButton,
-  Card,
-} from "react-bootstrap";
+import { Modal, Row, Col, Form, Button, CloseButton } from "react-bootstrap";
 import { FaTrashCan, FaCircleInfo } from "react-icons/fa6";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -52,31 +44,7 @@ const PopupEditRoom = (props) => {
     }
   }, [droppedRoom]);
 
-  const customStyleBackground = (selectedSeat) => {
-    if (
-      selectedSeat && droppedRoom
-        ? droppedRoom.map((item) => item.seat === selectedSeat)
-        : selectedSeat === selectedSeat
-    ) {
-      const colorMap = {
-        A: "#03A96B",
-        B: "#D3E9E1",
-        C: "#A4E5EE",
-        D: "#A4B4EE",
-        E: "#6685F4",
-        F: "#415083",
-        G: "#6D51A8",
-        H: "#B25ABA",
-        I: "#7B3D41",
-        J: "#B66D4D",
-      };
-      return colorMap[selectedSeat];
-    } else {
-      return "#FFFFFF";
-    }
-  };
-
-  const handleDeleteData = async (cs_id, major_id, room_id, seat) => {
+  const handleDeleteData = async (subjects) => {
     const confirmDelete = await Swal.fire({
       title: "ต้องการลบข้อมูลใช่หรือไม่ ?",
       icon: "warning",
@@ -93,17 +61,21 @@ const PopupEditRoom = (props) => {
 
     if (confirmDelete.isConfirmed) {
       try {
+        const rooms = subjects.map((subject) => {
+          const { cs_id, major_id, grade, room } = subject;
+          const { room_id, seat } = room[0];
+          return { cs_id, major_id, grade, seat, room_id };
+        });
+
         const response = await axios.post(
           "http://localhost:5500/api/delete-room",
           {
-            cs_id: cs_id,
-            major_id: major_id,
-            seat: seat,
-            room_id: room_id,
+            rooms: rooms,
           }
         );
+
         if (response.status === 200) {
-          props.fetchSubjects();
+          await props.fetchSubjects();
           Swal.fire({
             icon: "success",
             title: "ลบข้อมูลสำเร็จแล้ว",
@@ -111,13 +83,14 @@ const PopupEditRoom = (props) => {
             timer: 1500,
           });
           hide();
+        } else {
+          console.error(`Failed to delete rooms.`);
         }
       } catch (error) {
-        console.error("Error deleting item:", error);
+        console.error("Error deleting items:", error);
         Swal.fire({
           icon: "error",
-          title: "เกิดข้อผิดพลาด",
-          text: "ไม่สามารถลบข้อมูลได้",
+          title: "เกิดข้อผิดพลาดในการลบข้อมูล",
           showConfirmButton: false,
           timer: 1500,
         });
@@ -125,12 +98,21 @@ const PopupEditRoom = (props) => {
     }
   };
 
+  const colors = {
+    1: "#FD8A8A",
+    2: "#F1F7B5",
+    3: "#A8D1D1",
+    4: "#9EA1D4",
+  };
+
   return (
     <Modal show={show} onHide={hide} centered size="lg">
       <Modal.Header>
-        <Modal.Title>{`แก้ไขห้องสอบ ${selectedRoom} วันที่ ${
-          selectedDate ? selectedDate.value : ""
-        }`}</Modal.Title>
+        <Modal.Title>
+          <p>{`แก้ไขห้องสอบ ${selectedRoom}${selectedSeat?.value} วันที่ ${
+            selectedDate ? selectedDate.value : ""
+          }`}</p>
+        </Modal.Title>
         <CloseButton variant="white" onClick={hide} />
       </Modal.Header>
       <Modal.Body>
@@ -145,223 +127,120 @@ const PopupEditRoom = (props) => {
         ) : (
           fetchSubject.map((subject, index) => (
             <Row key={index} className="ps-3 pe-3 mb-3">
-              {/* <Card className="p-0">
-                <Card.Body
-                  className="p-0"
+              <Row className="gx-0 border border-1 ">
+                <Col
+                  md={1}
+                  className="rounded-start"
                   style={{
-                    background: customStyleBackground(selectedSeat?.value),
+                    background: colors[subject.grade],
+                    minHeight: "30px",
                   }}
-                >
-                  <Row>
-                    <Col md={1}></Col>
-                    <Col md={10} className="pe-0">
-                      <Card>
-                        <Card.Body>
-                          <Row className="gx-2">
-                            <Col md={3}>
-                              <Form.Label>รหัสวิชา</Form.Label>
-                              <Form.Control
-                                id="subjectId"
-                                name="subjectId"
-                                className="custom-input"
-                                type="text"
-                                readOnly
-                                value={subject.cs_id}
-                              />
-                            </Col>
-                            <Col>
-                              <Form.Label>ชื่อวิชา</Form.Label>
-                              <Form.Control
-                                id="subjectName"
-                                name="subjectName"
-                                className="custom-input"
-                                type="text"
-                                readOnly
-                                value={subject.cs_name_en}
-                              />
-                            </Col>
-                            <Col md={2}>
-                              <Form.Label>สาขา</Form.Label>
-                              <Form.Control
-                                id="majorName"
-                                name="majorName"
-                                className="custom-input"
-                                type="text"
-                                readOnly
-                                value={subject.major_id}
-                              />
-                            </Col>
-                          </Row>
-                          <Row className="gx-2 mt-2">
-                            <Col>
-                              <Form.Label>ที่นั่ง</Form.Label>
-                              <Form.Control
-                                id="seat"
-                                name="seat"
-                                className="custom-input"
-                                type="text"
-                                value={subject.room
-                                  .map((room) => room.seat)
-                                  .join(", ")}
-                                readOnly
-                              />
-                            </Col>
-                            <Col>
-                              <Form.Label>จำนวน</Form.Label>
-                              <Form.Control
-                                id="total"
-                                name="total"
-                                type="text"
-                                className="custom-input"
-                                value={subject.room
-                                  .map((room) => room.amount)
-                                  .join(", ")}
-                                readOnly
-                              />
-                            </Col>
-                            <Col>
-                              <Form.Label>
-                                <p>หมู่เรียน</p>
-                              </Form.Label>
-                              <Form.Control
-                                id="secName"
-                                name="secName"
-                                type="text"
-                                className="custom-input"
-                                value={subject.room
-                                  .map((room) => room.section)
-                                  .join(", ")}
-                                readOnly
-                              />
-                            </Col>
-                          </Row>
-                        </Card.Body>
-                      </Card>
+                ></Col>
+                <Col className="pe-0">
+                  <Row className="gx-2 ps-3 pe-3 pt-2 pb-3">
+                    <Col md={3}>
+                      <Form.Label>รหัสวิชา</Form.Label>
+                      <Form.Control
+                        id="subjectId"
+                        name="subjectId"
+                        className="custom-input"
+                        type="text"
+                        readOnly
+                        value={subject.cs_id}
+                      />
                     </Col>
-                    <Col
-                      md={1}
-                      className="d-flex justify-content-center align-items-center"
-                      style={{ backgroundColor: '#B55447'}}
-                    >
-                      <Button
-                        className="btn-icon"
-                        onClick={() =>
-                          handleDeleteData(
-                            subject.cs_id,
-                            subject.major_id,
-                            subject.room[0].room_id,
-                            subject.room[0].seat
-                          )
-                        }
-                      >
-                        <FaTrashCan className="text-light fs-5" />
-                      </Button>
+                    <Col>
+                      <Form.Label>ชื่อวิชา</Form.Label>
+                      <Form.Control
+                        id="subjectName"
+                        name="subjectName"
+                        className="custom-input"
+                        type="text"
+                        readOnly
+                        value={subject.cs_name_en}
+                      />
                     </Col>
                   </Row>
-                </Card.Body>
-              </Card> */}
-                <Row className="gx-0 border border-1">
-                  <Col md={1} className="rounded-start" style={{ background: customStyleBackground(selectedSeat?.value), minHeight: '30px' }} ></Col>
-                  <Col md={10} className="pe-0">
-                    <Row className="gx-2 ps-3 pe-3 pt-2 pb-3">
-                      <Col md={3}>
-                        <Form.Label>รหัสวิชา</Form.Label>
-                        <Form.Control
-                          id="subjectId"
-                          name="subjectId"
-                          className="custom-input"
-                          type="text"
-                          readOnly
-                          value={subject.cs_id}
-                        />
-                      </Col>
-                      <Col>
-                        <Form.Label>ชื่อวิชา</Form.Label>
-                        <Form.Control
-                          id="subjectName"
-                          name="subjectName"
-                          className="custom-input"
-                          type="text"
-                          readOnly
-                          value={subject.cs_name_en}
-                        />
-                      </Col>
-                      <Col md={2}>
-                        <Form.Label>สาขา</Form.Label>
-                        <Form.Control
-                          id="majorName"
-                          name="majorName"
-                          className="custom-input"
-                          type="text"
-                          readOnly
-                          value={subject.major_id}
-                        />
-                      </Col>
-                    </Row>
-                    <Row className="gx-2 ps-3 pe-3 pb-2">
-                      <Col>
-                        <Form.Label>ที่นั่ง</Form.Label>
-                        <Form.Control
-                          id="seat"
-                          name="seat"
-                          className="custom-input"
-                          type="text"
-                          value={subject.room
-                            .map((room) => room.seat)
-                            .join(", ")}
-                          readOnly
-                        />
-                      </Col>
-                      <Col>
-                        <Form.Label>จำนวน</Form.Label>
-                        <Form.Control
-                          id="total"
-                          name="total"
-                          type="text"
-                          className="custom-input"
-                          value={subject.room
-                            .map((room) => room.amount)
-                            .join(", ")}
-                          readOnly
-                        />
-                      </Col>
-                      <Col>
-                        <Form.Label>
-                          <p>หมู่เรียน</p>
-                        </Form.Label>
-                        <Form.Control
-                          id="secName"
-                          name="secName"
-                          type="text"
-                          className="custom-input"
-                          value={subject.room
-                            .map((room) => room.section)
-                            .join(", ")}
-                          readOnly
-                        />
-                      </Col>
-                    </Row>
-                  </Col>
-                  <Col md={1}>
-                    <Button
-                      variant="danger"
-                      className="h-100 w-100 rounded-0 rounded-end"
-                      onClick={() =>
-                        handleDeleteData(
-                          subject.cs_id,
-                          subject.major_id,
-                          subject.room[0].room_id,
-                          subject.room[0].seat
-                        )
-                      }
-                    >
-                      <FaTrashCan className="text-light fs-5" />
-                    </Button>
-                  </Col>
-                </Row>
+                  <Row className="gx-2 ps-3 pe-3 pb-2">
+                    <Col>
+                      <Form.Label>สาขา</Form.Label>
+                      <Form.Control
+                        id="majorName"
+                        name="majorName"
+                        className="custom-input"
+                        type="text"
+                        readOnly
+                        value={subject.major_id}
+                      />
+                    </Col>
+                    <Col>
+                      <Form.Label>ปี</Form.Label>
+                      <Form.Control
+                        id="gradeName"
+                        name="gradeName"
+                        className="custom-input"
+                        type="text"
+                        readOnly
+                        value={subject.grade}
+                      />
+                    </Col>
+                    <Col>
+                      <Form.Label>ที่นั่ง</Form.Label>
+                      <Form.Control
+                        id="seat"
+                        name="seat"
+                        className="custom-input"
+                        type="text"
+                        value={subject.room.map((room) => room.seat).join(", ")}
+                        readOnly
+                      />
+                    </Col>
+                    <Col>
+                      <Form.Label>จำนวน</Form.Label>
+                      <Form.Control
+                        id="total"
+                        name="total"
+                        type="text"
+                        className="custom-input"
+                        value={subject.room
+                          .map((room) => room.amount)
+                          .join(", ")}
+                        readOnly
+                      />
+                    </Col>
+                    <Col>
+                      <Form.Label>
+                        <p>หมู่เรียน</p>
+                      </Form.Label>
+                      <Form.Control
+                        id="secName"
+                        name="secName"
+                        type="text"
+                        className="custom-input"
+                        value={subject.room
+                          .map((room) => room.section)
+                          .join(", ")}
+                        readOnly
+                      />
+                    </Col>
+                  </Row>
+                </Col>
+              </Row>
             </Row>
           ))
         )}
+        <Row>
+          <Col className="d-flex justify-content-end">
+            <Button
+              className="d-flex align-items-center gap-2"
+              variant="danger"
+              onClick={() => handleDeleteData(fetchSubject)}
+            >
+              <FaTrashCan />
+              <p className="mb-0">ลบข้อมูลทั้งหมด</p>
+            </Button>
+          </Col>
+        </Row>
       </Modal.Body>
     </Modal>
   );

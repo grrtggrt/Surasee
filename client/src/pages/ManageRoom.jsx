@@ -39,6 +39,7 @@ const ManageRoom = () => {
   const [fetchDataSubject, setFetchDataSubject] = useState([]);
   const [dataRoom, setDataRoom] = useState([]);
   const [dataSubject, setDataSubject] = useState([]);
+  const [dataRoomSubject, setDataRoomSubject] = useState([]);
   const [dataMajor, setDataMajor] = useState([]);
   const [droppedItems, setDroppedItems] = useState([]);
 
@@ -59,8 +60,62 @@ const ManageRoom = () => {
   const fetchSubjects = useCallback(async () => {
     try {
       const response = await axios.get("http://localhost:5500/api/subjects");
-      const subjects = response.data[0].subject;
-      setDataSubject(subjects);
+      const data = response.data;
+      const subjects = data.flatMap((item) => item.subject || []);
+
+      const combinedSubjects = subjects.reduce((acc, subject) => {
+        const existingSubjectIndex = acc.findIndex(
+          (s) => s.cs_id === subject.cs_id
+        );
+        if (existingSubjectIndex !== -1) {
+          acc[existingSubjectIndex].amount += subject.amount;
+
+          acc[existingSubjectIndex].major_id.push({
+            amount: subject.amount,
+            grade: subject.grade,
+            major_id: subject.major_id,
+          });
+
+          // Combine room data
+          subject.room.forEach((newRoom) => {
+            const existingRoomIndex = acc[existingSubjectIndex].room.findIndex(
+              (r) => r.room_id === newRoom.room_id
+            );
+            if (existingRoomIndex !== -1) {
+              acc[existingSubjectIndex].room[existingRoomIndex].amount +=
+                newRoom.amount;
+            } else {
+              acc[existingSubjectIndex].room.push(newRoom);
+            }
+          });
+        } else {
+          acc.push({
+            cs_id: subject.cs_id,
+            cs_name_en: subject.cs_name_en,
+            cs_name_th: subject.cs_name_th,
+            amount: subject.amount,
+            date: subject.date,
+            droppableIdSchedule: subject.droppableIdSchedule,
+            major_id: [
+              {
+                amount: subject.amount,
+                grade: subject.grade,
+                major_id: subject.major_id,
+              },
+            ],
+            room: subject.room.map((room) => ({
+              ...room,
+              amount: room.amount,
+            })),
+            timezone: subject.timezone,
+            _id: subject._id,
+          });
+        }
+        return acc;
+      }, []);
+
+      setDataSubject(combinedSubjects);
+      setDataRoomSubject(subjects);
     } catch (error) {
       console.error("Error fetching subjects from schedule:", error);
     }
@@ -354,15 +409,20 @@ const ManageRoom = () => {
         const filteredData = fetchDataSubject.filter((item) => {
           return (
             (!selectedMajor ||
-              item.major_id
-                .toString()
-                .toLowerCase()
-                .includes(selectedMajor.value.toString().toLowerCase())) &&
+              (item.major_id &&
+                item.major_id.some((major) =>
+                  major.major_id
+                    .toLowerCase()
+                    .includes(selectedMajor.value.toLowerCase())
+                ))) &&
             (!selectedGrade ||
-              item.grade
-                .toString()
-                .toLowerCase()
-                .includes(selectedGrade.value.toString().toLowerCase())) &&
+              (item.major_id &&
+                item.major_id.some((grade) =>
+                  grade.grade
+                    .toString()
+                    .toLowerCase()
+                    .includes(selectedGrade.value.toString().toLowerCase())
+                ))) &&
             (!inputSubject ||
               item.cs_id.toLowerCase().includes(inputSubject.toLowerCase()) ||
               item.cs_name_en
@@ -371,10 +431,12 @@ const ManageRoom = () => {
               item.cs_name_th
                 .toLowerCase()
                 .includes(inputSubject.toLowerCase()) ||
-              item.major_id
-                .toString()
-                .toLowerCase()
-                .includes(inputSubject.toLowerCase()))
+              (item.major_id &&
+                item.major_id.some((major) =>
+                  major.major_id
+                    .toLowerCase()
+                    .includes(inputSubject.toLowerCase())
+                )))
           );
         });
         setFetchDataSubject(filteredData);
@@ -461,6 +523,13 @@ const ManageRoom = () => {
       setInitialLoading(false);
     }, 800);
   }, []);
+
+  const colors = {
+    1: "#FD8A8A",
+    2: "#F1F7B5",
+    3: "#A8D1D1",
+    4: "#9EA1D4",
+  };
 
   return (
     <>
@@ -636,36 +705,27 @@ const ManageRoom = () => {
                                     <p className="pb-1 pt-1">
                                       {item.cs_name_en}
                                     </p>
-                                    <p
-                                      style={{
-                                        backgroundColor: "#F0906D",
-                                        borderRadius: "20px",
-                                        textAlign: "center",
-                                        color: "white",
-                                        fontSize: "12px",
-                                        display: "block",
-                                        width: "fit-content",
-                                        minWidth: "50px",
-                                        padding: "2px 8px 2px 8px",
-                                      }}
-                                    >
-                                      {`${item.major_id}`}
-                                    </p>
-                                    <p
-                                      style={{
-                                        border: "1px solid #5ec1d4",
-                                        borderRadius: "20px",
-                                        textAlign: "center",
-                                        color: "#5ec1d4",
-                                        fontSize: "12px",
-                                        display: "block",
-                                        width: "fit-content",
-                                        padding: "1px 7px 1px 7px",
-                                      }}
-                                      className="d-flex align-items-center mt-2"
-                                    >
-                                      {`ปี ${item.grade}`}
-                                    </p>
+                                    <div className="d-flex flex-wrap gap-1">
+                                      {item.major_id.map((item, index) => (
+                                        <p
+                                          key={index}
+                                          style={{
+                                            backgroundColor:
+                                              colors[item.grade] || "#5e5e5e",
+                                            borderRadius: "20px",
+                                            textAlign: "center",
+                                            color: "white",
+                                            fontSize: "12px",
+                                            display: "block",
+                                            width: "fit-content",
+                                            minWidth: "50px",
+                                            padding: "2px 8px 2px 8px",
+                                          }}
+                                        >
+                                          {`${item.major_id}`}
+                                        </p>
+                                      ))}
+                                    </div>
                                   </Card.Body>
                                 </Card>
                               )}
@@ -841,7 +901,7 @@ const ManageRoom = () => {
                                         }}
                                         onClick={() =>
                                           handleShowEditRoom(
-                                            dataSubject
+                                            dataRoomSubject
                                               .filter(
                                                 (date) =>
                                                   date.date ===
@@ -884,7 +944,7 @@ const ManageRoom = () => {
                                     ) : null}
                                   </Card.Header>
                                   <Card.Body className="room-body-card">
-                                    {dataSubject
+                                    {dataRoomSubject
                                       .filter(
                                         (date) =>
                                           date.date === selectedDate?.value
@@ -901,7 +961,10 @@ const ManageRoom = () => {
                                         )
                                       )
                                       .map((subject, index) => (
-                                        <Card key={subject.cs_id} index={index}>
+                                        <Card
+                                          key={`${subject.cs_id}-${index}`}
+                                          index={index}
+                                        >
                                           <div
                                             style={{
                                               background: "#5ec1d4",
@@ -914,38 +977,50 @@ const ManageRoom = () => {
                                             {subject.cs_id}
                                           </div>
                                           <Card.Body className="p-2">
-                                            <p className="pt-1 pb-2">
-                                              {subject.cs_name_en}
-                                            </p>
-                                            <p
-                                              style={{
-                                                backgroundColor: "#F0906D",
-                                                borderRadius: "20px",
-                                                textAlign: "center",
-                                                color: "white",
-                                                fontSize: "12px",
-                                                display: "block",
-                                                width: "fit-content",
-                                                minWidth: "50px",
-                                                padding: "2px 8px 2px 8px",
-                                              }}
-                                              className="mb-2"
-                                            >{`${subject.major_id}`}</p>
-                                            <p
-                                              style={{
-                                                border: "1px solid #5ec1d4",
-                                                borderRadius: "20px",
-                                                textAlign: "center",
-                                                color: "#5ec1d4",
-                                                fontSize: "12px",
-                                                display: "block",
-                                                width: "fit-content",
-                                                padding: "1px 7px 1px 7px",
-                                              }}
-                                              className="d-flex align-items-center gap-1"
-                                            >
-                                              {`ปี ${subject.grade}`}
-                                            </p>
+                                            <Row>
+                                              <Col>
+                                                <p className="pt-1 pb-2">
+                                                  {subject.cs_name_en}
+                                                </p>
+                                              </Col>
+                                            </Row>
+                                            <Row>
+                                              <Col>
+                                                <p
+                                                  key={index}
+                                                  style={{
+                                                    backgroundColor:
+                                                      colors[subject.grade] ||
+                                                      "#5e5e5e",
+                                                    borderRadius: "20px",
+                                                    textAlign: "center",
+                                                    color: "white",
+                                                    fontSize: "12px",
+                                                    display: "block",
+                                                    width: "fit-content",
+                                                    minWidth: "50px",
+                                                    padding: "2px 8px 2px 8px",
+                                                  }}
+                                                  className="mb-2"
+                                                >
+                                                  {subject.major_id}
+                                                </p>
+                                              </Col>
+                                              <Col className="d-flex justify-content-end">
+                                                {Array.from(
+                                                  new Set(
+                                                    subject.room.map(
+                                                      (item) => item.section
+                                                    )
+                                                  )
+                                                ).map((section) => (
+                                                  <p
+                                                    key={section}
+                                                    style={{ color: "#03A96B" }}
+                                                  >{`${section}`}</p>
+                                                ))}
+                                              </Col>
+                                            </Row>
                                           </Card.Body>
                                         </Card>
                                       ))}

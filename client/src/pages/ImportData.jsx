@@ -220,7 +220,11 @@ const ImportData = () => {
   }, [selectedBuilding]);
 
   const filterMajorSubject = [
-    ...new Set(dataSubject.map((item) => item.major_id)),
+    ...new Set(
+      dataSubject.flatMap((item) =>
+        item.major_id.map((subItem) => subItem.major_id)
+      )
+    ),
   ].sort((a, b) => parseInt(a) - parseInt(b));
 
   const optionMajorSubject = filterMajorSubject.map((major) => {
@@ -231,11 +235,19 @@ const ImportData = () => {
   });
 
   const filteredMajorSubject = selectedMajorSubject
-    ? dataSubject.filter((item) => item.major_id === selectedMajorSubject.value)
+    ? dataSubject.filter((item) =>
+        item.major_id.map(
+          (item) => item.major_id === selectedMajorSubject.value
+        )
+      )
     : [];
 
   const filterGradeSubject = [
-    ...new Set(filteredMajorSubject.map((item) => item.grade)),
+    ...new Set(
+      filteredMajorSubject.flatMap((item) =>
+        item.major_id.map((item) => item.grade)
+      )
+    ),
   ].sort((a, b) => parseInt(a) - parseInt(b));
 
   const optionGradeSubject = filterGradeSubject.map((grade) => {
@@ -318,20 +330,27 @@ const ImportData = () => {
         const filteredData = fetchDataSubject.filter((item) => {
           return (
             (!selectedMajorSubject ||
-              item.major_id
-                .toLowerCase()
-                .includes(selectedMajorSubject?.value.toLowerCase())) &&
-            (!selectedGradeSubject ||
-              item.grade
-                .toString()
-                .toLowerCase()
-                .includes(
-                  selectedGradeSubject?.value.toString().toLowerCase()
-                )) &&
+              !selectedGradeSubject ||
+              (item.major_id &&
+                item.major_id.some(
+                  (item) =>
+                    item.major_id
+                      .toLowerCase()
+                      .includes(selectedMajorSubject?.value.toLowerCase()) &&
+                    item.grade
+                      .toString()
+                      .toLowerCase()
+                      .includes(
+                        selectedGradeSubject?.value.toString().toLowerCase()
+                      )
+                ))) &&
             (!inputSubject ||
-              item.major_id
-                .toLowerCase()
-                .includes(inputSubject.toLowerCase()) ||
+              (item.major_id &&
+                item.major_id.some((item) =>
+                  item.major_id
+                    .toLowerCase()
+                    .includes(inputSubject.toLowerCase())
+                )) ||
               item.cs_id.toLowerCase().includes(inputSubject.toLowerCase()) ||
               item.cs_name_th
                 .toLowerCase()
@@ -344,14 +363,6 @@ const ImportData = () => {
                 .toLowerCase()
                 .includes(inputSubject.toLowerCase()) ||
               item.lb_sec
-                .toString()
-                .toLowerCase()
-                .includes(inputSubject.toLowerCase()) ||
-              item.grade
-                .toString()
-                .toLowerCase()
-                .includes(inputSubject.toLowerCase()) ||
-              item.amount
                 .toString()
                 .toLowerCase()
                 .includes(inputSubject.toLowerCase()))
@@ -431,8 +442,8 @@ const ImportData = () => {
       setTimeout(() => {
         const filteredData = fetchDataRoom.filter((item) => {
           return (
-            (!selectedBuilding || item.build_id === selectedBuilding.value) &&
-            (!selectedFloor || item.floor === selectedFloor.value) &&
+            (!selectedBuilding || item.build_id === selectedBuilding?.value) &&
+            (!selectedFloor || item.floor === selectedFloor?.value) &&
             (!inputRoom || parseFloat(inputRoom) < parseFloat(item.Maxamount))
           );
         });
@@ -556,7 +567,7 @@ const ImportData = () => {
             <Button
               className="d-flex align-items-center gap-2"
               variant="success"
-              onClick= {() => handleShowPopupImportData()}
+              onClick={() => handleShowPopupImportData()}
             >
               <FaCloudArrowUp />
               <p className="mb-0">Upload</p>
@@ -609,7 +620,7 @@ const ImportData = () => {
                       onChange={handleSelectMajorSubject}
                       value={selectedMajorSubject}
                       placeholder="สาขา"
-                      isSearchable={true}
+                      isSearchable={false}
                       className="react-select-container"
                       classNamePrefix="react-select"
                     />
@@ -679,25 +690,19 @@ const ImportData = () => {
                       }}
                     >
                       <th className="fw-normal" style={{ width: "5%" }}>
-                        major_id
-                      </th>
-                      <th className="fw-normal" style={{ width: "10%" }}>
                         cs_id
                       </th>
-                      <th className="fw-normal" style={{ width: "25%" }}>
+                      <th className="fw-normal" style={{ width: "20%" }}>
                         cs_name_th
                       </th>
-                      <th className="fw-normal" style={{ width: "35%" }}>
+                      <th className="fw-normal" style={{ width: "20%" }}>
                         cs_name_en
                       </th>
-                      <th className="fw-normal" style={{ width: "10%" }}>
+                      <th className="fw-normal" style={{ width: "15%" }}>
                         lc_sec
                       </th>
                       <th className="fw-normal" style={{ width: "5%" }}>
                         lb_sec
-                      </th>
-                      <th className="fw-normal" style={{ width: "5%" }}>
-                        grade
                       </th>
                       <th className="fw-normal" style={{ width: "5%" }}>
                         amount
@@ -707,7 +712,6 @@ const ImportData = () => {
                   <tbody>
                     {displayDataSubject.map((item, id) => (
                       <tr key={id} style={{ textAlign: "center" }}>
-                        <td>{item.major_id}</td>
                         <td>{item.cs_id}</td>
                         <td style={{ textAlign: "start" }}>
                           {item.cs_name_th}
@@ -717,8 +721,13 @@ const ImportData = () => {
                         </td>
                         <td>{`${item.lc_sec}`}</td>
                         <td>{`${item.lb_sec}`}</td>
-                        <td>{item.grade}</td>
-                        <td>{item.amount}</td>
+
+                        <td>
+                          {item.major_id.reduce(
+                            (sum, curr) => sum + curr.amount,
+                            0
+                          )}
+                        </td>
                       </tr>
                     ))}
                     {displayDataSubject.length < itemsPerPage && (
@@ -727,12 +736,6 @@ const ImportData = () => {
                           ...Array(itemsPerPage - displayDataSubject.length),
                         ].map((_, index) => (
                           <tr key={index}>
-                            <td>
-                              <br />
-                            </td>
-                            <td>
-                              <br />
-                            </td>
                             <td>
                               <br />
                             </td>
@@ -834,7 +837,7 @@ const ImportData = () => {
                       onChange={handleSelectFaculty}
                       value={selectedFaculty}
                       placeholder="คณะ"
-                      isSearchable={true}
+                      isSearchable={false}
                       className="react-select-container"
                       classNamePrefix="react-select"
                     />
@@ -1055,7 +1058,7 @@ const ImportData = () => {
                       onChange={handleSelectBuilding}
                       value={selectedBuilding}
                       placeholder="อาคาร"
-                      isSearchable={true}
+                      isSearchable={false}
                       className="react-select-container"
                       classNamePrefix="react-select"
                     />

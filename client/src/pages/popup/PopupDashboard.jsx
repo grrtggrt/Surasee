@@ -35,8 +35,12 @@ const PopupDashboard = (props) => {
   const filteredSubjects = viewDetail
     ? dataSubject.filter(
         (subject) =>
-          subject.major_id.includes(viewDetail.major_id) &&
-          subject.grade === viewDetail.major_grade
+          subject.subject &&
+          subject.subject.some((item) =>
+            item.major_id.includes(viewDetail.major_id)
+          ) &&
+          subject.subject &&
+          subject.subject.some((item) => item.grade === viewDetail.major_grade)
       )
     : [];
 
@@ -120,7 +124,12 @@ const PopupDashboard = (props) => {
           </Col>
           <Col className="d-flex justify-content-end gap-2">
             <p>ทั้งหมด</p>
-            <p style={{ color: "#5ec1d4" }}>{filteredSubjects.length}</p>
+            <p style={{ color: "#5ec1d4" }}>
+              {filteredSubjects.reduce(
+                (total, item) => total + item.subject.length,
+                0
+              )}
+            </p>
             <p>วิชา</p>
           </Col>
         </Row>
@@ -134,98 +143,132 @@ const PopupDashboard = (props) => {
           </div>
         ) : (
           <Row className="g-3 p-3">
-            {filteredSubjects.map((item, id) => (
-              <Card key={id}>
-                <Card.Body className="p-0">
-                  <Row>
-                    <Col md={2} className="ps-0">
-                      <Card
-                        style={{
-                          background:
-                            item.room && item.room.length > 0
-                              ? "#03A96B"
-                              : "#dc3545",
-                          height: "100%",
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Card.Body style={{ fontSize: "20px", color: "white" }}>
-                          <p>{item.date}</p>
-                          <p style={{ fontSize: "16px" }}>{`${
-                            item.room && item.room.length > 0
-                              ? item.room[0].timeStart
-                              : "00:00"
-                          } - ${
-                            item.room && item.room.length > 0
-                              ? item.room[0].timeEnd
-                              : "00:00"
-                          }`}</p>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                    <Col md={10}>
-                      <Row className="pt-3 pb-3">
-                        <Col md={2} className="px-3">
-                          <p style={{ fontSize: "16px", color: "#424242" }}>
-                            {item.cs_id}
-                          </p>
-                          {(item.lc_sec || item.lb_sec) && (
-                            <p style={{ color: "#5B5B5B" }}>
-                              หมู่{" "}
-                              {`${item.lc_sec || ""}${
-                                item.lc_sec.length && item.lb_sec.length
-                                  ? ","
-                                  : ""
-                              }${item.lb_sec || ""}`}
-                            </p>
-                          )}
-                        </Col>
-                        <Col md={5}>
-                          <p style={{ fontSize: "16px", color: "#424242" }}>
-                            {item.cs_name_en}
-                          </p>
-                          <p style={{ color: "#5B5B5B" }}>{item.cs_name_th}</p>
-                        </Col>
-                        <Col>
-                          <p style={{ fontSize: "16px", color: "#424242" }}>
-                            {`${
-                              item.room && item.room.length > 0
-                                ? [
-                                    ...new Set(
-                                      item.room.map((room) => room.build_name)
-                                    ),
-                                  ].join(", ")
-                                : "อาคาร ?"
-                            }`}
-                          </p>
-                          <p style={{ color: "#5B5B5B" }}>
-                            {`${
-                              item.room && item.room.length > 0
-                                ? item.room
-                                    .map(
-                                      (room) => `${room.room_id} ${room.seat}`
-                                    )
-                                    .join(", ")
-                                : "????"
-                            } ( ${
-                              item.room &&
-                              item.room.length > 0 &&
-                              item.room[0].amount
-                                ? item.room
-                                    .map((room) => room.amount)
-                                    .join(", ")
-                                : "?"
-                            } ที่นั่ง )`}
-                          </p>
-                        </Col>
-                      </Row>
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-            ))}
+            {filteredSubjects.map((item, index) =>
+              item.subject && item.subject.length > 0
+                ? item.subject.map((item, id) => (
+                    <Card key={`${index}-${id}`}>
+                      <Card.Body className="p-0">
+                        <Row>
+                          <Col md={2} className="ps-0">
+                            <Card
+                              style={{
+                                background:
+                                  item.room && item.room.length > 0
+                                    ? "#03A96B"
+                                    : "#dc3545",
+                                height: "100%",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Card.Body
+                                style={{ fontSize: "20px", color: "white" }}
+                              >
+                                <p>{item.date}</p>
+                                <p style={{ fontSize: "16px" }}>{`${
+                                  item.room && item.room.length > 0
+                                    ? [
+                                        ...new Set(
+                                          item.room.map(
+                                            (timestart) => timestart.timeStart
+                                          )
+                                        ),
+                                      ].join(", ")
+                                    : "00:00"
+                                } - ${
+                                  item.room && item.room.length > 0
+                                    ? [
+                                        ...new Set(
+                                          item.room.map(
+                                            (timeend) => timeend.timeEnd
+                                          )
+                                        ),
+                                      ].join(", ")
+                                    : "00:00"
+                                }`}</p>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                          <Col md={10}>
+                            <Row className="pt-3 pb-3">
+                              <Col md={2} className="px-3">
+                                <p
+                                  style={{ fontSize: "16px", color: "#424242" }}
+                                >
+                                  {item.cs_id}
+                                </p>
+                                {item.room.some(
+                                  (section) => section.section
+                                ) ? (
+                                  <p style={{ color: "#5B5B5B" }}>
+                                    หมู่{" "}
+                                    {`${[
+                                      ...new Set(
+                                        item.room.map(
+                                          (section) => section.section
+                                        )
+                                      ),
+                                    ].join(", ")}`}
+                                  </p>
+                                ) : (
+                                  <p style={{ color: "#5B5B5B" }}>หมู่ ???</p>
+                                )}
+                              </Col>
+                              <Col md={5}>
+                                <p
+                                  style={{ fontSize: "16px", color: "#424242" }}
+                                >
+                                  {item.cs_name_en}
+                                </p>
+                                <p style={{ color: "#5B5B5B" }}>
+                                  {item.cs_name_th}
+                                </p>
+                              </Col>
+                              <Col>
+                                <p
+                                  style={{ fontSize: "16px", color: "#424242" }}
+                                >
+                                  {item.room && item.room.length > 0
+                                    ? [
+                                        ...new Set(
+                                          item.room.map(
+                                            (build) => build.build_name
+                                          )
+                                        ),
+                                      ].join(", ")
+                                    : "อาคาร ?"}
+                                </p>
+                                <p style={{ color: "#5B5B5B" }}>
+                                  {item.room && item.room.length > 0
+                                    ? item.room && Array.isArray(item.room)
+                                      ? item.room
+                                          .map(
+                                            (seat) =>
+                                              `${seat.room_id} ${seat.seat}`
+                                          )
+                                          .join(", ")
+                                      : "????"
+                                    : "????"}{" "}
+                                  (
+                                  {item.room && item.room.length > 0
+                                    ? item.room && Array.isArray(item.room)
+                                      ? item.room
+                                          .map((amount) => amount.amount)
+                                          .join(", ")
+                                      : "?"
+                                    : "?"}{" "}
+                                  ที่นั่ง )
+                                </p>
+                              </Col>
+                            </Row>
+                          </Col>
+                        </Row>
+                      </Card.Body>
+                    </Card>
+                  ))
+                : null
+            )}
           </Row>
         )}
       </Modal.Body>

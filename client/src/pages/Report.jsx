@@ -27,7 +27,6 @@ import "../styles/Loader.scss";
 const Report = () => {
   const [fetchData, setFetchData] = useState([]);
   const [dataSubject, setDataSubject] = useState([]);
-  const [dataRoom, setDataRoom] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [selectedDate, setSelectDate] = useState(null);
   const [selectedRoom, setSelectRoom] = useState(null);
@@ -38,19 +37,11 @@ const Report = () => {
   const [initialLoading, setInitialLoading] = useState(true);
 
   //ดึงข้อมูล
-  const fetchRoom = useCallback(async () => {
-    try {
-      const response = await axios.get("http://localhost:5500/api/building");
-      setDataRoom(response.data);
-    } catch (error) {
-      console.error("Error fetching room:", error);
-    }
-  }, []);
-
   const fetchSchedule = useCallback(async () => {
     try {
       const response = await axios.get("http://localhost:5500/api/subjects");
-      const subjects = response.data[0].subject;
+      const data = response.data;
+      const subjects = data.flatMap((item) => item.subject || []);
       setDataSubject(subjects);
       setFetchData(subjects);
     } catch (error) {
@@ -61,11 +52,11 @@ const Report = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      await Promise.all([fetchRoom(), fetchSchedule()]);
+      await Promise.all([fetchSchedule()]);
       setLoading(false);
     };
     fetchData();
-  }, [fetchRoom, fetchSchedule]);
+  }, [fetchSchedule]);
 
   // นับ CurrentItems ที่แสดงใน Table
   const [currentPage, setCurrentPage] = useState(1);
@@ -201,39 +192,7 @@ const Report = () => {
             (!input ||
               item.cs_id.toLowerCase().includes(input.toLowerCase()) ||
               item.cs_name_en.toLowerCase().includes(input.toLowerCase()) ||
-              item.cs_name_th.toLowerCase().includes(input.toLowerCase()) ||
-              item.major_id.toLowerCase().includes(input.toLowerCase()) ||
-              (item.room &&
-                item.room.some((sec) =>
-                  sec.section
-                    .toString()
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                )) ||
-              item.grade
-                .toString()
-                .toLowerCase()
-                .includes(input.toLowerCase()) ||
-              (item.room &&
-                item.room.some((room) =>
-                  room.room_id.toLowerCase().includes(input.toLowerCase())
-                )) ||
-              item.date.toLowerCase().includes(input.toLowerCase()) ||
-              (item.room &&
-                item.room.some((time) =>
-                  time.timeStart.toLowerCase().includes(input.toLowerCase())
-                )) ||
-              (item.room &&
-                item.room.some((time) =>
-                  time.timeEnd.toLowerCase().includes(input.toLowerCase())
-                )) ||
-              (item.room &&
-                item.room.some((amount) =>
-                  amount.amount
-                    .toString()
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                ))) &&
+              item.cs_name_th.toLowerCase().includes(input.toLowerCase())) &&
             (!selectedBuilding ||
               (item.room &&
                 item.room.some(
@@ -241,12 +200,12 @@ const Report = () => {
                     room.build_name &&
                     room.build_name
                       .toLowerCase()
-                      .includes(selectedBuilding.label.toLowerCase())
+                      .includes(selectedBuilding?.label.toLowerCase())
                 ))) &&
             (!selectedDate ||
               item.date
                 .toLowerCase()
-                .includes(selectedDate.value.toLowerCase())) &&
+                .includes(selectedDate?.value.toLowerCase())) &&
             (!selectedRoom ||
               (item.room &&
                 item.room.some(
@@ -254,17 +213,17 @@ const Report = () => {
                     room.room_id &&
                     room.room_id
                       .toLowerCase()
-                      .includes(selectedRoom.value.toLowerCase())
+                      .includes(selectedRoom?.value.toLowerCase())
                 ))) &&
             (!selectedMajor ||
               item.major_id
                 .toLowerCase()
-                .includes(selectedMajor.value.toLowerCase())) &&
+                .includes(selectedMajor?.value.toLowerCase())) &&
             (!selectedGrade ||
               item.grade
                 .toString()
                 .toLowerCase()
-                .includes(selectedGrade.value.toString().toLowerCase()))
+                .includes(selectedGrade?.value.toString().toLowerCase()))
           );
         });
 

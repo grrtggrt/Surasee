@@ -227,6 +227,9 @@ const PopupManageRoom = (props) => {
           .filter((room) => room.room_id === selectedRoom?.value)
           .map((room) => `droppable-${room._id}`)
           .join(", "),
+        Maxamount: dataRoom
+          .filter((room) => room.room_id === selectedRoom?.value)
+          .map((room) => room.Maxamount),
       };
       setCards([...cards, newCard]);
       setAmountSubject(amountSubject - inputAmount);
@@ -466,29 +469,47 @@ const PopupManageRoom = (props) => {
   };
 
   const handleSave = async () => {
-    const dataToSave = updatedDroppedItems
-      .map((item) => {
-        return cards.map((filteredCard) => ({
+    if (
+      !updatedDroppedItems ||
+      !cards ||
+      !selectedStartTime ||
+      !selectedEndTime
+    ) {
+      Swal.fire({
+        icon: "error",
+        title: "ข้อมูลไม่ครบถ้วน",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      return;
+    }
+
+    const dataToSave = updatedDroppedItems.flatMap((item) => {
+      return cards.flatMap((filteredCard) => {
+        return item.major_id.map((major) => ({
           build_name: filteredCard.selectedBuilding.label,
           room_id: filteredCard.selectedRoom.value,
-          seat: filteredCard.selectedSeat.value,
+          Maxamount: filteredCard.Maxamount,
+          seat: filteredCard.selectedSeat,
           timeStart: selectedStartTime.label,
           timeEnd: selectedEndTime.label,
           amount: filteredCard.inputAmount,
           section: filteredCard.inputSec,
           droppableIdRoom: filteredCard.droppableId,
           timezone: item.timezone,
-          major_id: item.major_id,
+          major_id: major.major_id,
+          grade: major.grade,
           cs_id: item.cs_id,
         }));
-      })
-      .flat();
+      });
+    });
 
     try {
       const response = await axios.post(
         "http://localhost:5500/api/update-subjects-room",
         dataToSave
       );
+
       if (response.status === 200) {
         props.fetchSubjects();
         Swal.fire({

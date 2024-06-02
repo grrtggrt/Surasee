@@ -61,7 +61,8 @@ const Schedule = () => {
   const fetchSchedule = useCallback(async () => {
     try {
       const response = await axios.get("http://localhost:5500/api/subjects");
-      const subjects = response.data[0].subject;
+      const subjects = response.data;
+
       setDataSchedule(subjects);
       setFetchDataSchedule(subjects);
     } catch (error) {
@@ -120,11 +121,15 @@ const Schedule = () => {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      const csIds = dataSchedule.map((item) => item.cs_id);
+      const csIds = dataSchedule.flatMap((item) =>
+        item.subject.map((subject) => subject.cs_id)
+      );
+
       const filteredSubjects = dataSubject.filter(
         (subject) => !csIds.includes(subject.cs_id)
       );
-      setDataSubject(filteredSubjects); // Assuming this state needs to be updated.
+
+      setDataSubject(filteredSubjects);
       setItems(filteredSubjects);
       setLoading(false);
     }, 600);
@@ -191,22 +196,35 @@ const Schedule = () => {
         timezone = "เย็น";
       }
 
+      const draggedMajor = draggedItem.major_id;
+
       const majorIdExists =
         droppedItems
           .filter((item) => item.droppableId === destination.droppableId)
-          .some(
-            (item) =>
-              item.major_id === draggedItem.major_id &&
-              item.grade === draggedItem.grade
+          .some((item) =>
+            item.major_id.some((major) =>
+              draggedMajor.some(
+                (draggedMajor) =>
+                  major.major_id === draggedMajor.major_id &&
+                  major.grade === draggedMajor.grade
+              )
+            )
           ) ||
         fetchDataSchedule
-          .filter(
-            (item) => item.droppableIdSchedule === destination.droppableId
+          .filter((item) =>
+            item.subject.some(
+              (subject) =>
+                subject.droppableIdSchedule === destination.droppableId
+            )
           )
-          .some(
-            (item) =>
-              item.major_id === draggedItem.major_id &&
-              item.grade === draggedItem.grade
+          .some((item) =>
+            item.major_id.some((major) =>
+              draggedMajor.some(
+                (draggedMajor) =>
+                  major.major_id === draggedMajor.major_id &&
+                  major.grade === draggedMajor.grade
+              )
+            )
           );
 
       if (majorIdExists) return;
@@ -216,15 +234,19 @@ const Schedule = () => {
           (item) =>
             item.date === formattedDate &&
             item.timezone === "เช้า" &&
-            item.major_id === draggedItem.major_id &&
-            item.grade === draggedItem.grade
+            item.major_id.some((major) => major.major_id) ===
+              draggedItem.major_id.some((major) => major.major_id) &&
+            item.major_id.some((grade) => grade.grade) ===
+              draggedItem.major_id.some((grade) => grade.grade)
         ) ||
         fetchDataSchedule.some(
           (item) =>
-            item.date === formattedDate &&
-            item.timezone === "เช้า" &&
-            item.major_id === draggedItem.major_id &&
-            item.grade === draggedItem.grade
+            item.subject.some((date) => date.date === formattedDate) &&
+            item.subject.some((timezone) => timezone.timezone === "เช้า") &&
+            item.subject.some((major) => major.major_id) ===
+              draggedItem.major_id.some((major) => major.major_id) &&
+            item.subject.some((grade) => grade.grade) ===
+              draggedItem.major_id.some((grade) => grade.grade)
         )
       ) {
         if (timezone === "กลางวัน") {
@@ -235,15 +257,19 @@ const Schedule = () => {
           (item) =>
             item.date === formattedDate &&
             item.timezone === "กลางวัน" &&
-            item.major_id === draggedItem.major_id &&
-            item.grade === draggedItem.grade
+            item.major_id.some((major) => major.major_id) ===
+              draggedItem.major_id.some((major) => major.major_id) &&
+            item.major_id.some((grade) => grade.grade) ===
+              draggedItem.major_id.some((grade) => grade.grade)
         ) ||
         fetchDataSchedule.some(
           (item) =>
-            item.date === formattedDate &&
-            item.timezone === "กลางวัน" &&
-            item.major_id === draggedItem.major_id &&
-            item.grade === draggedItem.grade
+            item.subject.some((date) => date.date === formattedDate) &&
+            item.subject.some((timezone) => timezone.timezone === "กลางวัน") &&
+            item.subject.some((major) => major.major_id) ===
+              draggedItem.major_id.some((major) => major.major_id) &&
+            item.subject.some((grade) => grade.grade) ===
+              draggedItem.major_id.some((grade) => grade.grade)
         )
       ) {
         return;
@@ -252,15 +278,19 @@ const Schedule = () => {
           (item) =>
             item.date === formattedDate &&
             item.timezone === "เย็น" &&
-            item.major_id === draggedItem.major_id &&
-            item.grade === draggedItem.grade
+            item.major_id.some((major) => major.major_id) ===
+              draggedItem.major_id.some((major) => major.major_id) &&
+            item.major_id.some((grade) => grade.grade) ===
+              draggedItem.major_id.some((grade) => grade.grade)
         ) ||
         fetchDataSchedule.some(
           (item) =>
-            item.date === formattedDate &&
-            item.timezone === "เย็น" &&
-            item.major_id === draggedItem.major_id &&
-            item.grade === draggedItem.grade
+            item.subject.some((date) => date.date === formattedDate) &&
+            item.subject.some((timezone) => timezone.timezone === "เย็น") &&
+            item.subject.some((major) => major.major_id) ===
+              draggedItem.major_id.some((major) => major.major_id) &&
+            item.subject.some((grade) => grade.grade) ===
+              draggedItem.major_id.some((grade) => grade.grade)
         )
       ) {
         if (timezone === "กลางวัน") {
@@ -301,40 +331,50 @@ const Schedule = () => {
       (item) => item.droppableId === droppableId && item.cs_id === itemId
     );
 
-    const deletedItem = fetchDataSchedule.find(
-      (item) =>
-        item.droppableIdSchedule === droppableId && item.cs_id === itemId
-    );
+    const deletedItem = fetchDataSchedule.reduce((acc, curr) => {
+      const foundItem = curr.subject.find(
+        (item) =>
+          item.droppableIdSchedule === droppableId && item.cs_id === itemId
+      );
+      if (foundItem) {
+        acc.push(foundItem);
+      }
+      return acc;
+    }, []);
 
-    if (deletedItem) {
-      try {
-        const response = await axios.post(
-          "http://localhost:5500/api/delete-subject",
-          {
-            cs_id: deletedItem.cs_id,
-            major_id: deletedItem.major_id,
-          }
-        );
-        console.log("Delete item response:", response.data);
-        if (response.status === 200) {
-          Swal.fire({
-            icon: "success",
-            title: "ลบข้อมูลสำเร็จแล้ว",
-            showConfirmButton: false,
-            timer: 1500,
-          }).then(() => {
+    if (deletedItem.length > 0) {
+      for (const item of deletedItem) {
+        const { cs_id, major_id, grade } = item;
+
+        try {
+          const response = await axios.post(
+            "http://localhost:5500/api/delete-subject",
+            {
+              cs_id: cs_id,
+              major_id: major_id,
+              grade: grade,
+            }
+          );
+          console.log("Delete item response:", response.data);
+          if (response.status === 200) {
+            Swal.fire({
+              icon: "success",
+              title: "ลบข้อมูลสำเร็จแล้ว",
+              showConfirmButton: false,
+              timer: 1500,
+            });
             fetchSubjects();
             fetchSchedule();
+          }
+        } catch (error) {
+          console.error("Error deleting item:", error);
+          Swal.fire({
+            icon: "error",
+            title: "เกิดข้อผิดพลาดในการลบข้อมูล",
+            showConfirmButton: false,
+            timer: 1500,
           });
         }
-      } catch (error) {
-        console.error("Error deleting item:", error);
-        Swal.fire({
-          icon: "error",
-          title: "เกิดข้อผิดพลาดในการลบข้อมูล",
-          showConfirmButton: false,
-          timer: 1500,
-        });
       }
     } else if (deletedItemDrop) {
       Swal.fire({
@@ -388,23 +428,53 @@ const Schedule = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const majorId = droppedItems[0].major_id;
+          const majorIdsAndGrades = droppedItems.reduce((acc, item) => {
+            if (Array.isArray(item.major_id)) {
+              item.major_id.forEach((major) => {
+                if (
+                  major.major_id &&
+                  major.grade !== undefined &&
+                  !acc.find(
+                    (obj) =>
+                      obj.major_id === major.major_id &&
+                      obj.grade === major.grade
+                  )
+                ) {
+                  acc.push({ major_id: major.major_id, grade: major.grade });
+                }
+              });
+            }
+            return acc;
+          }, []);
+
+          // ตรวจสอบว่ามีข้อมูล majorIdsAndGrades หรือไม่
+          if (majorIdsAndGrades.length === 0) {
+            throw new Error(
+              "No valid major_id and grade found in dropped items."
+            );
+          }
+
+          // สร้าง arrays ของ majorIds, majorGrades และ subjects
+          const majorIds = majorIdsAndGrades.map((item) => item.major_id);
+          const majorGrades = majorIdsAndGrades.map((item) => item.grade);
           const subjects = droppedItems.map((item) => ({
             cs_id: item.cs_id,
             cs_name_en: item.cs_name_en,
             cs_name_th: item.cs_name_th,
-            grade: item.grade,
-            major_id: item.major_id,
-            amount: item.amount,
+            grade: item.major_id.map((grade) => grade.grade),
+            major_id: item.major_id.map((major) => major.major_id),
+            amount: item.major_id.map((amount) => amount.amount),
             date: item.date,
             timezone: item.timezone,
             droppableIdSchedule: item.droppableId,
           }));
 
+          // ส่งข้อมูลไปยัง API
           const response = await axios.post(
             "http://localhost:5500/api/update-subjects",
             {
-              major_id: majorId,
+              major_id: majorIds,
+              major_grade: majorGrades,
               subjects: subjects,
             }
           );
@@ -589,15 +659,29 @@ const Schedule = () => {
       setTimeout(() => {
         const filteredData = items.filter((item) => {
           return (
-            (!selectedMajor || item.major_id === selectedMajor.value) &&
-            (!selectedGrade || item.grade === selectedGrade.value)
+            !selectedMajor ||
+            !selectedGrade ||
+            (item.major_id &&
+              item.major_id.some(
+                (major) =>
+                  major.major_id === selectedMajor?.value &&
+                  major.grade === selectedGrade?.value
+              ))
           );
         });
 
         const filteredDataSchedule = fetchDataSchedule.filter((item) => {
           return (
-            (!selectedMajor || item.major_id === selectedMajor.value) &&
-            (!selectedGrade || item.grade === selectedGrade.value)
+            (!selectedMajor ||
+              (item.subject &&
+                item.subject.some(
+                  (major) => major.major_id === selectedMajor?.value
+                ))) &&
+            (!selectedGrade ||
+              (item.subject &&
+                item.subject.some(
+                  (grade) => grade.grade === selectedGrade?.value
+                )))
           );
         });
 
@@ -625,16 +709,7 @@ const Schedule = () => {
             !input ||
             item.cs_id.toLowerCase().includes(input.toLowerCase()) ||
             item.cs_name_en.toLowerCase().includes(input.toLowerCase()) ||
-            item.cs_name_th.toLowerCase().includes(input.toLowerCase()) ||
-            item.major_id
-              .toString()
-              .toLowerCase()
-              .includes(input.toLowerCase()) ||
-            item.lb_sec
-              .toString()
-              .toLowerCase()
-              .includes(input.toLowerCase()) ||
-            item.lc_sec.toString().toLowerCase().includes(input.toLowerCase())
+            item.cs_name_th.toLowerCase().includes(input.toLowerCase())
           );
         });
         setItems(filteredData);
@@ -701,6 +776,7 @@ const Schedule = () => {
     }, 800);
   }, []);
 
+  //TABLE
   const calculateNumCols = (startDate, endDate) => {
     if (startDate && endDate) {
       const differenceInTime = endDate.getTime() - startDate.getTime();
@@ -710,7 +786,47 @@ const Schedule = () => {
     return 10;
   };
 
-  //TABLE
+  const subjectMap = {};
+
+  fetchDataSchedule &&
+    fetchDataSchedule.forEach((scheduleItem) => {
+      scheduleItem.subject &&
+        scheduleItem.subject.forEach((subjectItem) => {
+          const {
+            cs_id,
+            major_id,
+            grade,
+            amount,
+            cs_name_en,
+            cs_name_th,
+            date,
+            droppableIdSchedule,
+            room,
+            timezone,
+            _id,
+          } = subjectItem;
+          if (!subjectMap[cs_id]) {
+            subjectMap[cs_id] = {
+              cs_id,
+              cs_name_en,
+              cs_name_th,
+              amount: amount,
+              date,
+              droppableIdSchedule,
+              major_id: [{ major_id, grade, amount }],
+              room,
+              timezone,
+              _id,
+            };
+          } else {
+            subjectMap[cs_id].amount += amount;
+            subjectMap[cs_id].major_id.push({ major_id, grade, amount });
+          }
+        });
+    });
+
+  const mergedSubjects = Object.values(subjectMap);
+
   const numRows = 4; // จำนวนวันที่ต้องการสร้าง
   const numCols = calculateNumCols(startDate, endDate); // จำนวนคอลัมน์ในแต่ละแถว
   const renderRows = () => {
@@ -805,14 +921,13 @@ const Schedule = () => {
                 {(provided) => (
                   <Card {...provided.droppableProps} ref={provided.innerRef}>
                     <Card.Body className="table-body-card">
-                      {fetchDataSchedule
+                      {mergedSubjects
                         .filter(
                           (item) => item.droppableIdSchedule === droppableId
                         )
-                        .map((item, index) => (
+                        .map((item) => (
                           <Card
                             key={item.cs_id}
-                            index={index}
                             style={{ height: "max-content" }}
                           >
                             <div
@@ -853,37 +968,32 @@ const Schedule = () => {
                               >
                                 {item.cs_name_en}
                               </p>
-                              <p
-                                style={{
-                                  backgroundColor: "#F0906D",
-                                  borderRadius: "20px",
-                                  textAlign: "center",
-                                  color: "white",
-                                  fontSize: "12px",
-                                  display: "block",
-                                  width: "fit-content",
-                                  padding: "2px 8px 2px 8px",
-                                }}
-                                className="mb-2"
-                              >{`${item.major_id}`}</p>
-                              <p
-                                style={{
-                                  border: "1px solid #5ec1d4",
-                                  borderRadius: "20px",
-                                  textAlign: "center",
-                                  color: "#5ec1d4",
-                                  fontSize: "12px",
-                                  display: "block",
-                                  width: "fit-content",
-                                  padding: "1px 7px 1px 7px",
-                                }}
-                                className="d-flex align-items-center gap-1"
-                              >
-                                {`ปี ${item.grade}`}
-                              </p>
+                              <div className="d-flex flex-wrap gap-1">
+                                {item.major_id
+                                  .sort((a, b) => a.grade - b.grade)
+                                  .map((major, index) => (
+                                    <p
+                                      key={index}
+                                      style={{
+                                        backgroundColor:
+                                          colors[major.grade] || "#5e5e5e",
+                                        borderRadius: "20px",
+                                        textAlign: "center",
+                                        color: "white",
+                                        fontSize: "12px",
+                                        display: "block",
+                                        width: "fit-content",
+                                        padding: "2px 8px 2px 8px",
+                                      }}
+                                      className="mb-2"
+                                    >
+                                      {major.major_id}
+                                    </p>
+                                  ))}
+                              </div>
                             </Card.Body>
                           </Card>
-                        ))}
+                        ))}{" "}
                       {droppedItems
                         .filter((item) => item.droppableId === droppableId)
                         .map((item, index) => (
@@ -930,36 +1040,29 @@ const Schedule = () => {
                               >
                                 {item.cs_name_en}
                               </p>
-                              <p
-                                style={{
-                                  backgroundColor: "#F0906D",
-                                  borderRadius: "20px",
-                                  textAlign: "center",
-                                  color: "white",
-                                  fontSize: "12px",
-                                  display: "block",
-                                  width: "fit-content",
-                                  padding: "2px 8px 2px 8px",
-                                }}
-                                className="mb-2"
-                              >
-                                {`${item.major_id}`}
-                              </p>
-                              <p
-                                style={{
-                                  border: "1px solid #5ec1d4",
-                                  borderRadius: "20px",
-                                  textAlign: "center",
-                                  color: "#5ec1d4",
-                                  fontSize: "12px",
-                                  display: "block",
-                                  width: "fit-content",
-                                  padding: "1px 7px 1px 7px",
-                                }}
-                                className="d-flex align-items-center gap-1"
-                              >
-                                {`ปี ${item.grade}`}
-                              </p>
+                              <div className="d-flex flex-wrap gap-1">
+                                {item.major_id
+                                  .sort((a, b) => a.grade - b.grade)
+                                  .map((item, index) => (
+                                    <p
+                                      style={{
+                                        backgroundColor:
+                                          colors[item.grade] || "#5e5e5e",
+                                        borderRadius: "20px",
+                                        textAlign: "center",
+                                        color: "white",
+                                        fontSize: "12px",
+                                        display: "block",
+                                        width: "fit-content",
+                                        padding: "2px 8px 2px 8px",
+                                      }}
+                                      className="mb-2"
+                                      key={index}
+                                    >
+                                      {item.major_id}
+                                    </p>
+                                  ))}
+                              </div>
                             </Card.Body>
                           </Card>
                         ))}
@@ -985,24 +1088,33 @@ const Schedule = () => {
     return rows;
   };
 
+  //สี
+
   const customStyleBackground = (numberOfMajor) => {
     if (numberOfMajor > 0) {
       const colorMap = {
-        1: "#03A96B",
-        2: "#D3E9E1",
-        3: "#A4E5EE",
-        4: "#A4B4EE",
-        5: "#6685F4",
-        6: "#415083",
-        7: "#6D51A8",
-        8: "#B25ABA",
-        9: "#7B3D41",
-        10: "#B66D4D",
+        1: "#9e0142",
+        2: "#d53e4f",
+        3: "#f46d43",
+        4: "#fdae61",
+        5: "#fee08b",
+        6: "#e6f598",
+        7: "#abdda4",
+        8: "#66c2a5",
+        9: "#3288bd",
+        10: "#5e4fa2",
       };
       return colorMap[numberOfMajor];
     } else {
       return "#FFFFFF";
     }
+  };
+
+  const colors = {
+    1: "#FD8A8A",
+    2: "#F1F7B5",
+    3: "#A8D1D1",
+    4: "#9EA1D4",
   };
 
   return (
@@ -1122,7 +1234,10 @@ const Schedule = () => {
                           className="d-flex align-items-center justify-content-center gap-2 w-25"
                           variant="danger"
                           onClick={() => handleDeleteDate()}
-                          disabled={fetchDataSchedule.length > 0}
+                          disabled={
+                            dataSchedule &&
+                            dataSchedule.some((item) => item.subject.length > 0)
+                          }
                         >
                           <FaTrashCan />
                           <p className="mb-0">ลบวันสอบ</p>
@@ -1232,7 +1347,7 @@ const Schedule = () => {
                                               height: "15px",
                                               width: "10%",
                                               position: "absolute",
-                                              top: "35px",
+                                              top: "10px",
                                               bottom: "0",
                                               right: "-1px",
                                               borderTopLeftRadius: "5px",
@@ -1241,44 +1356,34 @@ const Schedule = () => {
                                           ></div>
                                         </Col>
                                       </Row>
-                                      <Row className="mb-2">
-                                        <Col>
-                                          <p
-                                            style={{
-                                              border: "1px solid #5ec1d4",
-                                              borderRadius: "20px",
-                                              textAlign: "center",
-                                              color: "#5ec1d4",
-                                              fontSize: "12px",
-                                              display: "block",
-                                              width: "fit-content",
-                                              padding: "1px 7px 1px 7px",
-                                            }}
-                                            className="d-flex align-items-center gap-1"
-                                          >
-                                            {`ปี${item.grade}`}
-                                          </p>
-                                        </Col>
-                                      </Row>
                                       <hr style={{ margin: "2px 0" }} />
                                       <p className="pb-1 pt-1">
                                         {item.cs_name_en}
                                       </p>
-                                      <p
-                                        style={{
-                                          backgroundColor: "#E5987C",
-                                          borderRadius: "20px",
-                                          textAlign: "center",
-                                          color: "white",
-                                          fontSize: "12px",
-                                          display: "block",
-                                          width: "fit-content",
-                                          padding: "2px 8px 2px 8px",
-                                          margin: "2px 0",
-                                        }}
-                                      >
-                                        {item.major_id}
-                                      </p>
+                                      <div className="d-flex flex-wrap gap-1">
+                                        {item.major_id
+                                          .sort((a, b) => a.grade - b.grade)
+                                          .map((item, index) => (
+                                            <p
+                                              key={index}
+                                              style={{
+                                                backgroundColor:
+                                                  colors[item.grade] ||
+                                                  "#5e5e5e",
+                                                borderRadius: "20px",
+                                                textAlign: "center",
+                                                color: "white",
+                                                fontSize: "12px",
+                                                display: "block",
+                                                width: "fit-content",
+                                                padding: "2px 8px 2px 8px",
+                                                margin: "2px 0",
+                                              }}
+                                            >
+                                              {item.major_id}
+                                            </p>
+                                          ))}
+                                      </div>
                                     </Card.Body>
                                   </Card>
                                 )}

@@ -52,7 +52,7 @@ const Dashboard = () => {
   const fetchScheduleSubject = useCallback(async () => {
     try {
       const response = await axios.get("http://localhost:5500/api/subjects");
-      const subjects = response.data[0].subject;
+      const subjects = response.data;
       setDataScheduleSubject(subjects);
     } catch (error) {
       console.error("Error fetching subjects from schedule:", error);
@@ -140,10 +140,9 @@ const Dashboard = () => {
                 .toLowerCase()
                 .includes(selectedGrade?.value.toString().toLowerCase())) &&
             (!input ||
-              item.fac_name.toLowerCase().includes(input.toLowerCase()) ||
               item.major_id.toLowerCase().includes(input.toLowerCase()) ||
               item.major_name_th.toLowerCase().includes(input.toLowerCase()) ||
-              item.major_grade.toString().toLowerCase().includes(input.toLowerCase()))
+              item.major_name_en.toLowerCase().includes(input.toLowerCase()))
           );
         });
 
@@ -184,7 +183,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     setSelectedGrade(null);
-  },[selectedFaculty])
+  }, [selectedFaculty]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -268,7 +267,14 @@ const Dashboard = () => {
                   className="d-flex justify-content-center"
                   style={{ fontSize: "60px" }}
                 >
-                  {dataSubject.length - dataScheduleSubject.length}
+                  {dataSubject.length -
+                    Array.from(
+                      new Set(
+                        dataScheduleSubject.flatMap((item) =>
+                          item.subject.map((item) => item.cs_id)
+                        )
+                      )
+                    ).length}
                 </Card.Text>
               </Card.Body>
             </Card>
@@ -290,7 +296,15 @@ const Dashboard = () => {
                   className="d-flex justify-content-center"
                   style={{ fontSize: "60px" }}
                 >
-                  {dataScheduleSubject.length}
+                  {
+                    Array.from(
+                      new Set(
+                        dataScheduleSubject.flatMap((item) =>
+                          item.subject.map((item) => item.cs_id)
+                        )
+                      )
+                    ).length
+                  }
                 </Card.Text>
               </Card.Body>
             </Card>
@@ -377,7 +391,7 @@ const Dashboard = () => {
                         id="searchName"
                         name="searchName"
                         type="search"
-                        placeholder="ค้นหา"
+                        placeholder="ค้นหารหัสสาขา / ชื่อสาขา"
                         className="custom-input"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
