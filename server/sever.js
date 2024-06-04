@@ -13,6 +13,9 @@ const major = require('./routes/major')
 const building = require('./routes/building')
 const schedule = require('./routes/schedule')
 const userRoutes = require('./routes/userRoutes');
+const uploadRoute = require('./routes/uploadRoutes');
+const fileStatusRoutes = require('./routes/FileStatus');
+const deleteData = require('./routes/deleteData');
 
 const app = express()
 
@@ -41,7 +44,10 @@ app.use('/api', major)
 app.use('/api', building)
 app.use('/api', schedule)
 app.use('/api', userRoutes);
-// app.use('/api/upload', uploadRoutes);
+app.use('/api', uploadRoute);
+app.use('/api', fileStatusRoutes);
+app.use('/api', deleteData);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {

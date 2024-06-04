@@ -285,7 +285,6 @@ const PopupManageRoom = (props) => {
 
   const filteredRoom = selectedBuilding
     ? dataRoom.filter((item) => {
-        // คำนวณ totalAmount สำหรับแต่ละห้อง
         const totalAmount = dataSubject
           .filter((subject) =>
             updatedDroppedItems.some(
@@ -308,7 +307,7 @@ const PopupManageRoom = (props) => {
             item.amount
           );
 
-        const hasDataSubject = dataSubject.some((subject) =>
+        const hasDataSubject = updatedDroppedItems.some((subject) =>
           subject.room.some((room) => room.room_id === item.room_id)
         );
 
@@ -380,7 +379,11 @@ const PopupManageRoom = (props) => {
           })));
 
   useEffect(() => {
-    setSelectedEndTime(null);
+    if (matchingItems.length > 0) {
+      return;
+    } else {
+      setSelectedEndTime(null);
+    }
   }, [selectedStartTime]);
 
   useEffect(() => {
@@ -491,8 +494,14 @@ const PopupManageRoom = (props) => {
           room_id: filteredCard.selectedRoom.value,
           Maxamount: filteredCard.Maxamount,
           seat: filteredCard.selectedSeat,
-          timeStart: selectedStartTime.label,
-          timeEnd: selectedEndTime.label,
+          timeStart:
+            matchingItems.length > 0
+              ? selectedStartTime.map((item) => item.label)[0]
+              : selectedStartTime.label,
+          timeEnd:
+            matchingItems.length > 0
+              ? selectedEndTime.map((item) => item.label)[0]
+              : selectedEndTime.label,
           amount: filteredCard.inputAmount,
           section: filteredCard.inputSec,
           droppableIdRoom: filteredCard.droppableId,
@@ -503,6 +512,8 @@ const PopupManageRoom = (props) => {
         }));
       });
     });
+
+    console.log("dataToSave", dataToSave);
 
     try {
       const response = await axios.post(
@@ -529,6 +540,47 @@ const PopupManageRoom = (props) => {
       });
     }
   };
+
+  const matchingItems =
+    updatedDroppedItems &&
+    updatedDroppedItems.some((item) => item.room.length > 0)
+      ? updatedDroppedItems
+          .flatMap((item) => item.room)
+          .filter((room) =>
+            dataTimeStart.some((item) => item.value === room.timeStart)
+          )
+      : [];
+
+  const TimeStart = () => {
+    if (matchingItems.length > 0) {
+      const TimeStart = dataTimeStart.filter((item) =>
+        matchingItems.some((room) => room.timeStart === item.value)
+      );
+      setSelectedStartTime(TimeStart);
+    } else {
+      selectedStartTime;
+    }
+  };
+
+  const TimeEnd = () => {
+    if (matchingItems.length > 0) {
+      const TimeEnd = dataTimeEnd.filter((item) =>
+        matchingItems.some((room) => room.timeEnd === item.value)
+      );
+      setSelectedEndTime(TimeEnd);
+    } else {
+      selectedEndTime;
+    }
+  };
+
+  useEffect(() => {
+    if (matchingItems.length > 0) {
+      TimeStart();
+      TimeEnd();
+    } else {
+      return;
+    }
+  }, [show]);
 
   return (
     <Modal show={show} onHide={hide} centered size="lg">
@@ -627,6 +679,10 @@ const PopupManageRoom = (props) => {
                   isSearchable={false}
                   className="react-select-container"
                   classNamePrefix="react-select"
+                  isDisabled={
+                    updatedDroppedItems &&
+                    updatedDroppedItems.some((item) => item.room.length > 0)
+                  }
                 />
               </Col>
               <Col
@@ -646,7 +702,11 @@ const PopupManageRoom = (props) => {
                   isSearchable={false}
                   className="react-select-container"
                   classNamePrefix="react-select"
-                  isDisabled={!selectedStartTime}
+                  isDisabled={
+                    !selectedStartTime ||
+                    (updatedDroppedItems &&
+                      updatedDroppedItems.some((item) => item.room.length > 0))
+                  }
                 />
               </Col>
             </Row>

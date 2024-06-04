@@ -349,29 +349,39 @@ const Report = () => {
 
   //Alert Confirm
   const handleReportConfirm = () => {
-    Swal.fire({
-      title: "ต้องการส่งออกข้อมูลใช่หรือไม่",
-      icon: "question",
-      showCancelButton: true,
-      cancelButtonText: "ยกเลิก",
-      confirmButtonText: "ตกลง",
-      confirmButtonColor: "#03A96B ",
-      cancelButtonColor: "#dc3545",
-      customClass: {
-        confirmButton: "shadow-none",
-        cancelButton: "shadow-none",
-      },
-    }).then((result) => {
-      if (result.isConfirmed) {
-        exportToExcel(fetchData);
-        Swal.fire({
-          title: "ส่งออกข้อมูลสำเร็จ",
-          icon: "success",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-      }
-    });
+    if (fetchData.length === 0) {
+      Swal.fire({
+        title: "ไม่มีข้อมูลให้ส่งออก",
+        icon: "warning",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      return;
+    } else {
+      Swal.fire({
+        title: "ต้องการส่งออกข้อมูลใช่หรือไม่",
+        icon: "question",
+        showCancelButton: true,
+        cancelButtonText: "ยกเลิก",
+        confirmButtonText: "ตกลง",
+        confirmButtonColor: "#03A96B ",
+        cancelButtonColor: "#dc3545",
+        customClass: {
+          confirmButton: "shadow-none",
+          cancelButton: "shadow-none",
+        },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          exportToExcel(fetchData);
+          Swal.fire({
+            title: "ส่งออกข้อมูลสำเร็จ",
+            icon: "success",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        }
+      });
+    }
   };
 
   return (

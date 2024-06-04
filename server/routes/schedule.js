@@ -142,37 +142,31 @@ router.post("/update-subjects", async (req, res) => {
   }
 
   try {
-    // ดำเนินการทีละ major_id และ major_grade
     for (let i = 0; i < major_id.length; i++) {
       const currentMajorId = major_id[i];
       const currentMajorGrade = major_grade[i];
 
-      // ค้นหา schedule ตาม major_id และ major_grade ที่ระบุ
       let schedule = await Schedule.findOne({
         "schedule.major_id": currentMajorId,
         "schedule.major_grade": currentMajorGrade,
       });
 
-      // ถ้าไม่พบ schedule ให้สร้างใหม่
       if (!schedule) {
         schedule = new Schedule({
           schedule: {
             major_id: currentMajorId,
             major_grade: currentMajorGrade,
-            semester: "", // กำหนดค่าเริ่มต้นเป็นสตริงว่างหรือค่าที่ต้องการ
-            term: "", // กำหนดค่าเริ่มต้นเป็นสตริงว่างหรือค่าที่ต้องการ
+            semester: "",
+            term: "",
           },
           subject: [],
-          room: [], // กำหนดค่าเริ่มต้นเป็นอาเรย์ว่าง
         });
       }
 
-      // แสดงโครงสร้างของแต่ละ subject เพื่อการดีบัก
       subjects.forEach((subject) => {
         console.log(`โครงสร้าง Subject: `, JSON.stringify(subject, null, 2));
       });
 
-      // กรองและแมพ subjects ให้ตรงกับ major_id และ major_grade ปัจจุบัน
       const subjectsToSave = subjects
         .filter((subject) => {
           const majorIdMatch = subject.major_id.includes(currentMajorId);
@@ -204,20 +198,15 @@ router.post("/update-subjects", async (req, res) => {
           };
         });
 
-      // เพิ่ม subjects ที่กรองแล้วไปยัง schedule's subject array
       schedule.subject.push(...subjectsToSave);
       await schedule.save();
 
-      // แสดงความสำเร็จในแต่ละ iteration
       console.log(
         `Updated schedule for major_id: ${currentMajorId}, major_grade: ${currentMajorGrade}`
       );
     }
-
-    // ส่งข้อความสำเร็จหลังจากทำงานเสร็จ
     res.status(200).json({ message: "Updated schedules successfully" });
   } catch (error) {
-    // จัดการกับข้อผิดพลาดที่เกิดขึ้นระหว่างกระบวนการ
     console.error("Error updating subjects:", error);
     res.status(500).json({ error: "Internal server error" });
   }
@@ -265,9 +254,7 @@ router.post("/update-subjects-room", async (req, res) => {
         } = roomData;
 
         if (amount === 0) {
-          console.log(
-            `Skipping room with room_id ${room_id} because amount is 0`
-          );
+          console.log(`Skipping room with room_id ${room_id} because amount is 0`);
           continue;
         }
 
@@ -276,9 +263,7 @@ router.post("/update-subjects-room", async (req, res) => {
           "schedule.major_grade": grade,
         });
         if (!schedule) {
-          console.log(
-            `Schedule with major_id ${major_id} and grade ${grade} not found`
-          );
+          console.log(`Schedule with major_id ${major_id} and grade ${grade} not found`);
           return res.status(404).json({
             error: `Schedule with major_id ${major_id} and grade ${grade} not found`,
           });
@@ -288,9 +273,7 @@ router.post("/update-subjects-room", async (req, res) => {
           (sub) => sub.cs_id === csId && sub.grade === grade
         );
         if (!subject) {
-          console.log(
-            `Subject with cs_id ${csId} and grade ${grade} not found in schedule`
-          );
+          console.log(`Subject with cs_id ${csId} and grade ${grade} not found in schedule`);
           return res.status(404).json({
             error: `Subject with cs_id ${csId} and grade ${grade} not found in schedule`,
           });
@@ -310,23 +293,17 @@ router.post("/update-subjects-room", async (req, res) => {
 
         let roomAmount = amount;
         if (roomAmount + usedCapacity > maxAmount) {
-          console.log(
-            `Reducing room amount for room_id ${room_id} to remaining capacity`
-          );
+          console.log(`Reducing room amount for room_id ${room_id} to remaining capacity`);
           roomAmount = maxAmount - usedCapacity;
         }
 
         if (roomAmount > subject.amount) {
-          console.log(
-            `Reducing room amount for room_id ${room_id} to remaining amount in subject`
-          );
+          console.log(`Reducing room amount for room_id ${room_id} to remaining amount in subject`);
           roomAmount = subject.amount;
         }
 
         if (roomAmount <= 0) {
-          console.log(
-            `Skipping room with room_id ${room_id} because the remaining amount is 0 or less`
-          );
+          console.log(`Skipping room with room_id ${room_id} because the remaining amount is 0 or less`);
           continue;
         }
 

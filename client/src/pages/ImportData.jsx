@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
+
 import {
   FaCloudArrowUp,
   FaMagnifyingGlass,
   FaArrowsRotate,
   FaChevronLeft,
   FaChevronRight,
-  FaPlus,
+  FaDownload,
   FaTrashCan,
 } from "react-icons/fa6";
+
 import {
   Row,
   Col,
@@ -20,6 +22,9 @@ import {
 import Select from "react-select";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
+
 //styles
 import "./ImportData.scss";
 import "../styles/Loader.scss";
@@ -46,6 +51,19 @@ const ImportData = () => {
   const [inputRoom, setInputRoom] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [showCheckboxesSubject, setShowCheckboxesSubject] = useState(false);
+  const [checkedItemsSubject, setCheckedItemsSubject] = useState({});
+  const [checkedAllSubject, setCheckedAllSubject] = useState(false);
+  const [showConfirmButtonsSubject, setShowConfirmButtonsSubject] =
+    useState(false);
+  const [showCheckboxesMajor, setShowCheckboxesMajor] = useState(false);
+  const [checkedItemsMajor, setCheckedItemsMajor] = useState({});
+  const [checkedAllMajor, setCheckedAllMajor] = useState(false);
+  const [showConfirmButtonsMajor, setShowConfirmButtonsMajor] = useState(false);
+  const [showCheckboxesRoom, setShowCheckboxesRoom] = useState(false);
+  const [checkedItemsRoom, setCheckedItemsRoom] = useState({});
+  const [checkedAllRoom, setCheckedAllRoom] = useState(false);
+  const [showConfirmButtonsRoom, setShowConfirmButtonsRoom] = useState(false);
 
   const fetchSubjects = useCallback(async () => {
     try {
@@ -89,6 +107,361 @@ const ImportData = () => {
   //Popup
   const handleShowPopupImportData = () => setShowPopupImportData(true);
   const handleHidePopupImportData = () => setShowPopupImportData(false);
+
+  const handleDeleteButtonClickSubject = () => {
+    setShowCheckboxesSubject(!showCheckboxesSubject);
+    setShowConfirmButtonsSubject(!showConfirmButtonsSubject);
+    if (showCheckboxesSubject) {
+      setCheckedItemsSubject({});
+      setCheckedAllSubject(false);
+    }
+  };
+
+  const handleDeleteButtonClickMajor = () => {
+    setShowCheckboxesMajor(!showCheckboxesMajor);
+    setShowConfirmButtonsMajor(!showConfirmButtonsMajor);
+    if (showCheckboxesMajor) {
+      setCheckedItemsMajor({});
+      setCheckedAllMajor(false);
+    }
+  };
+
+  const handleDeleteButtonClickRoom = () => {
+    setShowCheckboxesRoom(!showCheckboxesRoom);
+    setShowConfirmButtonsRoom(!showConfirmButtonsRoom);
+    if (showCheckboxesRoom) {
+      setCheckedItemsRoom({});
+      setCheckedAllRoom(false);
+    }
+  };
+
+  const handleCancelButtonClickSubject = () => {
+    setShowCheckboxesSubject(false);
+    setShowConfirmButtonsSubject(false);
+    setCheckedItemsSubject({});
+    setCheckedAllSubject(false);
+  };
+
+  const handleCancelButtonClickMajor = () => {
+    setShowCheckboxesMajor(false);
+    setShowConfirmButtonsMajor(false);
+    setCheckedItemsMajor({});
+    setCheckedAllMajor(false);
+  };
+
+  const handleCancelButtonClickRoom = () => {
+    setShowCheckboxesRoom(false);
+    setShowConfirmButtonsRoom(false);
+    setCheckedItemsRoom({});
+    setCheckedAllRoom(false);
+  };
+
+  const handleCheckAllSubject = () => {
+    setCheckedItemsSubject((prevState) => {
+      const newCheckedSubject = !checkedAllSubject;
+      const newCheckedItemsSubject = { ...prevState };
+
+      if (newCheckedSubject) {
+        dataSubject.forEach((item) => {
+          newCheckedItemsSubject[item.cs_id] = true;
+        });
+      } else {
+        dataSubject.forEach((item) => {
+          delete newCheckedItemsSubject[item.cs_id];
+        });
+      }
+
+      setCheckedAllSubject(newCheckedSubject);
+      return newCheckedItemsSubject;
+    });
+  };
+
+  const handleCheckAllMajor = () => {
+    setCheckedItemsMajor((prevState) => {
+      const newCheckedMajor = !checkedAllMajor;
+      const newCheckedItemsMajor = { ...prevState };
+
+      if (newCheckedMajor) {
+        dataMajor.forEach((item) => {
+          newCheckedItemsMajor[`${item.major_id}_${item.major_grade}`] = {
+            major_id: item.major_id,
+            major_grade: item.major_grade,
+          };
+        });
+      } else {
+        dataMajor.forEach((item) => {
+          delete newCheckedItemsMajor[`${item.major_id}_${item.major_grade}`];
+        });
+      }
+
+      setCheckedAllMajor(newCheckedMajor);
+      return newCheckedItemsMajor;
+    });
+  };
+
+  const handleCheckAllRoom = () => {
+    setCheckedItemsRoom((prevState) => {
+      const newCheckedRoom = !checkedAllRoom;
+      const newCheckedItemsRoom = { ...prevState };
+
+      if (newCheckedRoom) {
+        dataRoom.forEach((item) => {
+          newCheckedItemsRoom[`${item.room_id}_${item.seat[0]}`] = {
+            room_id: item.room_id,
+            seat: item.seat[0],
+          };
+        });
+      } else {
+        dataRoom.forEach((item) => {
+          delete newCheckedItemsRoom[`${item.room_id}_${item.seat[0]}`];
+        });
+      }
+
+      setCheckedAllRoom(newCheckedRoom);
+      return newCheckedItemsRoom;
+    });
+  };
+
+  const handleCheckItemSubject = (cs_id) => {
+    setCheckedItemsSubject((prevState) => {
+      const newCheckedItems = { ...prevState };
+      if (newCheckedItems[cs_id]) {
+        delete newCheckedItems[cs_id];
+      } else {
+        newCheckedItems[cs_id] = true;
+      }
+      return newCheckedItems;
+    });
+  };
+
+  const handleCheckItemMajor = (major_id, major_grade) => {
+    setCheckedItemsMajor((prevState) => {
+      const newCheckedItems = { ...prevState };
+      const key = `${major_id}_${major_grade}`;
+
+      if (newCheckedItems[key]) {
+        delete newCheckedItems[key];
+      } else {
+        newCheckedItems[key] = { major_id, major_grade };
+      }
+
+      return newCheckedItems;
+    });
+  };
+
+  const handleCheckItemRoom = (room_id, seat) => {
+    setCheckedItemsRoom((prevState) => {
+      const newCheckedItems = { ...prevState };
+      const key = `${room_id}_${seat[0]}`;
+
+      if (newCheckedItems[key]) {
+        delete newCheckedItems[key];
+      } else {
+        newCheckedItems[key] = { room_id, seat: seat[0] };
+      }
+
+      return newCheckedItems;
+    });
+  };
+
+  const handleDeletePopUpSubject = async () => {
+    const itemsToDeleteSubject = Object.keys(checkedItemsSubject).filter(
+      (key) => checkedItemsSubject[key]
+    );
+    if (itemsToDeleteSubject.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "ไม่มีข้อมูลที่ต้องลบ",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      return;
+    }
+    Swal.fire({
+      title: "ต้องการลบข้อมูลใช่หรือไม่",
+      icon: "question",
+      showCancelButton: true,
+      cancelButtonText: "ยกเลิก",
+      confirmButtonText: "ตกลง",
+      confirmButtonColor: "#03A96B ",
+      cancelButtonColor: "#dc3545",
+      customClass: {
+        confirmButton: "shadow-none",
+        cancelButton: "shadow-none",
+      },
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete("http://localhost:5500/api/subject", {
+            data: { ids: itemsToDeleteSubject },
+          });
+          const newDataSubject = dataSubject.filter(
+            (item) => !itemsToDeleteSubject.includes(item.cs_id)
+          );
+          setFetchDataSubject(newDataSubject);
+          setCheckedItemsSubject({});
+          setCheckedAllSubject(false);
+          setShowConfirmButtonsSubject(false);
+          setShowCheckboxesSubject(false);
+          Swal.fire({
+            title: "ลบข้อมูลสำเร็จ",
+            icon: "success",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        } catch (error) {
+          Swal.fire({
+            title: "เกิดข้อผิดพลาดในการลบข้อมูล",
+            icon: "error",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        }
+      }
+    });
+  };
+
+  const handleDeletePopUpMajor = async () => {
+    const itemsToDeleteMajor = Object.keys(checkedItemsMajor).filter(
+      (key) => checkedItemsMajor[key]
+    );
+
+    if (itemsToDeleteMajor.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "ไม่มีข้อมูลที่ต้องลบ",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      return;
+    }
+
+    const itemsToDelete = itemsToDeleteMajor.map((key) => {
+      const [major_id, major_grade] = key.split("_");
+      return { major_id, major_grade: parseInt(major_grade) };
+    });
+
+    Swal.fire({
+      title: "ต้องการลบข้อมูลใช่หรือไม่",
+      icon: "question",
+      showCancelButton: true,
+      cancelButtonText: "ยกเลิก",
+      confirmButtonText: "ตกลง",
+      confirmButtonColor: "#03A96B",
+      cancelButtonColor: "#dc3545",
+      customClass: {
+        confirmButton: "shadow-none",
+        cancelButton: "shadow-none",
+      },
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete("http://localhost:5500/api/major", {
+            data: { items: itemsToDelete },
+          });
+
+          const newDataMajor = dataMajor.filter(
+            (item) =>
+              !itemsToDeleteMajor.includes(
+                `${item.major_id}_${item.major_grade}`
+              )
+          );
+
+          setFetchDataMajor(newDataMajor);
+          setDataMajor(newDataMajor);
+          setCheckedItemsMajor({});
+          setCheckedAllMajor(false);
+          setShowConfirmButtonsMajor(false);
+          setShowCheckboxesMajor(false);
+
+          Swal.fire({
+            title: "ลบข้อมูลสำเร็จ",
+            icon: "success",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        } catch (error) {
+          Swal.fire({
+            title: "เกิดข้อผิดพลาดในการลบข้อมูล",
+            icon: "error",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        }
+      }
+    });
+  };
+
+  const handleDeletePopUpRoom = async () => {
+    const itemsToDeleteRoom = Object.keys(checkedItemsRoom).filter(
+      (key) => checkedItemsRoom[key]
+    );
+
+    if (itemsToDeleteRoom.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "ไม่มีข้อมูลที่ต้องลบ",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      return;
+    }
+
+    const itemsToDelete = itemsToDeleteRoom.map((key) => {
+      const [room_id, seat] = key.split("_");
+      return { room_id, seat };
+    });
+
+    Swal.fire({
+      title: "ต้องการลบข้อมูลใช่หรือไม่",
+      icon: "question",
+      showCancelButton: true,
+      cancelButtonText: "ยกเลิก",
+      confirmButtonText: "ตกลง",
+      confirmButtonColor: "#03A96B",
+      cancelButtonColor: "#dc3545",
+      customClass: {
+        confirmButton: "shadow-none",
+        cancelButton: "shadow-none",
+      },
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete("http://localhost:5500/api/building", {
+            data: { items: itemsToDelete },
+          });
+
+          const newDataRoom = dataRoom.filter(
+            (item) =>
+              !itemsToDeleteRoom.includes(`${item.room_id}_${item.seat[0]}`)
+          );
+
+          setFetchDataRoom(newDataRoom);
+          setDataRoom(newDataRoom);
+          setCheckedItemsRoom({});
+          setCheckedAllRoom(false);
+          setShowConfirmButtonsRoom(false);
+          setShowCheckboxesRoom(false);
+
+          Swal.fire({
+            title: "ลบข้อมูลสำเร็จ",
+            icon: "success",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        } catch (error) {
+          Swal.fire({
+            title: "เกิดข้อผิดพลาดในการลบข้อมูล",
+            icon: "error",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        }
+      }
+    });
+  };
+
+  const handleDeleteAll = async () => {};
 
   const handleResetDataSubject = () => {
     setLoading(true);
@@ -529,6 +902,7 @@ const ImportData = () => {
     indexOfFirstItemMajor,
     indexOfLastItemMajor
   );
+
   const pageNumbersMajor = [];
   let startPageMajor = 1;
   let endPageMajor = Math.min(
@@ -553,6 +927,15 @@ const ImportData = () => {
     }, 800);
   }, []);
 
+  const downloadTemplate = (headers, filename) => {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([headers]);
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([wbout], { type: "application/octet-stream" });
+    saveAs(blob, filename);
+  };
+
   return (
     <>
       {initialLoading && (
@@ -570,15 +953,15 @@ const ImportData = () => {
               onClick={() => handleShowPopupImportData()}
             >
               <FaCloudArrowUp />
-              <p className="mb-0">Upload</p>
+              <p className="mb-0">เพิ่มข้อมูล</p>
             </Button>
             <Button
               className="d-flex align-items-center gap-2"
               variant="danger"
-              onClick={() => {}}
+              onClick={() => handleDeleteAll()}
             >
               <FaTrashCan />
-              <p className="mb-0">Delete</p>
+              <p className="mb-0">ลบข้อมูลทั้งหมด</p>
             </Button>
           </Col>
         </Row>
@@ -597,16 +980,36 @@ const ImportData = () => {
                     <Button
                       className="d-flex align-items-center gap-2"
                       variant="success"
-                      onClick={() => {}}
+                      onClick={() =>
+                        downloadTemplate(
+                          [
+                            "major_id_1",
+                            "grade_1",
+                            "amount_1",
+                            "major_id_2",
+                            "grade_2",
+                            "amount_2",
+                            "cs_id",
+                            "cs_name_th",
+                            "cs_name_en",
+                            "lc_sec_1",
+                            "lc_sec_2",
+                            "lb_sec_1",
+                            "lb_sec_2"
+
+                          ],
+                          "Subject.xlsx"
+                        )
+                      }
                     >
-                      <FaPlus />
-                      <p className="mb-0">เพิ่มรายการ</p>
+                      <FaDownload />
+                      <p className="mb-0">ดาวน์โหลดแบบฟอร์ม</p>
                     </Button>
                     <Button
                       className="d-flex align-items-center gap-2"
                       variant="light"
                       style={{ color: "#dc3545", border: "1px solid" }}
-                      onClick={() => {}}
+                      onClick={() => handleDeleteButtonClickSubject()}
                     >
                       <FaTrashCan />
                       <p className="mb-0">ลบรายการ</p>
@@ -689,6 +1092,15 @@ const ImportData = () => {
                         textAlign: "center",
                       }}
                     >
+                      {showCheckboxesSubject && (
+                        <th className="fw-normal" style={{ width: "5%" }}>
+                          <Form.Check
+                            type="checkbox"
+                            checked={checkedAllSubject}
+                            onChange={handleCheckAllSubject}
+                          />
+                        </th>
+                      )}
                       <th className="fw-normal" style={{ width: "5%" }}>
                         cs_id
                       </th>
@@ -712,6 +1124,17 @@ const ImportData = () => {
                   <tbody>
                     {displayDataSubject.map((item, id) => (
                       <tr key={id} style={{ textAlign: "center" }}>
+                        {showCheckboxesSubject && (
+                          <td>
+                            <Form.Check
+                              type="checkbox"
+                              checked={checkedItemsSubject[item.cs_id] || false}
+                              onChange={() =>
+                                handleCheckItemSubject(item.cs_id)
+                              }
+                            />
+                          </td>
+                        )}
                         <td>{item.cs_id}</td>
                         <td style={{ textAlign: "start" }}>
                           {item.cs_name_th}
@@ -760,38 +1183,67 @@ const ImportData = () => {
                     )}
                   </tbody>
                 </Table>
-                <Pagination className="d-flex justify-content-end align-items-center gap-3 pt-3 pe-3">
-                  <p style={{ color: "#4a4f55" }}>
-                    Page {currentPageSubject} of{" "}
-                    {Math.ceil(fetchDataSubject.length / itemsPerPage)}
-                  </p>
-                  {currentPageSubject > 1 && (
-                    <Button
-                      variant="success"
-                      onClick={() => paginateSubject(currentPageSubject - 1)}
-                    >
-                      <FaChevronLeft />
-                    </Button>
-                  )}
-                  {pageNumbersSubject.map((number) => (
-                    <Pagination.Item
-                      key={number}
-                      active={number === currentPageSubject}
-                      onClick={() => paginateSubject(number)}
-                    >
-                      {number}
-                    </Pagination.Item>
-                  ))}
-                  {currentPageSubject <
-                    Math.ceil(fetchDataSubject.length / itemsPerPage) && (
-                    <Button
-                      variant="success"
-                      onClick={() => paginateSubject(currentPageSubject + 1)}
-                    >
-                      <FaChevronRight />
-                    </Button>
-                  )}
-                </Pagination>
+                <Row>
+                  {checkedItemsSubject &&
+                    Object.values(checkedItemsSubject).length > 0 && (
+                      <Col className="d-flex">
+                        <div className="d-flex align-items-center gap-2 ps-3">
+                          <Button
+                            className="d-flex align-items-center"
+                            variant="success"
+                            onClick={() => handleDeletePopUpSubject()}
+                          >
+                            ยืนยัน
+                          </Button>
+                          <Button
+                            className="d-flex align-items-center"
+                            variant="danger"
+                            onClick={() => handleCancelButtonClickSubject()}
+                          >
+                            ยกเลิก
+                          </Button>
+                        </div>
+                      </Col>
+                    )}
+                  <Col>
+                    <Pagination className="d-flex justify-content-end align-items-center gap-3 pt-3 pe-3">
+                      <p style={{ color: "#4a4f55" }}>
+                        Page {currentPageSubject} of{" "}
+                        {Math.ceil(fetchDataSubject.length / itemsPerPage)}
+                      </p>
+                      {currentPageSubject > 1 && (
+                        <Button
+                          variant="success"
+                          onClick={() =>
+                            paginateSubject(currentPageSubject - 1)
+                          }
+                        >
+                          <FaChevronLeft />
+                        </Button>
+                      )}
+                      {pageNumbersSubject.map((number) => (
+                        <Pagination.Item
+                          key={number}
+                          active={number === currentPageSubject}
+                          onClick={() => paginateSubject(number)}
+                        >
+                          {number}
+                        </Pagination.Item>
+                      ))}
+                      {currentPageSubject <
+                        Math.ceil(fetchDataSubject.length / itemsPerPage) && (
+                        <Button
+                          variant="success"
+                          onClick={() =>
+                            paginateSubject(currentPageSubject + 1)
+                          }
+                        >
+                          <FaChevronRight />
+                        </Button>
+                      )}
+                    </Pagination>
+                  </Col>
+                </Row>
               </Card.Body>
             </Card>
           </Col>
@@ -811,10 +1263,23 @@ const ImportData = () => {
                     <Button
                       className="d-flex align-items-center gap-2"
                       variant="success"
-                      onClick={() => {}}
+                      onClick={() =>
+                        downloadTemplate(
+                          [
+                            "major_id",
+                            "fac_id",
+                            "cs_name_th",
+                            "cs_name_en",
+                            "fac_name",
+                            "major_status",
+                            "major_grade"
+                          ],
+                          "Major.xlsx"
+                        )
+                      }
                     >
-                      <FaPlus />
-                      <p className="mb-0">เพิ่มรายการ</p>
+                      <FaDownload />
+                      <p className="mb-0">ดาวน์โหลดแบบฟอร์ม</p>
                     </Button>
                     <Button
                       className="d-flex align-items-center gap-2"
@@ -823,7 +1288,7 @@ const ImportData = () => {
                         color: "#dc3545",
                         border: "1px solid #dc3545",
                       }}
-                      onClick={() => {}}
+                      onClick={() => handleDeleteButtonClickMajor()}
                     >
                       <FaTrashCan />
                       <p className="mb-0">ลบรายการ</p>
@@ -909,6 +1374,15 @@ const ImportData = () => {
                         textAlign: "center",
                       }}
                     >
+                      {showCheckboxesMajor && (
+                        <th className="fw-normal" style={{ width: "5%" }}>
+                          <Form.Check
+                            type="checkbox"
+                            checked={checkedAllMajor}
+                            onChange={handleCheckAllMajor}
+                          />
+                        </th>
+                      )}
                       <th className="fw-normal" style={{ width: "5%" }}>
                         major_id
                       </th>
@@ -935,6 +1409,24 @@ const ImportData = () => {
                   <tbody>
                     {displayDataMajor.map((item, id) => (
                       <tr key={id} style={{ textAlign: "center" }}>
+                        {showCheckboxesMajor && (
+                          <td>
+                            <Form.Check
+                              type="checkbox"
+                              checked={
+                                checkedItemsMajor[
+                                  `${item.major_id}_${item.major_grade}`
+                                ] || false
+                              }
+                              onChange={() =>
+                                handleCheckItemMajor(
+                                  item.major_id,
+                                  item.major_grade
+                                )
+                              }
+                            />
+                          </td>
+                        )}
                         <td>{item.major_id}</td>
                         <td>{item.fac_id}</td>
                         <td style={{ textAlign: "start" }}>
@@ -981,38 +1473,63 @@ const ImportData = () => {
                     )}
                   </tbody>
                 </Table>
-                <Pagination className="d-flex justify-content-end align-items-center gap-3 pt-3 pe-3">
-                  <p style={{ color: "#4a4f55" }}>
-                    Page {currentPageMajor} of{" "}
-                    {Math.ceil(fetchDataMajor.length / itemsPerPage)}
-                  </p>
-                  {currentPageMajor > 1 && (
-                    <Button
-                      variant="success"
-                      onClick={() => paginateMajor(currentPageMajor - 1)}
-                    >
-                      <FaChevronLeft />
-                    </Button>
-                  )}
-                  {pageNumbersMajor.map((number) => (
-                    <Pagination.Item
-                      key={number}
-                      active={number === currentPageMajor}
-                      onClick={() => paginateMajor(number)}
-                    >
-                      {number}
-                    </Pagination.Item>
-                  ))}
-                  {currentPageMajor <
-                    Math.ceil(fetchDataMajor.length / itemsPerPage) && (
-                    <Button
-                      variant="success"
-                      onClick={() => paginateMajor(currentPageMajor + 1)}
-                    >
-                      <FaChevronRight />
-                    </Button>
-                  )}
-                </Pagination>
+                <Row>
+                  {checkedItemsMajor &&
+                    Object.values(checkedItemsMajor).length > 0 && (
+                      <Col className="d-flex">
+                        <div className="d-flex align-items-center gap-2 ps-3">
+                          <Button
+                            className="d-flex align-items-center gap-2"
+                            variant="success"
+                            onClick={() => handleDeletePopUpMajor()}
+                          >
+                            ยืนยัน
+                          </Button>
+                          <Button
+                            className="d-flex align-items-center gap-2"
+                            variant="danger"
+                            onClick={() => handleCancelButtonClickMajor()}
+                          >
+                            ยกเลิก
+                          </Button>
+                        </div>
+                      </Col>
+                    )}
+                  <Col>
+                    <Pagination className="d-flex justify-content-end align-items-center gap-3 pt-3 pe-3">
+                      <p style={{ color: "#4a4f55" }}>
+                        Page {currentPageMajor} of{" "}
+                        {Math.ceil(fetchDataMajor.length / itemsPerPage)}
+                      </p>
+                      {currentPageMajor > 1 && (
+                        <Button
+                          variant="success"
+                          onClick={() => paginateMajor(currentPageMajor - 1)}
+                        >
+                          <FaChevronLeft />
+                        </Button>
+                      )}
+                      {pageNumbersMajor.map((number) => (
+                        <Pagination.Item
+                          key={number}
+                          active={number === currentPageMajor}
+                          onClick={() => paginateMajor(number)}
+                        >
+                          {number}
+                        </Pagination.Item>
+                      ))}
+                      {currentPageMajor <
+                        Math.ceil(fetchDataMajor.length / itemsPerPage) && (
+                        <Button
+                          variant="success"
+                          onClick={() => paginateMajor(currentPageMajor + 1)}
+                        >
+                          <FaChevronRight />
+                        </Button>
+                      )}
+                    </Pagination>
+                  </Col>
+                </Row>
               </Card.Body>
             </Card>
           </Col>
@@ -1032,10 +1549,23 @@ const ImportData = () => {
                     <Button
                       className="d-flex align-items-center gap-2"
                       variant="success"
-                      onClick={() => {}}
+                      onClick={() =>
+                        downloadTemplate(
+                          [
+                            "build_id",
+                            "build_name",
+                            "room_id",
+                            "floor",
+                            "seat",
+                            "amount",
+                            "Maxamount"
+                          ],
+                          "Room.xlsx"
+                        )
+                      }
                     >
-                      <FaPlus />
-                      <p className="mb-0">เพิ่มรายการ</p>
+                      <FaDownload />
+                      <p className="mb-0">ดาวน์โหลดแบบฟอร์ม</p>
                     </Button>
                     <Button
                       className="d-flex align-items-center gap-2"
@@ -1044,7 +1574,7 @@ const ImportData = () => {
                         color: "#dc3545",
                         border: "1px solid #dc3545",
                       }}
-                      onClick={() => {}}
+                      onClick={() => handleDeleteButtonClickRoom()}
                     >
                       <FaTrashCan />
                       <p className="mb-0">ลบรายการ</p>
@@ -1123,6 +1653,15 @@ const ImportData = () => {
                         textAlign: "center",
                       }}
                     >
+                      {showCheckboxesRoom && (
+                        <th className="fw-normal" style={{ width: "5%" }}>
+                          <Form.Check
+                            type="checkbox"
+                            checked={checkedAllRoom}
+                            onChange={handleCheckAllRoom}
+                          />
+                        </th>
+                      )}
                       <th className="fw-normal" style={{ width: "5%" }}>
                         build_id
                       </th>
@@ -1142,6 +1681,21 @@ const ImportData = () => {
                   <tbody>
                     {displayDataRoom.map((item, id) => (
                       <tr key={id} style={{ textAlign: "center" }}>
+                        {showCheckboxesRoom && (
+                          <td>
+                            <Form.Check
+                              type="checkbox"
+                              checked={
+                                checkedItemsRoom[
+                                  `${item.room_id}_${item.seat[0]}`
+                                ] || false
+                              }
+                              onChange={() =>
+                                handleCheckItemRoom(item.room_id, item.seat)
+                              }
+                            />
+                          </td>
+                        )}
                         <td>{item.build_id}</td>
                         <td>{item.build_name}</td>
                         <td>{item.room_id}</td>
@@ -1180,38 +1734,63 @@ const ImportData = () => {
                     )}
                   </tbody>
                 </Table>
-                <Pagination className="d-flex justify-content-end align-items-center gap-3 pt-3 pe-3">
-                  <p style={{ color: "#4a4f55" }}>
-                    Page {currentPageRoom} of{" "}
-                    {Math.ceil(fetchDataRoom.length / itemsPerPage)}
-                  </p>
-                  {currentPageRoom > 1 && (
-                    <Button
-                      variant="success"
-                      onClick={() => paginateRoom(currentPageRoom - 1)}
-                    >
-                      <FaChevronLeft />
-                    </Button>
-                  )}
-                  {pageNumbersRoom.map((number) => (
-                    <Pagination.Item
-                      key={number}
-                      active={number === currentPageRoom}
-                      onClick={() => paginateRoom(number)}
-                    >
-                      {number}
-                    </Pagination.Item>
-                  ))}
-                  {currentPageRoom <
-                    Math.ceil(fetchDataRoom.length / itemsPerPage) && (
-                    <Button
-                      variant="success"
-                      onClick={() => paginateRoom(currentPageRoom + 1)}
-                    >
-                      <FaChevronRight />
-                    </Button>
-                  )}
-                </Pagination>
+                <Row>
+                  {checkedItemsRoom &&
+                    Object.values(checkedItemsRoom).length > 0 && (
+                      <Col className="d-flex">
+                        <div className="d-flex align-items-center gap-2 ps-3">
+                          <Button
+                            className="d-flex align-items-center gap-2"
+                            variant="success"
+                            onClick={() => handleDeletePopUpRoom()}
+                          >
+                            ยืนยัน
+                          </Button>
+                          <Button
+                            className="d-flex align-items-center gap-2"
+                            variant="danger"
+                            onClick={() => handleCancelButtonClickRoom()}
+                          >
+                            ยกเลิก
+                          </Button>
+                        </div>
+                      </Col>
+                    )}
+                  <Col>
+                    <Pagination className="d-flex justify-content-end align-items-center gap-3 pt-3 pe-3">
+                      <p style={{ color: "#4a4f55" }}>
+                        Page {currentPageRoom} of{" "}
+                        {Math.ceil(fetchDataRoom.length / itemsPerPage)}
+                      </p>
+                      {currentPageRoom > 1 && (
+                        <Button
+                          variant="success"
+                          onClick={() => paginateRoom(currentPageRoom - 1)}
+                        >
+                          <FaChevronLeft />
+                        </Button>
+                      )}
+                      {pageNumbersRoom.map((number) => (
+                        <Pagination.Item
+                          key={number}
+                          active={number === currentPageRoom}
+                          onClick={() => paginateRoom(number)}
+                        >
+                          {number}
+                        </Pagination.Item>
+                      ))}
+                      {currentPageRoom <
+                        Math.ceil(fetchDataRoom.length / itemsPerPage) && (
+                        <Button
+                          variant="success"
+                          onClick={() => paginateRoom(currentPageRoom + 1)}
+                        >
+                          <FaChevronRight />
+                        </Button>
+                      )}
+                    </Pagination>
+                  </Col>
+                </Row>
               </Card.Body>
             </Card>
           </Col>

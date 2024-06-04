@@ -76,14 +76,11 @@ const ManageRoom = () => {
             major_id: subject.major_id,
           });
 
-          // Combine room data
           subject.room.forEach((newRoom) => {
             const existingRoomIndex = acc[existingSubjectIndex].room.findIndex(
               (r) => r.room_id === newRoom.room_id
             );
             if (existingRoomIndex !== -1) {
-              acc[existingSubjectIndex].room[existingRoomIndex].amount +=
-                newRoom.amount;
             } else {
               acc[existingSubjectIndex].room.push(newRoom);
             }
@@ -178,7 +175,7 @@ const ManageRoom = () => {
       const droppedRoom = fetchDataRoom
         .filter((room) => `droppable-${room._id}` === destination.droppableId)
         .map((room) => {
-          const relatedSubjects = dataSubject
+          const relatedSubjects = dataRoomSubject
             .filter((date) => date.date === selectedDate?.value)
             .filter((time) => time.timezone === selectedTime?.value)
             .filter((subject) =>
@@ -706,25 +703,27 @@ const ManageRoom = () => {
                                       {item.cs_name_en}
                                     </p>
                                     <div className="d-flex flex-wrap gap-1">
-                                      {item.major_id.map((item, index) => (
-                                        <p
-                                          key={index}
-                                          style={{
-                                            backgroundColor:
-                                              colors[item.grade] || "#5e5e5e",
-                                            borderRadius: "20px",
-                                            textAlign: "center",
-                                            color: "white",
-                                            fontSize: "12px",
-                                            display: "block",
-                                            width: "fit-content",
-                                            minWidth: "50px",
-                                            padding: "2px 8px 2px 8px",
-                                          }}
-                                        >
-                                          {`${item.major_id}`}
-                                        </p>
-                                      ))}
+                                      {item.major_id
+                                        .sort((a, b) => a.grade - b.grade)
+                                        .map((item, index) => (
+                                          <p
+                                            key={index}
+                                            style={{
+                                              backgroundColor:
+                                                colors[item.grade] || "#5e5e5e",
+                                              borderRadius: "20px",
+                                              textAlign: "center",
+                                              color: "white",
+                                              fontSize: "12px",
+                                              display: "block",
+                                              width: "fit-content",
+                                              minWidth: "50px",
+                                              padding: "2px 8px 2px 8px",
+                                            }}
+                                          >
+                                            {`${item.major_id}`}
+                                          </p>
+                                        ))}
                                     </div>
                                   </Card.Body>
                                 </Card>
@@ -825,7 +824,7 @@ const ManageRoom = () => {
                       {fetchDataRoom
                         .sort((a, b) => a.build_id - b.build_id)
                         .map((item, index) => {
-                          const totalAmount = dataSubject
+                          const totalAmount = dataRoomSubject
                             .filter((date) => date.date === selectedDate?.value)
                             .filter(
                               (time) => time.timezone === selectedTime?.value
@@ -848,13 +847,13 @@ const ManageRoom = () => {
 
                           const isDropDisabled =
                             totalAmount >= item.Maxamount ||
-                            dataSubject.some(
+                            dataRoomSubject.some(
                               (subject) =>
                                 subject.date === selectedDate?.value &&
                                 subject.timezone === selectedTime?.value &&
                                 subject.room.some(
                                   (room) =>
-                                    room.room_id === item.room_id &&
+                                    room.room_id === item.room_id ||
                                     room.droppableIdRoom ===
                                       `droppable-${item._id}`
                                 )

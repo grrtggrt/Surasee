@@ -504,43 +504,43 @@ const Schedule = () => {
   };
 
   const handleDeleteConfirm = () => {
-    if (droppedItems.length === 0 && fetchDataSchedule.length === 0) {
+    if (droppedItems.length === 0) {
       Swal.fire({
         icon: "warning",
-        title: "ไม่มีข้อมูลที่ต้องบันทึก",
+        title: "ไม่มีข้อมูลที่ต้องลบ",
         showConfirmButton: false,
         timer: 1500,
       });
       return;
+    } else {
+      Swal.fire({
+        title: "ต้องการลบทั้งหมดใช่หรือไม่ ?",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: "ยกเลิก",
+        confirmButtonText: "ตกลง",
+        confirmButtonColor: "#03A96B",
+        cancelButtonColor: "#dc3545",
+        customClass: {
+          confirmButton: "shadow-none",
+          cancelButton: "shadow-none",
+        },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire({
+            title: "ลบข้อมูลสำเร็จ",
+            icon: "success",
+            confirmButtonColor: "#03A96B",
+            confirmButtonText: "ตกลง",
+            customClass: {
+              confirmButton: "shadow-none",
+            },
+          });
+          handleClearAll();
+          setIsEditing(false);
+        }
+      });
     }
-
-    Swal.fire({
-      title: "ต้องการลบทั้งหมดใช่หรือไม่ ?",
-      icon: "warning",
-      showCancelButton: true,
-      cancelButtonText: "ยกเลิก",
-      confirmButtonText: "ตกลง",
-      confirmButtonColor: "#03A96B",
-      cancelButtonColor: "#dc3545",
-      customClass: {
-        confirmButton: "shadow-none",
-        cancelButton: "shadow-none",
-      },
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: "ลบข้อมูลสำเร็จ",
-          icon: "success",
-          confirmButtonColor: "#03A96B",
-          confirmButtonText: "ตกลง",
-          customClass: {
-            confirmButton: "shadow-none",
-          },
-        });
-        handleClearAll();
-        setIsEditing(false);
-      }
-    });
   };
 
   const handleDeleteConfirmSubject = (droppableId, itemId) => {

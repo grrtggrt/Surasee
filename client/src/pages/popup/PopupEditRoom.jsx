@@ -229,18 +229,20 @@ const PopupEditRoom = (props) => {
             </Row>
           ))
         )}
-        <Row>
-          <Col className="d-flex justify-content-end">
-            <Button
-              className="d-flex align-items-center gap-2"
-              variant="danger"
-              onClick={() => handleDeleteData(fetchSubject)}
-            >
-              <FaTrashCan />
-              <p className="mb-0">ลบข้อมูลทั้งหมด</p>
-            </Button>
-          </Col>
-        </Row>
+        {dataSubject && dataSubject.length !== 0 && (
+          <Row>
+            <Col className="d-flex justify-content-end">
+              <Button
+                className="d-flex align-items-center gap-2"
+                variant="danger"
+                onClick={() => handleDeleteData(fetchSubject)}
+              >
+                <FaTrashCan />
+                <p className="mb-0">ลบข้อมูลทั้งหมด</p>
+              </Button>
+            </Col>
+          </Row>
+        )}
       </Modal.Body>
     </Modal>
   );
