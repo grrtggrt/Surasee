@@ -30,11 +30,9 @@ import "./ImportData.scss";
 import "../styles/Loader.scss";
 
 import PopupImportData from "../pages/popup/PopupImportData";
-import PopupDeleteData from "./popup/PopupDeleteData";
 
 const ImportData = () => {
   const [showPopupImportData, setShowPopupImportData] = useState(false);
-  const [showPopupDeleteData, setShowPopupDeleteData] = useState(false);
   const [dataSubject, setDataSubject] = useState([]);
   const [dataMajor, setDataMajor] = useState([]);
   const [dataRoom, setDataRoom] = useState([]);
@@ -109,9 +107,6 @@ const ImportData = () => {
   //Popup
   const handleShowPopupImportData = () => setShowPopupImportData(true);
   const handleHidePopupImportData = () => setShowPopupImportData(false);
-
-  const handleShowPopupDeleteData = () => setShowPopupDeleteData(true);
-  const handleHidePopupDeleteData = () => setShowPopupDeleteData(false);
 
   const handleDeleteButtonClickSubject = () => {
     setShowCheckboxesSubject(!showCheckboxesSubject);
@@ -467,6 +462,25 @@ const ImportData = () => {
         }
       }
     });
+  };
+
+  const handleClickDeleteAll = async () => {
+    if (
+      dataSubject.length === 0 &&
+      dataMajor.length === 0 &&
+      dataRoom.length === 0
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "ไม่มีข้อมูลที่ต้องลบ",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      return;
+    } else {
+      try {
+      } catch {}
+    }
   };
 
   const handleResetDataSubject = () => {
@@ -964,7 +978,7 @@ const ImportData = () => {
             <Button
               className="d-flex align-items-center gap-2"
               variant="danger"
-              onClick={() => handleShowPopupDeleteData()}
+              onClick={() => handleClickDeleteAll()}
             >
               <FaTrashCan />
               <p className="mb-0">ลบข้อมูลทั้งหมด</p>
@@ -1819,10 +1833,6 @@ const ImportData = () => {
       <PopupImportData
         show={showPopupImportData}
         hide={handleHidePopupImportData}
-      />
-      <PopupDeleteData
-        show={showPopupDeleteData}
-        hide={handleHidePopupDeleteData}
       />
     </>
   );
