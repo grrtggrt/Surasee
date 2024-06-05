@@ -6,8 +6,9 @@ const Building = require("../models/building");
 
 router.delete("/subject", async (req, res) => {
   try {
-    const { ids } = req.body;
-    await Subject.deleteMany({ cs_id: { $in: ids } });
+    const { items } = req.body;
+
+    await Subject.deleteMany({ cs_id: { $in: items } });
     res.status(200).send("Subjects deleted successfully");
   } catch (error) {
     console.error(error);

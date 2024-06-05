@@ -30,9 +30,11 @@ import "./ImportData.scss";
 import "../styles/Loader.scss";
 
 import PopupImportData from "../pages/popup/PopupImportData";
+import PopupDeleteData from "./popup/PopupDeleteData";
 
 const ImportData = () => {
   const [showPopupImportData, setShowPopupImportData] = useState(false);
+  const [showPopupDeleteData, setShowPopupDeleteData] = useState(false);
   const [dataSubject, setDataSubject] = useState([]);
   const [dataMajor, setDataMajor] = useState([]);
   const [dataRoom, setDataRoom] = useState([]);
@@ -107,6 +109,9 @@ const ImportData = () => {
   //Popup
   const handleShowPopupImportData = () => setShowPopupImportData(true);
   const handleHidePopupImportData = () => setShowPopupImportData(false);
+
+  const handleShowPopupDeleteData = () => setShowPopupDeleteData(true);
+  const handleHidePopupDeleteData = () => setShowPopupDeleteData(false);
 
   const handleDeleteButtonClickSubject = () => {
     setShowCheckboxesSubject(!showCheckboxesSubject);
@@ -293,12 +298,15 @@ const ImportData = () => {
       if (result.isConfirmed) {
         try {
           await axios.delete("http://localhost:5500/api/subject", {
-            data: { ids: itemsToDeleteSubject },
+            data: { items: itemsToDeleteSubject },
           });
+
           const newDataSubject = dataSubject.filter(
             (item) => !itemsToDeleteSubject.includes(item.cs_id)
           );
+
           setFetchDataSubject(newDataSubject);
+          setDataSubject(newDataSubject);
           setCheckedItemsSubject({});
           setCheckedAllSubject(false);
           setShowConfirmButtonsSubject(false);
@@ -460,8 +468,6 @@ const ImportData = () => {
       }
     });
   };
-
-  const handleDeleteAll = async () => {};
 
   const handleResetDataSubject = () => {
     setLoading(true);
@@ -690,7 +696,7 @@ const ImportData = () => {
   }));
 
   const handleClickSearchSubject = () => {
-    if (!selectedMajorSubject && !selectedGradeSubject && !inputSubject) {
+    if (!selectedMajorSubject || (!selectedGradeSubject && !inputSubject)) {
       Swal.fire({
         title: "กรุณากรอกข้อมูลเพื่อค้นหา",
         icon: "warning",
@@ -958,7 +964,7 @@ const ImportData = () => {
             <Button
               className="d-flex align-items-center gap-2"
               variant="danger"
-              onClick={() => handleDeleteAll()}
+              onClick={() => handleShowPopupDeleteData()}
             >
               <FaTrashCan />
               <p className="mb-0">ลบข้อมูลทั้งหมด</p>
@@ -995,8 +1001,7 @@ const ImportData = () => {
                             "lc_sec_1",
                             "lc_sec_2",
                             "lb_sec_1",
-                            "lb_sec_2"
-
+                            "lb_sec_2",
                           ],
                           "Subject.xlsx"
                         )
@@ -1177,6 +1182,11 @@ const ImportData = () => {
                             <td>
                               <br />
                             </td>
+                            {showCheckboxesSubject && (
+                              <td>
+                                <br />
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </>
@@ -1272,7 +1282,7 @@ const ImportData = () => {
                             "cs_name_en",
                             "fac_name",
                             "major_status",
-                            "major_grade"
+                            "major_grade",
                           ],
                           "Major.xlsx"
                         )
@@ -1466,6 +1476,11 @@ const ImportData = () => {
                               <td>
                                 <br />
                               </td>
+                              {showCheckboxesMajor && (
+                                <td>
+                                  <br />
+                                </td>
+                              )}
                             </tr>
                           )
                         )}
@@ -1558,7 +1573,7 @@ const ImportData = () => {
                             "floor",
                             "seat",
                             "amount",
-                            "Maxamount"
+                            "Maxamount",
                           ],
                           "Room.xlsx"
                         )
@@ -1727,6 +1742,11 @@ const ImportData = () => {
                               <td>
                                 <br />
                               </td>
+                              {showCheckboxesRoom && (
+                                <td>
+                                  <br />
+                                </td>
+                              )}
                             </tr>
                           )
                         )}
@@ -1799,6 +1819,10 @@ const ImportData = () => {
       <PopupImportData
         show={showPopupImportData}
         hide={handleHidePopupImportData}
+      />
+      <PopupDeleteData
+        show={showPopupDeleteData}
+        hide={handleHidePopupDeleteData}
       />
     </>
   );
