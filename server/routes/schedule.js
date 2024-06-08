@@ -132,7 +132,8 @@ router.post("/delete-room", async (req, res) => {
 });
 
 router.post("/update-subjects", async (req, res) => {
-  const { major_id, major_grade, subjects } = req.body;
+  const { major_id, major_grade, subjects, selectedSemester, selectedTerm } =
+    req.body;
 
   // ตรวจสอบว่า fields จำเป็นถูกส่งมาหรือไม่
   if (!subjects || !major_id || !major_grade) {
@@ -156,8 +157,8 @@ router.post("/update-subjects", async (req, res) => {
           schedule: {
             major_id: currentMajorId,
             major_grade: currentMajorGrade,
-            semester: "",
-            term: "",
+            semester: selectedSemester,
+            term: selectedTerm,
           },
           subject: [],
         });
@@ -254,7 +255,9 @@ router.post("/update-subjects-room", async (req, res) => {
         } = roomData;
 
         if (amount === 0) {
-          console.log(`Skipping room with room_id ${room_id} because amount is 0`);
+          console.log(
+            `Skipping room with room_id ${room_id} because amount is 0`
+          );
           continue;
         }
 
@@ -263,7 +266,9 @@ router.post("/update-subjects-room", async (req, res) => {
           "schedule.major_grade": grade,
         });
         if (!schedule) {
-          console.log(`Schedule with major_id ${major_id} and grade ${grade} not found`);
+          console.log(
+            `Schedule with major_id ${major_id} and grade ${grade} not found`
+          );
           return res.status(404).json({
             error: `Schedule with major_id ${major_id} and grade ${grade} not found`,
           });
@@ -273,7 +278,9 @@ router.post("/update-subjects-room", async (req, res) => {
           (sub) => sub.cs_id === csId && sub.grade === grade
         );
         if (!subject) {
-          console.log(`Subject with cs_id ${csId} and grade ${grade} not found in schedule`);
+          console.log(
+            `Subject with cs_id ${csId} and grade ${grade} not found in schedule`
+          );
           return res.status(404).json({
             error: `Subject with cs_id ${csId} and grade ${grade} not found in schedule`,
           });
@@ -293,17 +300,23 @@ router.post("/update-subjects-room", async (req, res) => {
 
         let roomAmount = amount;
         if (roomAmount + usedCapacity > maxAmount) {
-          console.log(`Reducing room amount for room_id ${room_id} to remaining capacity`);
+          console.log(
+            `Reducing room amount for room_id ${room_id} to remaining capacity`
+          );
           roomAmount = maxAmount - usedCapacity;
         }
 
         if (roomAmount > subject.amount) {
-          console.log(`Reducing room amount for room_id ${room_id} to remaining amount in subject`);
+          console.log(
+            `Reducing room amount for room_id ${room_id} to remaining amount in subject`
+          );
           roomAmount = subject.amount;
         }
 
         if (roomAmount <= 0) {
-          console.log(`Skipping room with room_id ${room_id} because the remaining amount is 0 or less`);
+          console.log(
+            `Skipping room with room_id ${room_id} because the remaining amount is 0 or less`
+          );
           continue;
         }
 

@@ -36,6 +36,7 @@ const ImportData = () => {
   const [dataSubject, setDataSubject] = useState([]);
   const [dataMajor, setDataMajor] = useState([]);
   const [dataRoom, setDataRoom] = useState([]);
+  const [dataSchedule, setDataSchedule] = useState([]);
   const [fetchDataSubject, setFetchDataSubject] = useState([]);
   const [fetchDataMajor, setFetchDataMajor] = useState([]);
   const [fetchDataRoom, setFetchDataRoom] = useState([]);
@@ -95,14 +96,28 @@ const ImportData = () => {
     }
   }, []);
 
+  const fetchSchedule = useCallback(async () => {
+    try {
+      const response = await axios.get("http://localhost:5500/api/schedule");
+      setDataSchedule(response.data);
+    } catch (error) {
+      console.error("Error fetching room:", error);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      await Promise.all([fetchRoom(), fetchSubjects(), fetchMajor()]);
+      await Promise.all([
+        fetchRoom(),
+        fetchSubjects(),
+        fetchMajor(),
+        fetchSchedule(),
+      ]);
       setLoading(false);
     };
     fetchData();
-  }, [fetchRoom, fetchSubjects, fetchMajor]);
+  }, [fetchRoom, fetchSubjects, fetchMajor, fetchSchedule]);
 
   //Popup
   const handleShowPopupImportData = () => setShowPopupImportData(true);
@@ -468,7 +483,8 @@ const ImportData = () => {
     if (
       dataSubject.length === 0 &&
       dataMajor.length === 0 &&
-      dataRoom.length === 0
+      dataRoom.length === 0 &&
+      dataSchedule.length === 0
     ) {
       Swal.fire({
         icon: "warning",
@@ -478,8 +494,98 @@ const ImportData = () => {
       });
       return;
     } else {
-      try {
-      } catch {}
+      Swal.fire({
+        title: "ต้องการลบข้อมูลใช่หรือไม่",
+        icon: "question",
+        showCancelButton: true,
+        cancelButtonText: "ยกเลิก",
+        confirmButtonText: "ตกลง",
+        confirmButtonColor: "#03A96B",
+        cancelButtonColor: "#dc3545",
+        customClass: {
+          confirmButton: "shadow-none",
+          cancelButton: "shadow-none",
+        },
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const subjectPayload = {
+              items: dataSubject.map((subject) => subject.cs_id),
+            };
+            const majorPayload = {
+              items: dataMajor.map((major) => ({
+                major_id: major.major_id,
+                major_grade: major.major_grade,
+              })),
+            };
+            const buildingPayload = {
+              items: dataRoom.map((building) => ({
+                room_id: building.room_id,
+                seat: building.seat[0],
+              })),
+            };
+            const schedulePayload = {
+              items: dataSchedule.map((schedule) => ({
+                major_id: schedule.schedule.major_id,
+                major_grade: schedule.schedule.major_grade,
+              })),
+            };
+
+            await Promise.all([
+              axios
+                .delete("http://localhost:5500/api/subject", {
+                  data: subjectPayload,
+                })
+                .then((response) =>
+                  console.log("Subject delete response:", response)
+                ),
+              axios
+                .delete("http://localhost:5500/api/major", {
+                  data: majorPayload,
+                })
+                .then((response) =>
+                  console.log("Major delete response:", response)
+                ),
+              axios
+                .delete("http://localhost:5500/api/building", {
+                  data: buildingPayload,
+                })
+                .then((response) =>
+                  console.log("Building delete response:", response)
+                ),
+              axios
+                .delete("http://localhost:5500/api/schedule", {
+                  data: schedulePayload,
+                })
+                .then((response) =>
+                  console.log("Schedule delete response:", response)
+                ),
+              axios.delete("http://localhost:5500/api/FileStatus"),
+              localStorage.removeItem("startDate"),
+              localStorage.removeItem("endDate"),
+              localStorage.removeItem("selectSemester"),
+              localStorage.removeItem("selectTerm"),
+            ]);
+            Swal.fire({
+              icon: "success",
+              title: "ลบข้อมูลสำเร็จ",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            window.location.reload();
+          } catch (error) {
+            Swal.fire({
+              icon: "error",
+              title: "เกิดข้อผิดพลาดในการลบข้อมูล",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            console.error("Error during deletion:", error);
+          }
+        } else {
+          console.log("User canceled deletion");
+        }
+      });
     }
   };
 
@@ -864,6 +970,7 @@ const ImportData = () => {
     indexOfFirstItemSubject,
     indexOfLastItemSubject
   );
+
   const pageNumbersSubject = [];
   let startPageSubject = 1;
   let endPageSubject = Math.min(

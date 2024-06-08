@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Row, Col, Card } from "react-bootstrap";
 import { FaCircleInfo } from "react-icons/fa6";
-import axios from "axios";
 
 const PopupDashboard = (props) => {
   const { show, hide, viewDetail, dataSubject } = props;
@@ -9,28 +8,6 @@ const PopupDashboard = (props) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [selectedSemester, setSelectedSemester] = useState(null);
-
-  const fetchSelected = useCallback(async () => {
-    try {
-      const response = await axios.get("http://localhost:5500/api/schedule");
-      if (
-        response.data &&
-        Array.isArray(response.data) &&
-        response.data.length > 0
-      ) {
-        const scheduleData = response.data[0].schedule;
-
-        if (typeof scheduleData === "object") {
-          const selectedSemester = scheduleData.semester
-            ? [scheduleData.semester]
-            : [];
-          setSelectedSemester(selectedSemester);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching subjects from schedule:", error);
-    }
-  }, []);
 
   const filteredSubjects = viewDetail
     ? dataSubject.filter(
@@ -45,18 +22,26 @@ const PopupDashboard = (props) => {
     : [];
 
   useEffect(() => {
-    fetchSelected();
-  }, [fetchSelected]);
-
-  useEffect(() => {
     const storedStartDate = localStorage.getItem("startDate");
     const storedEndDate = localStorage.getItem("endDate");
+    const storedSelectSemesterd = localStorage.getItem("selectSemester");
 
     if (storedStartDate) {
       setStartDate(new Date(storedStartDate));
+    } else {
+      setStartDate(null);
     }
+
     if (storedEndDate) {
       setEndDate(new Date(storedEndDate));
+    } else {
+      setEndDate(null);
+    }
+
+    if (storedSelectSemesterd) {
+      setSelectedSemester(storedSelectSemesterd);
+    } else {
+      setSelectedSemester(null);
     }
   }, []);
 

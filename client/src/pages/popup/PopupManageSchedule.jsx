@@ -42,9 +42,11 @@ const PopupManageSchedule = (props) => {
   };
 
   const saveDateRangeToLocalStorage = () => {
-    if (startDate && endDate) {
+    if (startDate && endDate && selectSemester && selectTerm) {
       localStorage.setItem("startDate", startDate.toISOString());
       localStorage.setItem("endDate", endDate.toISOString());
+      localStorage.setItem("selectSemester", selectSemester.value);
+      localStorage.setItem("selectTerm", selectTerm.value);
     }
   };
 

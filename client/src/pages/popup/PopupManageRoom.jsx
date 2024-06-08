@@ -44,6 +44,8 @@ const PopupManageRoom = (props) => {
   const [amountSubject, setAmountSubject] = useState(null);
   const [isDisabled, setIsDisabled] = useState(false);
 
+  console.log(updatedDroppedItems)
+
   //ดึงข้อมูล
   const fetchRoom = useCallback(async () => {
     try {

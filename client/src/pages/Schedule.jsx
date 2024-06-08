@@ -70,31 +70,6 @@ const Schedule = () => {
     }
   }, []);
 
-  const fetchSelected = useCallback(async () => {
-    try {
-      const response = await axios.get("http://localhost:5500/api/schedule");
-      if (
-        response.data &&
-        Array.isArray(response.data) &&
-        response.data.length > 0
-      ) {
-        const scheduleData = response.data[0].schedule;
-
-        if (typeof scheduleData === "object") {
-          const selectedSemester = scheduleData.semester
-            ? [scheduleData.semester]
-            : [];
-          const selectedTerm = scheduleData.term ? [scheduleData.term] : [];
-
-          setSelectedSemester(selectedSemester);
-          setSelectedTerm(selectedTerm);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching subjects from schedule:", error);
-    }
-  }, []);
-
   const fetchMajor = useCallback(async () => {
     try {
       const response = await axios.get("http://localhost:5500/api/major");
@@ -107,17 +82,12 @@ const Schedule = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      await Promise.all([
-        fetchSubjects(),
-        fetchMajor(),
-        fetchSchedule(),
-        fetchSelected(),
-      ]);
+      await Promise.all([fetchSubjects(), fetchMajor(), fetchSchedule()]);
       setIsDataFetched(true);
       setLoading(false);
     };
     fetchData();
-  }, [fetchSubjects, fetchMajor, fetchSchedule, fetchSelected]);
+  }, [fetchSubjects, fetchMajor, fetchSchedule]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -141,6 +111,8 @@ const Schedule = () => {
     if (!showSchedule || isDeleted) {
       const storedStartDate = localStorage.getItem("startDate");
       const storedEndDate = localStorage.getItem("endDate");
+      const storedSelectSemesterd = localStorage.getItem("selectSemester");
+      const storedSelectTerm = localStorage.getItem("selectTerm");
 
       if (storedStartDate) {
         setStartDate(new Date(storedStartDate));
@@ -154,9 +126,20 @@ const Schedule = () => {
         setEndDate(null);
       }
 
+      if (storedSelectSemesterd) {
+        setSelectedSemester(storedSelectSemesterd);
+      } else {
+        setSelectedSemester(null);
+      }
+
+      if (storedSelectTerm) {
+        setSelectedTerm(storedSelectTerm);
+      } else {
+        setSelectedTerm(null);
+      }
+
       setIsDeleted(false);
     }
-    fetchSelected();
   }, [showSchedule, isDeleted]);
 
   //PopupSchedule
@@ -210,7 +193,7 @@ const Schedule = () => {
               )
             )
           ) ||
-        fetchDataSchedule
+        dataSchedule
           .filter((item) =>
             item.subject.some(
               (subject) =>
@@ -218,7 +201,7 @@ const Schedule = () => {
             )
           )
           .some((item) =>
-            item.major_id.some((major) =>
+            item.subject.some((major) =>
               draggedMajor.some(
                 (draggedMajor) =>
                   major.major_id === draggedMajor.major_id &&
@@ -227,29 +210,57 @@ const Schedule = () => {
             )
           );
 
-      if (majorIdExists) return;
+      if (majorIdExists) {
+        Swal.fire({
+          icon: "warning",
+          title: "เกิดข้อผิดพลาดในการจัดตาราง",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+        return;
+      }
 
       if (
         droppedItems.some(
           (item) =>
             item.date === formattedDate &&
             item.timezone === "เช้า" &&
-            item.major_id.some((major) => major.major_id) ===
-              draggedItem.major_id.some((major) => major.major_id) &&
-            item.major_id.some((grade) => grade.grade) ===
-              draggedItem.major_id.some((grade) => grade.grade)
+            item.major_id.some((major) =>
+              draggedItem.major_id.some(
+                (drag) =>
+                  major.major_id.includes(drag.major_id) &&
+                  item.major_id.some((major) =>
+                    draggedItem.major_id.some(
+                      (drag) => major.grade === drag.grade
+                    )
+                  )
+              )
+            )
         ) ||
-        fetchDataSchedule.some(
+        dataSchedule.some(
           (item) =>
             item.subject.some((date) => date.date === formattedDate) &&
             item.subject.some((timezone) => timezone.timezone === "เช้า") &&
-            item.subject.some((major) => major.major_id) ===
-              draggedItem.major_id.some((major) => major.major_id) &&
-            item.subject.some((grade) => grade.grade) ===
-              draggedItem.major_id.some((grade) => grade.grade)
+            item.subject.some((major) =>
+              draggedItem.major_id.some(
+                (drag) =>
+                  major.major_id.includes(drag.major_id) &&
+                  item.subject.some((major) =>
+                    draggedItem.major_id.some(
+                      (drag) => major.grade === drag.grade
+                    )
+                  )
+              )
+            )
         )
       ) {
         if (timezone === "กลางวัน") {
+          Swal.fire({
+            icon: "warning",
+            title: "เกิดข้อผิดพลาดในการจัดตาราง",
+            showConfirmButton: false,
+            timer: 1500,
+          });
           return;
         }
       } else if (
@@ -257,43 +268,83 @@ const Schedule = () => {
           (item) =>
             item.date === formattedDate &&
             item.timezone === "กลางวัน" &&
-            item.major_id.some((major) => major.major_id) ===
-              draggedItem.major_id.some((major) => major.major_id) &&
-            item.major_id.some((grade) => grade.grade) ===
-              draggedItem.major_id.some((grade) => grade.grade)
+            item.major_id.some((major) =>
+              draggedItem.major_id.some(
+                (drag) =>
+                  major.major_id.includes(drag.major_id) &&
+                  item.major_id.some((major) =>
+                    draggedItem.major_id.some(
+                      (drag) => major.grade === drag.grade
+                    )
+                  )
+              )
+            )
         ) ||
-        fetchDataSchedule.some(
+        dataSchedule.some(
           (item) =>
             item.subject.some((date) => date.date === formattedDate) &&
             item.subject.some((timezone) => timezone.timezone === "กลางวัน") &&
-            item.subject.some((major) => major.major_id) ===
-              draggedItem.major_id.some((major) => major.major_id) &&
-            item.subject.some((grade) => grade.grade) ===
-              draggedItem.major_id.some((grade) => grade.grade)
+            item.subject.some((major) =>
+              draggedItem.major_id.some(
+                (drag) =>
+                  major.major_id.includes(drag.major_id) &&
+                  item.subject.some((major) =>
+                    draggedItem.major_id.some(
+                      (drag) => major.grade === drag.grade
+                    )
+                  )
+              )
+            )
         )
       ) {
+        Swal.fire({
+          icon: "warning",
+          title: "เกิดข้อผิดพลาดในการจัดตาราง",
+          showConfirmButton: false,
+          timer: 1500,
+        });
         return;
       } else if (
         droppedItems.some(
           (item) =>
             item.date === formattedDate &&
             item.timezone === "เย็น" &&
-            item.major_id.some((major) => major.major_id) ===
-              draggedItem.major_id.some((major) => major.major_id) &&
-            item.major_id.some((grade) => grade.grade) ===
-              draggedItem.major_id.some((grade) => grade.grade)
+            item.major_id.some((major) =>
+              draggedItem.major_id.some(
+                (drag) =>
+                  major.major_id.includes(drag.major_id) &&
+                  item.major_id.some((major) =>
+                    draggedItem.major_id.some(
+                      (drag) => major.grade === drag.grade
+                    )
+                  )
+              )
+            )
         ) ||
-        fetchDataSchedule.some(
+        dataSchedule.some(
           (item) =>
             item.subject.some((date) => date.date === formattedDate) &&
             item.subject.some((timezone) => timezone.timezone === "เย็น") &&
-            item.subject.some((major) => major.major_id) ===
-              draggedItem.major_id.some((major) => major.major_id) &&
-            item.subject.some((grade) => grade.grade) ===
-              draggedItem.major_id.some((grade) => grade.grade)
+            item.subject.some((major) =>
+              draggedItem.major_id.some(
+                (drag) =>
+                  major.major_id.includes(drag.major_id) &&
+                  item.subject.some((major) =>
+                    draggedItem.major_id.some(
+                      (drag) => major.grade === drag.grade
+                    )
+                  )
+              )
+            )
         )
       ) {
         if (timezone === "กลางวัน") {
+          Swal.fire({
+            icon: "warning",
+            title: "เกิดข้อผิดพลาดในการจัดตาราง",
+            showConfirmButton: false,
+            timer: 1500,
+          });
           return;
         }
       }
@@ -305,6 +356,8 @@ const Schedule = () => {
           droppableId: destination.droppableId,
           date: formattedDate,
           timezone: timezone,
+          selectedSemester: selectedSemester,
+          selectedTerm: selectedTerm,
         },
       ];
       setItems(newItems);
@@ -413,6 +466,28 @@ const Schedule = () => {
       return;
     }
 
+    if (!selectedSemester) {
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: "กรุณาเลือกภาคการศึกษา",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      return;
+    }
+
+    if (!selectedTerm) {
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: "กรุณาเลือกเทอม",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      return;
+    }
+
     Swal.fire({
       title: "ต้องการบันทึกข้อมูลใช่หรือไม่ ?",
       icon: "info",
@@ -469,13 +544,14 @@ const Schedule = () => {
             droppableIdSchedule: item.droppableId,
           }));
 
-          // ส่งข้อมูลไปยัง API
           const response = await axios.post(
             "http://localhost:5500/api/update-subjects",
             {
               major_id: majorIds,
               major_grade: majorGrades,
               subjects: subjects,
+              selectedSemester: selectedSemester,
+              selectedTerm: selectedTerm,
             }
           );
 
@@ -580,6 +656,8 @@ const Schedule = () => {
       if (result.isConfirmed) {
         localStorage.removeItem("startDate");
         localStorage.removeItem("endDate");
+        localStorage.removeItem("selectSemester");
+        localStorage.removeItem("selectTerm");
 
         setIsDeleted(true);
 
