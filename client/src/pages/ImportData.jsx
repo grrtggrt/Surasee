@@ -117,11 +117,14 @@ const ImportData = () => {
       setLoading(false);
     };
     fetchData();
-  }, [fetchRoom, fetchSubjects, fetchMajor, fetchSchedule]);
+  }, [fetchRoom, fetchSubjects, fetchMajor, fetchSchedule ,showPopupImportData]);
 
   //Popup
   const handleShowPopupImportData = () => setShowPopupImportData(true);
-  const handleHidePopupImportData = () => setShowPopupImportData(false);
+  const handleHidePopupImportData = () => {
+
+    setShowPopupImportData(false);
+  };
 
   const handleDeleteButtonClickSubject = () => {
     setShowCheckboxesSubject(!showCheckboxesSubject);

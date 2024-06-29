@@ -673,13 +673,13 @@ const PopupImportData = (props) => {
                           textAlign: "center",
                         }}
                       >
-                        <th className="fw-normal" style={{ width: "15%" }}>
+                        <th className="fw-normal" style={{ width: "30%" }}>
                           File Name
                         </th>
                         <th className="fw-normal" style={{ width: "20%" }}>
                           Table
                         </th>
-                        <th className="fw-normal" style={{ width: "40%" }}>
+                        <th className="fw-normal" style={{ width: "50%" }}>
                           DateTime
                         </th>
                       </tr>

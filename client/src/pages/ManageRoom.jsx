@@ -523,7 +523,7 @@ const ManageRoom = () => {
 
   const colors = {
     1: "#FD8A8A",
-    2: "#F1F7B5",
+    2: "#ACE1AF",
     3: "#A8D1D1",
     4: "#9EA1D4",
   };

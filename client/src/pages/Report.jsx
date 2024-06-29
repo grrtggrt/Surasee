@@ -518,7 +518,6 @@ const Report = () => {
                         <th>ห้องสอบ</th>
                         <th>วันที่</th>
                         <th>เวลา</th>
-                        <th>จำนวน</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -546,7 +545,8 @@ const Report = () => {
                             item.room && item.room.length > 0
                               ? item.room
                                   .map(
-                                    (room) => `${room.room_id}(${room.seat})`
+                                    (room) =>
+                                      `${room.room_id}(${room.amount}${room.seat})`
                                   )
                                   .join(", ")
                               : "????"
@@ -566,11 +566,6 @@ const Report = () => {
                                 : "????"
                             }`}
                           </td>
-                          <td>{`${
-                            item.room && item.room.length > 0
-                              ? item.room.map((room) => room.amount).join(", ")
-                              : "????"
-                          }`}</td>
                         </tr>
                       ))}
                       {displayData.length < itemsPerPage && (
@@ -578,9 +573,6 @@ const Report = () => {
                           {[...Array(itemsPerPage - displayData.length)].map(
                             (_, index) => (
                               <tr key={index}>
-                                <td>
-                                  <br />
-                                </td>
                                 <td>
                                   <br />
                                 </td>

@@ -220,41 +220,39 @@ const Schedule = () => {
         return;
       }
 
-      if (
-        droppedItems.some(
-          (item) =>
-            item.date === formattedDate &&
-            item.timezone === "เช้า" &&
-            item.major_id.some((major) =>
-              draggedItem.major_id.some(
-                (drag) =>
-                  major.major_id.includes(drag.major_id) &&
-                  item.major_id.some((major) =>
-                    draggedItem.major_id.some(
-                      (drag) => major.grade === drag.grade
-                    )
-                  )
+      const checkConflict = (timezoneToCheck) => {
+        return (
+          droppedItems.some(
+            (item) =>
+              item.date === formattedDate &&
+              item.timezone === timezoneToCheck &&
+              item.major_id.some((major) =>
+                draggedItem.major_id.some(
+                  (drag) =>
+                    major.major_id.includes(drag.major_id) &&
+                    major.grade === drag.grade
+                )
               )
-            )
-        ) ||
-        dataSchedule.some(
-          (item) =>
-            item.subject.some((date) => date.date === formattedDate) &&
-            item.subject.some((timezone) => timezone.timezone === "เช้า") &&
-            item.subject.some((major) =>
-              draggedItem.major_id.some(
-                (drag) =>
-                  major.major_id.includes(drag.major_id) &&
-                  item.subject.some((major) =>
-                    draggedItem.major_id.some(
-                      (drag) => major.grade === drag.grade
-                    )
-                  )
+          ) ||
+          dataSchedule.some(
+            (item) =>
+              item.subject.some((date) => date.date === formattedDate) &&
+              item.subject.some(
+                (timezone) => timezone.timezone === timezoneToCheck
+              ) &&
+              item.subject.some((major) =>
+                draggedItem.major_id.some(
+                  (drag) =>
+                    major.major_id.includes(drag.major_id) &&
+                    major.grade === drag.grade
+                )
               )
-            )
-        )
-      ) {
-        if (timezone === "กลางวัน") {
+          )
+        );
+      };
+
+      if (timezone === "กลางวัน") {
+        if (checkConflict("เช้า") || checkConflict("เย็น")) {
           Swal.fire({
             icon: "warning",
             title: "เกิดข้อผิดพลาดในการจัดตาราง",
@@ -263,82 +261,18 @@ const Schedule = () => {
           });
           return;
         }
-      } else if (
-        droppedItems.some(
-          (item) =>
-            item.date === formattedDate &&
-            item.timezone === "กลางวัน" &&
-            item.major_id.some((major) =>
-              draggedItem.major_id.some(
-                (drag) =>
-                  major.major_id.includes(drag.major_id) &&
-                  item.major_id.some((major) =>
-                    draggedItem.major_id.some(
-                      (drag) => major.grade === drag.grade
-                    )
-                  )
-              )
-            )
-        ) ||
-        dataSchedule.some(
-          (item) =>
-            item.subject.some((date) => date.date === formattedDate) &&
-            item.subject.some((timezone) => timezone.timezone === "กลางวัน") &&
-            item.subject.some((major) =>
-              draggedItem.major_id.some(
-                (drag) =>
-                  major.major_id.includes(drag.major_id) &&
-                  item.subject.some((major) =>
-                    draggedItem.major_id.some(
-                      (drag) => major.grade === drag.grade
-                    )
-                  )
-              )
-            )
-        )
-      ) {
-        Swal.fire({
-          icon: "warning",
-          title: "เกิดข้อผิดพลาดในการจัดตาราง",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-        return;
-      } else if (
-        droppedItems.some(
-          (item) =>
-            item.date === formattedDate &&
-            item.timezone === "เย็น" &&
-            item.major_id.some((major) =>
-              draggedItem.major_id.some(
-                (drag) =>
-                  major.major_id.includes(drag.major_id) &&
-                  item.major_id.some((major) =>
-                    draggedItem.major_id.some(
-                      (drag) => major.grade === drag.grade
-                    )
-                  )
-              )
-            )
-        ) ||
-        dataSchedule.some(
-          (item) =>
-            item.subject.some((date) => date.date === formattedDate) &&
-            item.subject.some((timezone) => timezone.timezone === "เย็น") &&
-            item.subject.some((major) =>
-              draggedItem.major_id.some(
-                (drag) =>
-                  major.major_id.includes(drag.major_id) &&
-                  item.subject.some((major) =>
-                    draggedItem.major_id.some(
-                      (drag) => major.grade === drag.grade
-                    )
-                  )
-              )
-            )
-        )
-      ) {
-        if (timezone === "กลางวัน") {
+      } else if (timezone === "เช้า") {
+        if (checkConflict("กลางวัน")) {
+          Swal.fire({
+            icon: "warning",
+            title: "เกิดข้อผิดพลาดในการจัดตาราง",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+          return;
+        }
+      } else if (timezone === "เย็น") {
+        if (checkConflict("กลางวัน")) {
           Swal.fire({
             icon: "warning",
             title: "เกิดข้อผิดพลาดในการจัดตาราง",
@@ -1190,7 +1124,7 @@ const Schedule = () => {
 
   const colors = {
     1: "#FD8A8A",
-    2: "#F1F7B5",
+    2: "#ACE1AF",
     3: "#A8D1D1",
     4: "#9EA1D4",
   };
